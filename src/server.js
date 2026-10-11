@@ -168,8 +168,13 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`InsightLoop MVP server running at http://localhost:${PORT}`);
-});
+// Vercel invokes the exported server for each request. Local development
+// still listens on PORT; don't bind a port while running as a serverless function.
+if (!process.env.VERCEL) {
+  server.listen(PORT, () => {
+    console.log(`InsightLoop MVP server running at http://localhost:${PORT}`);
+  });
+}
 
 export { server };
+export default server;
