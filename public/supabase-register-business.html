@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register Your Business — InsightLoop (Supabase track)</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="topbar"><a class="brand" href="/index.html">InsightLoop</a></header>
+
+<div class="narrow">
+  <h1>Register your business</h1>
+  <div class="alert info">Supabase-backed track — see docs/SUPABASE_SETUP.md before this will actually work.</div>
+  <p class="muted">Your account will need admin verification before you can launch research.</p>
+  <div id="alert" class="alert error hidden"></div>
+
+  <form id="form">
+    <label>Your name</label>
+    <input id="full_name" required>
+    <label>Work email</label>
+    <input type="email" id="email" required>
+    <label>Password (min 8 characters)</label>
+    <input type="password" id="password" minlength="8" required>
+    <label>Business / brand name</label>
+    <input id="legal_name" required>
+    <label>City</label>
+    <input id="city" placeholder="e.g. Visakhapatnam" required>
+    <label>Category</label>
+    <select id="category">
+      <option value="food_beverage">Food & Beverage</option>
+      <option value="retail">Retail</option>
+      <option value="services">Services</option>
+      <option value="agency">Research/Marketing Agency</option>
+      <option value="other">Other</option>
+    </select>
+    <label>GSTIN (optional, for verification)</label>
+    <input id="gstin" placeholder="Optional">
+
+    <button style="width:100%; margin-top:16px;">Create business account</button>
+  </form>
+</div>
+
+<script src="/js/api.js"></script>
+<script type="module">
+import { registerBusiness } from '/js/supabase/auth.js';
+
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearAlert('alert');
+  try {
+    await registerBusiness({
+      full_name: full_name.value, email: email.value, password: password.value,
+      legal_name: legal_name.value, city: city.value, category: category.value, gstin: gstin.value || null,
+    });
+    window.location.href = '/supabase-business/dashboard.html';
+  } catch (err) {
+    // If your Supabase project has "Confirm email" enabled, signUp()
+    // succeeds but create-business's follow-up call will fail with 401
+    // because there's no session yet - see auth.js's registerBusiness()
+    // comment. This error message will look like a generic auth failure
+    // in that case; check your project's email confirmation setting first.
+    showAlert('alert', err.message);
+  }
+});
+</script>
+</body>
+</html>

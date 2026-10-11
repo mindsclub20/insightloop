@@ -1,0 +1,17 @@
+{
+  "name": "insightloop-mvp",
+  "version": "0.1.0",
+  "description": "InsightLoop P0 MVP - rapid customer-research platform (participant / business / admin)",
+  "type": "module",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "seed": "node --no-warnings seed.js",
+    "start": "node --no-warnings src/server.js",
+    "dev": "node --no-warnings --watch src/server.js",
+    "test": "node --no-warnings --test test/*.test.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

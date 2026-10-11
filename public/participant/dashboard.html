@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Research — InsightLoop</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/participant/dashboard.html">InsightLoop</a>
+  <nav>
+    <span id="userName" class="muted"></span>
+    <a href="#" onclick="logout()">Log out</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <div class="tab active" data-tab="studies">Available Research</div>
+    <div class="tab" data-tab="wallet">Wallet</div>
+    <div class="tab" data-tab="withdraw">Withdraw</div>
+    <div class="tab" data-tab="profile">Profile</div>
+  </div>
+
+  <div id="alert" class="alert error hidden"></div>
+
+  <section id="tab-studies">
+    <div id="studyList" class="grid cols-2"></div>
+    <div id="studyDetail"></div>
+  </section>
+
+  <section id="tab-wallet" class="hidden">
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Available balance</h3>
+        <div id="balanceAmt" style="font-size:28px; font-weight:700; color:var(--green);"></div>
+        <p class="muted">Pending: <span id="pendingAmt"></span> (awaiting confirmation or admin review)</p>
+      </div>
+      <div class="card">
+        <h3>Transaction history</h3>
+        <div id="txList"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-withdraw" class="hidden">
+    <div class="card" style="max-width:420px;">
+      <h3>Request withdrawal</h3>
+      <p class="muted">Minimum ₹100. Payouts are processed manually by admin in this MVP (see demo notice).</p>
+      <label>Amount (₹)</label>
+      <input type="number" id="wAmount" min="100" step="1">
+      <label>UPI ID</label>
+      <input id="wUpi" placeholder="yourname@upi">
+      <button style="margin-top:14px;" onclick="submitWithdrawal()">Request withdrawal</button>
+    </div>
+    <div class="card">
+      <h3>Your withdrawal requests</h3>
+      <div id="withdrawalList"></div>
+    </div>
+  </section>
+
+  <section id="tab-profile" class="hidden">
+    <div class="card" style="max-width:420px;">
+      <h3>Profile & preferences</h3>
+      <label>City</label><input id="pCity">
+      <label>Area</label><input id="pArea">
+      <label>Age range</label>
+      <select id="pAge"><option value="18-25">18-25</option><option value="26-35">26-35</option><option value="36-45">36-45</option><option value="46-60">46-60</option><option value="61-99">61+</option></select>
+      <label>Interests (comma-separated)</label><input id="pInterests">
+      <button style="margin-top:14px;" onclick="saveProfile()">Save</button>
+    </div>
+  </section>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/participant.js"></script>
+</body>
+</html>

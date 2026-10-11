@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Join as a Participant — InsightLoop</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="topbar"><a class="brand" href="/index.html">InsightLoop</a></header>
+
+<div class="narrow">
+  <h1>Join as a participant</h1>
+  <p class="muted">You must be 18 or older. We only collect what's needed to match you to relevant research — no precise location, no unnecessary personal data.</p>
+  <div id="alert" class="alert error hidden"></div>
+
+  <form id="form">
+    <label>Full name</label>
+    <input id="full_name" required>
+    <label>Email</label>
+    <input type="email" id="email" required>
+    <label>Password (min 8 characters)</label>
+    <input type="password" id="password" minlength="8" required>
+    <label>Date of birth</label>
+    <input type="date" id="date_of_birth" required>
+
+    <label>Age range</label>
+    <select id="age_range">
+      <option value="18-25">18-25</option>
+      <option value="26-35">26-35</option>
+      <option value="36-45">36-45</option>
+      <option value="46-60">46-60</option>
+      <option value="61-99">61+</option>
+    </select>
+
+    <label>Gender (optional)</label>
+    <select id="gender">
+      <option value="">Prefer not to say</option>
+      <option value="female">Female</option>
+      <option value="male">Male</option>
+      <option value="other">Other</option>
+    </select>
+
+    <label>City</label>
+    <input id="city" placeholder="e.g. Visakhapatnam" required>
+    <label>Area (optional)</label>
+    <input id="area" placeholder="e.g. MVP Colony">
+
+    <label>Occupation category</label>
+    <select id="occupation_category">
+      <option value="student">Student</option>
+      <option value="salaried">Salaried professional</option>
+      <option value="self_employed">Self-employed / business owner</option>
+      <option value="homemaker">Homemaker</option>
+      <option value="other">Other</option>
+    </select>
+
+    <label>Interests (comma-separated, e.g. food, smartphones, fashion)</label>
+    <input id="interests" placeholder="food, smartphones, fashion">
+
+    <button style="width:100%; margin-top:16px;">Create account</button>
+  </form>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearAlert('alert');
+  try {
+    await api('POST', '/api/auth/register/participant', {
+      full_name: full_name.value,
+      email: email.value,
+      password: password.value,
+      date_of_birth: date_of_birth.value,
+      age_range: age_range.value,
+      gender: gender.value || null,
+      city: city.value,
+      area: area.value || null,
+      occupation_category: occupation_category.value,
+      interests: interests.value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
+    });
+    window.location.href = '/participant/dashboard.html';
+  } catch (err) {
+    showAlert('alert', err.message);
+  }
+});
+</script>
+</body>
+</html>

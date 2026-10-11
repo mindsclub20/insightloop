@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register Your Business — InsightLoop</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="topbar"><a class="brand" href="/index.html">InsightLoop</a></header>
+
+<div class="narrow">
+  <h1>Register your business</h1>
+  <p class="muted">Your account will need admin verification before you can launch research (usually within one business day in a real deployment).</p>
+  <div id="alert" class="alert error hidden"></div>
+
+  <form id="form">
+    <label>Your name</label>
+    <input id="full_name" required>
+    <label>Work email</label>
+    <input type="email" id="email" required>
+    <label>Password (min 8 characters)</label>
+    <input type="password" id="password" minlength="8" required>
+    <label>Business / brand name</label>
+    <input id="legal_name" required>
+    <label>City</label>
+    <input id="city" placeholder="e.g. Visakhapatnam" required>
+    <label>Category</label>
+    <select id="category">
+      <option value="food_beverage">Food & Beverage</option>
+      <option value="retail">Retail</option>
+      <option value="services">Services</option>
+      <option value="agency">Research/Marketing Agency</option>
+      <option value="other">Other</option>
+    </select>
+    <label>GSTIN (optional, for verification)</label>
+    <input id="gstin" placeholder="Optional">
+
+    <button style="width:100%; margin-top:16px;">Create business account</button>
+  </form>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearAlert('alert');
+  try {
+    await api('POST', '/api/auth/register/business', {
+      full_name: full_name.value,
+      email: email.value,
+      password: password.value,
+      legal_name: legal_name.value,
+      city: city.value,
+      category: category.value,
+      gstin: gstin.value || null,
+    });
+    window.location.href = '/business/dashboard.html';
+  } catch (err) {
+    showAlert('alert', err.message);
+  }
+});
+</script>
+</body>
+</html>

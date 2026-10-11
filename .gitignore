@@ -1,0 +1,8 @@
+node_modules/
+data/*.db
+data/*.db-*
+*.log
+.env
+
+# Required local data and secret exclusions
+mobile/.env

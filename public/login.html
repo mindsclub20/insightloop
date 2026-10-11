@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in — InsightLoop</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/index.html">InsightLoop</a>
+</header>
+
+<div class="narrow">
+  <h1>Log in</h1>
+  <div id="alert" class="alert error hidden"></div>
+  <form id="loginForm">
+    <label>Email</label>
+    <input type="email" id="email" required>
+    <label>Password</label>
+    <input type="password" id="password" required>
+    <button style="width:100%; margin-top:16px;">Log in</button>
+  </form>
+  <p class="muted" style="margin-top:16px;">
+    New business? <a href="/register-business.html">Register your business</a><br>
+    New participant? <a href="/register-participant.html">Sign up to participate</a>
+  </p>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearAlert('alert');
+  try {
+    const { role } = await api('POST', '/api/auth/login', {
+      email: document.getElementById('email').value,
+      password: document.getElementById('password').value,
+    });
+    if (role === 'USER') window.location.href = '/participant/dashboard.html';
+    else if (role === 'BUSINESS') window.location.href = '/business/dashboard.html';
+    else window.location.href = '/admin/dashboard.html';
+  } catch (err) {
+    showAlert('alert', err.message);
+  }
+});
+</script>
+</body>
+</html>

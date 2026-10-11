@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — InsightLoop</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/admin/dashboard.html">InsightLoop Admin</a>
+  <nav>
+    <span id="userName" class="muted"></span>
+    <a href="#" onclick="logout()">Log out</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div id="statsBar" class="grid cols-2" style="grid-template-columns: repeat(4, 1fr);"></div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="studies">Studies</div>
+    <div class="tab" data-tab="flagged">Flagged Responses</div>
+    <div class="tab" data-tab="businesses">Businesses</div>
+    <div class="tab" data-tab="users">Users</div>
+    <div class="tab" data-tab="withdrawals">Withdrawals</div>
+    <div class="tab" data-tab="ledger">Ledger Audit</div>
+  </div>
+
+  <div id="alert" class="alert error hidden"></div>
+
+  <section id="tab-studies"><div id="studiesList"></div></section>
+  <section id="tab-flagged" class="hidden"><div id="flaggedList"></div></section>
+  <section id="tab-businesses" class="hidden"><div id="businessList"></div></section>
+  <section id="tab-users" class="hidden"><div id="usersList"></div></section>
+  <section id="tab-withdrawals" class="hidden"><div id="withdrawalsList"></div></section>
+  <section id="tab-ledger" class="hidden"><div id="ledgerArea"></div></section>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/admin.js"></script>
+</body>
+</html>

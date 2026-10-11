@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Dashboard — InsightLoop (Supabase)</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/supabase-business/dashboard.html">InsightLoop</a>
+  <nav>
+    <span id="userName" class="muted"></span>
+    <a href="#" onclick="logoutSupabase()">Log out</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="alert info">Supabase-backed track — requires a deployed project (docs/SUPABASE_SETUP.md). The working demo is at /business/dashboard.html.</div>
+  <div id="verificationBanner"></div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="create">Create Research</div>
+    <div class="tab" data-tab="studies">My Studies</div>
+  </div>
+
+  <div id="alert" class="alert error hidden"></div>
+
+  <section id="tab-create">
+    <div class="card" style="max-width:560px;">
+      <h2>I want to understand...</h2>
+      <label>Research goal / template</label>
+      <select id="template_type">
+        <option value="pricing_test">Pricing Test — would customers pay X?</option>
+        <option value="feature_preference">Feature / Product Preference</option>
+        <option value="purchase_intent">Purchase Intent</option>
+        <option value="satisfaction">Customer Satisfaction</option>
+        <option value="timing_location">Timing & Location Preference</option>
+        <option value="custom">Custom</option>
+      </select>
+      <label>Study title</label>
+      <input id="title" placeholder="e.g. Lunch combo pricing test">
+      <label>Objective (plain language)</label>
+      <textarea id="objective" placeholder="e.g. I'm opening a cafe near a college and want to know what students want."></textarea>
+      <label>Target city</label>
+      <input id="target_city" placeholder="e.g. Visakhapatnam">
+      <div class="row">
+        <div style="flex:1;"><label>Min age</label><input type="number" id="min_age" value="18"></div>
+        <div style="flex:1;"><label>Max age</label><input type="number" id="max_age" value="35"></div>
+      </div>
+      <label>Gender</label>
+      <select id="target_gender"><option value="any">Any</option><option value="male">Male</option><option value="female">Female</option></select>
+      <label>Interest tags (comma-separated, optional)</label>
+      <input id="target_tags" placeholder="e.g. food, students">
+      <label>Sample size</label>
+      <select id="sample_size"><option value="50">50 respondents</option><option value="100" selected>100 respondents</option><option value="150">150 respondents</option></select>
+      <label>Reward per response (₹)</label>
+      <input type="number" id="reward" value="5" min="1">
+      <p class="muted" id="budgetPreview"></p>
+      <button style="margin-top:10px;" id="createStudyBtn">Create draft study</button>
+    </div>
+
+    <div id="draftBuilder"></div>
+  </section>
+
+  <section id="tab-studies" class="hidden">
+    <div id="studyList"></div>
+    <div id="studyDetail"></div>
+  </section>
+</div>
+
+<script src="/js/api.js"></script>
+<script type="module" src="/js/supabase/business-page.js"></script>
+</body>
+</html>
