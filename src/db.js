@@ -17,6 +17,10 @@ import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { assertDatabaseMode } from './lib/database-mode.js';
+
+// Prevent non-persistent SQLite from being used in Vercel production.
+assertDatabaseMode(process.env);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, '..', 'data');
