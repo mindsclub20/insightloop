@@ -2,18 +2,25 @@ import path from 'node:path';
 
 /**
  * Select a database location for the SQLite local/demo adapter.
- * The Node HTTP server does not currently implement a persistent PostgreSQL
- * adapter, so serverless deployments must fail closed instead of using
- * ephemeral SQLite or attempting writes to the read-only deployment image.
+ *
+ * Vercel's filesystem is not persistent. A preview can opt into an isolated
+ * in-memory demo database with INSIGHTLOOP_ALLOW_EPHEMERAL_DEMO=1, so the
+ * UI/API can be smoke-tested without pretending records will persist.
+ * Production must not enable this flag: implement and verify the hosted
+ * PostgreSQL adapter before handling real users or survey responses.
  */
 export function getDatabaseLocation({ env = process.env, moduleDir } = {}) {
   if (!moduleDir) throw new TypeError('moduleDir is required');
 
   if (env.VERCEL) {
+    if (env.INSIGHTLOOP_ALLOW_EPHEMERAL_DEMO === '1' && env.VERCEL_ENV !== 'production') {
+      return { dataDir: null, dbPath: ':memory:' };
+    }
+
     throw new Error(
       'InsightLoop cannot start on Vercel with the SQLite demo database. ' +
-      'The Node server has no configured persistent PostgreSQL adapter. ' +
-      'Use local/demo mode or complete and verify the hosted database adapter before deployment.'
+      'For preview-only smoke tests, set INSIGHTLOOP_ALLOW_EPHEMERAL_DEMO=1. ' +
+      'Production requires a persistent PostgreSQL adapter.'
     );
   }
 
