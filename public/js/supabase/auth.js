@@ -1,9 +1,5 @@
-// public/js/supabase/auth.js
-// WRITTEN, NOT EXECUTED. Replaces public/js/api.js's auth-related fetch
-// calls and the whole custom scrypt+session-cookie system in
-// src/lib/auth.js for this track.
-
-import { supabase, invoke } from './client.js';
+// Supabase Auth is the source of truth for credentials and sessions.
+import { supabase } from './client.js';
 
 export async function login(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -12,50 +8,70 @@ export async function login(email, password) {
 }
 
 export async function logout() {
-  await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
 }
 
-export async function registerParticipant({ email, password, full_name, city, area, age_range, gender, occupation_category, date_of_birth, interests }) {
-  // handle_new_user() (migrations/008) creates the profiles row (role='USER')
-  // and enforces the 18+ gate server-side from date_of_birth - this call
-  // cannot succeed in creating an under-18 account no matter what this
-  // client does or doesn't check first.
+export async function registerParticipant({
+  email, password, full_name, city, area, age_range, gender,
+  occupation_category, date_of_birth, interests,
+}) {
+  if (!date_of_birth) throw new Error('Date of birth is required.');
+  const dob = new Date(date_of_birth + 'T00:00:00Z');
+  if (Number.isNaN(dob.getTime())) throw new Error('Enter a valid date of birth.');
+  const age = (Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+  if (age < 18) throw new Error('InsightLoop participants must be 18 or older.');
+
   const { data, error } = await supabase.auth.signUp({
-    email, password,
-    options: { data: { full_name, city, area, age_range, gender, occupation_category, date_of_birth, account_type: 'participant' } },
+    email,
+    password,
+    options: {
+      data: {
+        full_name, city, area, age_range, gender, occupation_category,
+        date_of_birth, account_type: 'participant',
+      },
+    },
   });
   if (error) throw error;
 
-  if (interests?.length) {
-    // "own interests" RLS policy (002) allows this insert for the just-created user.
-    await supabase.from('user_interests').insert(interests.map((tag) => ({ user_id: data.user.id, tag })));
+  if (data.user && interests?.length) {
+    const { error: interestsError } = await supabase.from('user_interests').insert(
+      interests.map((tag) => ({ user_id: data.user.id, tag })),
+    );
+    if (interestsError) throw interestsError;
   }
-  return data;
+  return { ...data, needsEmailConfirmation: !data.session };
 }
 
-// Two-step by necessity - see supabase/functions/create-business/index.ts's
-// header comment for exactly why signUp() alone can't create the
-// businesses row.
-export async function registerBusiness({ email, password, full_name, legal_name, city, category, gstin }) {
+export async function registerBusiness({
+  email, password, full_name, legal_name, city, category, gstin,
+}) {
+  if (!legal_name?.trim()) throw new Error('Business legal name is required.');
+  // Migration 019 creates the profile, wallet, business, and owner membership
+  // transactionally from this server-verified Auth signup event.
   const { data, error } = await supabase.auth.signUp({
-    email, password,
-    options: { data: { full_name, account_type: 'business' } },
+    email,
+    password,
+    options: {
+      data: {
+        full_name,
+        account_type: 'business',
+        legal_name: legal_name.trim(),
+        city: city || null,
+        category: category || null,
+        gstin: gstin || null,
+      },
+    },
   });
   if (error) throw error;
-
-  // Signing up does NOT automatically create a session if your Supabase
-  // project has "Confirm email" enabled (Authentication -> Providers) - in
-  // that case data.session is null here and this second call will fail
-  // with 401 until the user confirms their email and logs in. Decide your
-  // project's email-confirmation setting with that in mind; this function
-  // does not special-case it.
-  const business = await invoke('create-business', { legal_name, city, category, gstin });
-  return { user: data.user, business };
+  return { ...data, needsEmailConfirmation: !data.session };
 }
 
 export async function getCurrentUserAndProfile() {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
   if (!user) return { user: null, profile: null };
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  if (error) throw error;
   return { user, profile };
 }
