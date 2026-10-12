@@ -7,18 +7,13 @@
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<header class="topbar">
-  <a class="brand" href="/index.html">InsightLoop</a>
-</header>
-
+<header class="topbar"><a class="brand" href="/index.html">InsightLoop</a></header>
 <div class="narrow">
   <h1>Log in</h1>
-  <div id="alert" class="alert error hidden"></div>
+  <div id="alert" class="alert error hidden" role="alert"></div>
   <form id="loginForm">
-    <label>Email</label>
-    <input type="email" id="email" required>
-    <label>Password</label>
-    <input type="password" id="password" required>
+    <label for="email">Email</label><input type="email" id="email" autocomplete="email" required>
+    <label for="password">Password</label><input type="password" id="password" autocomplete="current-password" required>
     <button style="width:100%; margin-top:16px;">Log in</button>
   </form>
   <p class="muted" style="margin-top:16px;">
@@ -26,22 +21,26 @@
     New participant? <a href="/register-participant.html">Sign up to participate</a>
   </p>
 </div>
-
 <script src="/js/api.js"></script>
-<script>
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
+<script type="module">
+import { login, getCurrentUserAndProfile } from '/js/supabase/auth.js';
+import { supabase } from '/js/supabase/client.js';
+
+document.getElementById('loginForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
   clearAlert('alert');
   try {
-    const { role } = await api('POST', '/api/auth/login', {
-      email: document.getElementById('email').value,
-      password: document.getElementById('password').value,
-    });
-    if (role === 'USER') window.location.href = '/participant/dashboard.html';
-    else if (role === 'BUSINESS') window.location.href = '/business/dashboard.html';
-    else window.location.href = '/admin/dashboard.html';
-  } catch (err) {
-    showAlert('alert', err.message);
+    await login(document.getElementById('email').value.trim(), document.getElementById('password').value);
+    const { profile } = await getCurrentUserAndProfile();
+    if (!profile || profile.status === 'SUSPENDED') {
+      await supabase.auth.signOut();
+      throw new Error('This account is not active. Contact InsightLoop support.');
+    }
+    if (profile.role === 'BUSINESS') location.href = '/supabase-business/dashboard.html';
+    else if (profile.role === 'ADMIN' || profile.role === 'SUPER_ADMIN') location.href = '/supabase-admin/dashboard.html';
+    else location.href = '/supabase-participant/dashboard.html';
+  } catch (error) {
+    showAlert('alert', error.message || 'Could not sign in.');
   }
 });
 </script>

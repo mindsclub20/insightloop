@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Participant Dashboard — InsightLoop</title><link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="/supabase-participant/dashboard.html">InsightLoop</a>
+<nav><span id="userName" class="muted"></span><button id="logoutButton" class="secondary">Log out</button></nav>
+</header>
+<div class="container">
+<h1>Participant dashboard</h1>
+<div id="alert" class="alert error hidden" role="alert"></div>
+<div class="grid cols-2">
+<section class="card"><h2>Your profile</h2><div id="profile">Loading…</div></section>
+<section class="card"><h2>Your wallet</h2><div id="wallet">Loading…</div><p class="muted">Rewards and withdrawals appear here once you participate in eligible research.</p></section>
+</div>
+<section class="card" style="margin-top:20px"><h2>Your interests</h2><div id="interests">Loading…</div></section>
+</div>
+<script src="/js/api.js"></script>
+<script type="module">
+import { supabase } from '/js/supabase/client.js';
+import { getProfile, getWallet } from '/js/supabase/participant.js';
+import { logout } from '/js/supabase/auth.js';
+
+const money = (paise) => '₹' + (Number(paise || 0) / 100).toFixed(2);
+document.getElementById('logoutButton').addEventListener('click', async () => {
+  try { await logout(); location.href = '/login.html'; }
+  catch (error) { showAlert('alert', error.message); }
+});
+
+async function load() {
+  try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) { location.href = '/login.html'; return; }
+    const [{ profile, tags }, wallet] = await Promise.all([getProfile(), getWallet()]);
+    if (profile.status === 'SUSPENDED') { await logout(); location.href = '/login.html'; return; }
+    document.getElementById('userName').textContent = profile.full_name || user.email;
+    document.getElementById('profile').innerHTML =
+      '<p><strong>Name:</strong> ' + escapeHtml(profile.full_name || '—') + '</p>' +
+      '<p><strong>Email:</strong> ' + escapeHtml(user.email || '—') + '</p>' +
+      '<p><strong>City:</strong> ' + escapeHtml(profile.city || '—') + '</p>' +
+      '<p><strong>Age range:</strong> ' + escapeHtml(profile.age_range || '—') + '</p>' +
+      '<p><strong>Account status:</strong> ' + escapeHtml(profile.status || 'ACTIVE') + '</p>';
+    document.getElementById('wallet').innerHTML =
+      '<p><strong>Available balance:</strong> ' + money(wallet.balance_paise) + '</p>' +
+      '<p><strong>Pending balance:</strong> ' + money(wallet.pending_paise) + '</p>';
+    document.getElementById('interests').textContent = tags.length ? tags.join(', ') : 'No interests added yet.';
+  } catch (error) {
+    showAlert('alert', error.message || 'Could not load your account.');
+  }
+}
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+}
+load();
+</script>
+</body>
+</html>
