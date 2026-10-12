@@ -1,6 +1,8 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { getDatabaseLocation } from '../src/lib/database-path.js';
 
 test('rejects Vercel startup instead of selecting ephemeral SQLite storage', () => {
@@ -52,4 +54,15 @@ test('rejects a relative explicit SQLite path to avoid ambiguous storage locatio
     }),
     /must be an absolute path or ":memory:"/,
   );
+});
+
+test('database module fails at startup on Vercel before opening SQLite', () => {
+  const dbModule = new URL('../src/db.js', import.meta.url).href;
+  const result = spawnSync(process.execPath, ['--input-type=module', '-e', `import(${JSON.stringify(dbModule)})`], {
+    encoding: 'utf8',
+    env: { ...process.env, VERCEL: '1', INSIGHTLOOP_DB_PATH: '' },
+  });
+
+  assert.notEqual(result.status, 0, 'database module must refuse unsupported Vercel startup');
+  assert.match(result.stderr, /cannot start on Vercel.*SQLite demo database/i);
 });
