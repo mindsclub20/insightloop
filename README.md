@@ -98,22 +98,27 @@ blocked with the correct 401/403 as designed.
 
 ## Deployment
 
-**This demo is built to run locally / on a single Node process** (e.g. a
-small VM, Fly.io, Render). It is NOT yet wired to Supabase — see "What is
-still mocked/manual" below for the real next step.
+**Verified scope: local/demo SQLite only.** The Node HTTP server does not yet
+use a persistent PostgreSQL adapter. Vercel startup therefore fails closed
+with an actionable error instead of creating SQLite under `/tmp` or trying to
+write into the read-only deployment filesystem. Do not deploy this Node server
+as a production data service until a durable database adapter is implemented
+and tested against a real hosted database.
 
 - **Build command:** none (no bundler/transpiler).
-- **Start command:** `npm start` (or `node src/server.js`).
-- **Environment variables:** see `.env.example`. Only `PORT` and
-  `INSIGHTLOOP_DB_PATH` are actually read by the current code; the Supabase
-  and payment-gateway variables are documented placeholders for the next
-  phase, not yet consumed anywhere.
-- **Database file:** `data/insightloop.db` (SQLite, WAL mode). For anything
-  beyond local testing, migrate to `migrations/001_postgres_schema.sql` +
-  `002_rls_policies.sql` on Supabase and swap `src/db.js` for a Postgres
-  client — this is the single largest piece of remaining work (see below).
-- **Static assets:** served directly by the Node process from `public/` — no
-  separate CDN/build needed for this MVP.
+- **Local start command:** `npm start` (or `node src/server.js`) on a supported
+  Node.js version.
+- **Local environment variables:** `PORT` and optional `INSIGHTLOOP_DB_PATH`.
+  The SQLite path must be absolute or `:memory:`; unset uses `data/insightloop.db`.
+- **Production database variables:** none are currently consumed by the Node
+  server. `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`, and
+  `DATABASE_URL` in `.env.example` are documentation placeholders only; setting
+  them does not connect this server to Postgres.
+- **Durable production storage:** implement and validate a PostgreSQL/Supabase
+  adapter that matches the current repository's schema and query conventions.
+  Do not use SQLite in `/tmp` or the deployment filesystem as durable storage.
+- **Static assets:** served directly by the Node process from `public/` in
+  local/demo mode.
 
 ## Project structure
 
