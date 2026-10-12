@@ -4,17 +4,36 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { getDatabaseLocation } from '../src/lib/database-path.js';
 
-test('rejects Vercel startup instead of selecting ephemeral SQLite storage', () => {
+test('rejects Vercel startup by default instead of selecting ephemeral SQLite storage', () => {
   assert.throws(
-    () => getDatabaseLocation({ env: { VERCEL: '1' }, moduleDir: '/var/task/src' }),
+    () => getDatabaseLocation({ env: { VERCEL: '1', VERCEL_ENV: 'preview' }, moduleDir: '/var/task/src' }),
     /cannot start on Vercel.*SQLite demo database/i,
   );
 });
 
-test('rejects an explicit SQLite path on Vercel as well', () => {
+test('rejects an explicit SQLite path on Vercel unless preview demo mode is explicitly enabled', () => {
   assert.throws(
     () => getDatabaseLocation({
-      env: { VERCEL: '1', INSIGHTLOOP_DB_PATH: '/tmp/custom.sqlite' },
+      env: { VERCEL: '1', VERCEL_ENV: 'preview', INSIGHTLOOP_DB_PATH: '/tmp/custom.sqlite' },
+      moduleDir: '/var/task/src',
+    }),
+    /persistent PostgreSQL adapter/i,
+  );
+});
+
+test('allows explicitly opted-in preview demo mode with in-memory SQLite only', () => {
+  const location = getDatabaseLocation({
+    env: { VERCEL: '1', VERCEL_ENV: 'preview', INSIGHTLOOP_ALLOW_EPHEMERAL_DEMO: '1' },
+    moduleDir: '/var/task/src',
+  });
+  assert.equal(location.dataDir, null);
+  assert.equal(location.dbPath, ':memory:');
+});
+
+test('never allows ephemeral demo mode in production', () => {
+  assert.throws(
+    () => getDatabaseLocation({
+      env: { VERCEL: '1', VERCEL_ENV: 'production', INSIGHTLOOP_ALLOW_EPHEMERAL_DEMO: '1' },
       moduleDir: '/var/task/src',
     }),
     /persistent PostgreSQL adapter/i,
@@ -55,13 +74,13 @@ test('rejects a relative explicit SQLite path to avoid ambiguous storage locatio
   );
 });
 
-test('database module fails at startup on Vercel before opening SQLite', () => {
+test('database module fails at startup on Vercel production before opening SQLite', () => {
   const dbModule = new URL('../src/db.js', import.meta.url).href;
   const result = spawnSync(process.execPath, ['--input-type=module', '-e', `import(${JSON.stringify(dbModule)})`], {
     encoding: 'utf8',
-    env: { ...process.env, VERCEL: '1', INSIGHTLOOP_DB_PATH: '' },
+    env: { ...process.env, VERCEL: '1', VERCEL_ENV: 'production', INSIGHTLOOP_DB_PATH: '', INSIGHTLOOP_ALLOW_EPHEMERAL_DEMO: '1' },
   });
 
-  assert.notEqual(result.status, 0, 'database module must refuse unsupported Vercel startup');
+  assert.notEqual(result.status, 0, 'database module must refuse unsupported Vercel production startup');
   assert.match(result.stderr, /cannot start on Vercel.*SQLite demo database/i);
 });
