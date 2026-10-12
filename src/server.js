@@ -128,7 +128,7 @@ function serveStatic(req, res, pathname) {
   fs.createReadStream(filePath).pipe(res);
 }
 
-const server = http.createServer(async (req, res) => {
+async function handler(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = url.pathname;
 
@@ -166,10 +166,16 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 500, { error: 'Internal server error' });
     }
   }
-});
+}
 
-server.listen(PORT, () => {
-  console.log(`InsightLoop MVP server running at http://localhost:${PORT}`);
-});
+const server = process.env.VERCEL ? null : http.createServer(handler);
+if (server) {
+  server.listen(PORT, () => {
+    console.log(`InsightLoop MVP server running at http://localhost:${PORT}`);
+  });
+}
 
+// Vercel's Node.js runtime requires a default request handler export.
+// Local development still starts a normal HTTP server above.
+export default handler;
 export { server };
