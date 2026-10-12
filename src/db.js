@@ -17,12 +17,11 @@ import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { getDatabaseLocation } from './lib/database-path.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.join(__dirname, '..', 'data');
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-
-const DB_PATH = process.env.INSIGHTLOOP_DB_PATH || path.join(DATA_DIR, 'insightloop.db');
+const { dataDir: DATA_DIR, dbPath: DB_PATH } = getDatabaseLocation({ env: process.env, moduleDir: __dirname });
+if (DATA_DIR && !fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
 export const db = new DatabaseSync(DB_PATH);
 db.exec('PRAGMA foreign_keys = ON;');
