@@ -1,3 +1,0 @@
--- Explicit application row-level policies for InsightLoop.
--- RLS is enabled on all 19 public tables. See migrations/019_rls_policy_hardening.sql for restricted helper functions and column-level profile grants.
--- Respondent identity and individual answers are never exposed to business members; wallet mutations and moderation are admin/server controlled.
