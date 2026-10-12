@@ -2,7 +2,6 @@ import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import { getDatabaseLocation } from '../src/lib/database-path.js';
 
 test('rejects Vercel startup instead of selecting ephemeral SQLite storage', () => {
