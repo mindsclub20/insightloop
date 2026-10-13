@@ -1,6 +1,13 @@
 // Supabase Auth is the source of truth for credentials and sessions.
 import { supabase } from './client.js';
 
+// Use the current app origin so production confirmation links do not fall back
+// to Supabase's default localhost:3000 URL. This origin must be allowed in
+// Supabase Dashboard → Authentication → URL Configuration.
+function getEmailRedirectTo() {
+  return new URL('/', window.location.origin).toString();
+}
+
 export async function login(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
@@ -26,6 +33,7 @@ export async function registerParticipant({
     email,
     password,
     options: {
+      emailRedirectTo: getEmailRedirectTo(),
       data: {
         full_name, city, area, age_range, gender, occupation_category,
         date_of_birth, account_type: 'participant',
@@ -53,6 +61,7 @@ export async function registerBusiness({
     email,
     password,
     options: {
+      emailRedirectTo: getEmailRedirectTo(),
       data: {
         full_name,
         account_type: 'business',
