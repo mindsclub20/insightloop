@@ -64,7 +64,7 @@ serve(async (req) => {
         'question_type must be one of: single_choice, multi_choice, yes_no, rating_5, rating_10, short_text, long_text.',
         'single_choice and multi_choice need 2 to 8 short options. Use Yes and No as the options for yes_no. Other types should use an empty options array.',
         'Keep questions in plain language and suitable for adults. Keep objective and title brief.',
-      ].join('\\n'),
+      ].join('\n'),
       prompt: [
         `Business command: ${command}`,
         `Target city: ${targetCity}`,
@@ -72,7 +72,7 @@ serve(async (req) => {
         `Target gender: ${gender}`,
         `Requested sample size: ${sampleSize}`,
         `Reward per completed response: ₹${rewardRupees}`,
-      ].join('\\n'),
+      ].join('\n'),
       jsonMode: true,
       maxOutputTokens: 3000,
     });
