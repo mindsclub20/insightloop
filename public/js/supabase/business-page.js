@@ -229,6 +229,7 @@ async function submitAiSurvey() {
         Your survey was created with ${survey.questions.length} questions. It is not public yet; it must pass admin approval. Payment status: ${escapeHtml(result.paymentStatus || 'pending')}.
       </div>`;
     document.getElementById('aiStatus').textContent = 'Submitted for review.';
+    showAlert('alert', 'Survey submitted for admin approval. It will not go live until approved.', 'success');
     switchTab('studies');
   } catch (err) {
     showAlert('alert', err.message || 'Could not submit the survey.');
