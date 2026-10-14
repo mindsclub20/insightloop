@@ -67,7 +67,8 @@ async function init() {
   ['sample_size', 'reward'].forEach((id) => document.getElementById(id).addEventListener('input', updateBudgetPreview));
   updateBudgetPreview();
   document.getElementById('createStudyBtn').addEventListener('click', createStudy);
-  document.getElementById('generateAiSurveyBtn').addEventListener('click', generateAiSurvey);\n  document.getElementById('generateAiAdBtn').addEventListener('click', generateAiAd);
+  document.getElementById('generateAiSurveyBtn').addEventListener('click', generateAiSurvey);
+  document.getElementById('generateAiAdBtn').addEventListener('click', generateAiAd);
   document.getElementById('aiCommand').addEventListener('keydown', (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') generateAiSurvey();
   });
