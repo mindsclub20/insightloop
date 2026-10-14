@@ -3,6 +3,7 @@ import { newId } from '../lib/ids.js';
 import { registerUser, verifyPassword, createSession, destroySession } from '../lib/auth.js';
 import { HttpError } from '../lib/authz.js';
 import { setSessionCookie, clearSessionCookie, rateLimit } from '../lib/http.js';
+import { timingSafeEqual } from 'node:crypto';
 
 const MIN_AGE = 18;
 
@@ -102,4 +103,22 @@ export async function me(req, res, ctx) {
     extra.business = biz || null;
   }
   return { user: ctx.user, ...extra };
+}
+
+
+// Password-only admin entry. The shared secret lives only in server environment settings.
+export async function adminLogin(req, res, ctx) {
+  const ip = req.socket.remoteAddress || 'unknown';
+  if (!rateLimit(`admin-login:${ip}`, 8, 60_000)) throw new HttpError(429, 'Too many admin attempts. Wait a minute and try again.');
+  const configured = process.env.INSIGHTLOOP_ADMIN_PASSWORD;
+  const supplied = typeof ctx.body.password === 'string' ? ctx.body.password : '';
+  if (!configured || configured.length < 16) throw new HttpError(503, 'Admin access is not configured. Set a strong INSIGHTLOOP_ADMIN_PASSWORD on the server.');
+  const expected = Buffer.from(configured);
+  const actual = Buffer.from(supplied);
+  if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) throw new HttpError(401, 'Incorrect admin password.');
+  const admin = db.prepare("SELECT id, role, full_name FROM users WHERE role IN ('ADMIN','SUPER_ADMIN') AND status = 'ACTIVE' ORDER BY CASE role WHEN 'SUPER_ADMIN' THEN 0 ELSE 1 END LIMIT 1").get();
+  if (!admin) throw new HttpError(503, 'No active admin account exists in the database yet.');
+  const { token, expiresAt } = createSession(admin.id);
+  setSessionCookie(res, token, expiresAt);
+  return { userId: admin.id, role: admin.role, full_name: admin.full_name };
 }
