@@ -93,7 +93,7 @@ serve(async (req) => {
                     options: { type: 'ARRAY', items: { type: 'STRING' } },
                     is_required: { type: 'BOOLEAN' },
                   },
-                  required: ['question_text', 'question_type'],
+                  required: ['question_text', 'question_type', 'options', 'is_required'],
                 },
               },
             },
