@@ -9,13 +9,13 @@
 <body>
 <header class="topbar">
   <a class="brand" href="/supabase-business/dashboard.html">InsightLoop</a>
-  <nav>
+  <nav id="businessNav" hidden>
     <span id="userName" class="muted"></span>
     <a href="#" onclick="logoutSupabase()">Log out</a>
   </nav>
 </header>
 
-<div class="container">
+<div class="container" id="dashboardContent" hidden>
   
   <div id="verificationBanner"></div>
 
