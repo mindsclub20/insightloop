@@ -14,6 +14,8 @@ import * as business from './business.js';
 
 let CURRENT = null;
 let DRAFT_STUDY = null;
+let AI_SURVEY_DRAFT = null;
+let AI_REQUEST_BUSY = false;
 
 const TEMPLATE_SUGGESTIONS = {
   pricing_test: [
@@ -63,6 +65,10 @@ async function init() {
   ['sample_size', 'reward'].forEach((id) => document.getElementById(id).addEventListener('input', updateBudgetPreview));
   updateBudgetPreview();
   document.getElementById('createStudyBtn').addEventListener('click', createStudy);
+  document.getElementById('generateAiSurveyBtn').addEventListener('click', generateAiSurvey);
+  document.getElementById('aiCommand').addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') generateAiSurvey();
+  });
 }
 
 function renderVerificationBanner(biz) {
@@ -84,6 +90,197 @@ function updateBudgetPreview() {
   const fee = Math.round(sample * reward * 0.3);
   const budget = sample * reward + fee;
   document.getElementById('budgetPreview').textContent = `Estimated budget: ${paise(budget)} (${paise(reward)}/response × ${sample} + platform fee)`;
+}
+
+async function generateAiSurvey() {
+  if (AI_REQUEST_BUSY) return;
+  clearAlert('alert');
+  const command = document.getElementById('aiCommand').value.trim();
+  if (command.length < 8) {
+    showAlert('alert', 'Describe what you want to learn in at least 8 characters.');
+    return;
+  }
+  const targetCity = document.getElementById('target_city').value.trim();
+  if (!targetCity) {
+    showAlert('alert', 'Enter the target city in the research details above first.');
+    document.getElementById('target_city').focus();
+    return;
+  }
+  const button = document.getElementById('generateAiSurveyBtn');
+  const status = document.getElementById('aiStatus');
+  AI_REQUEST_BUSY = true;
+  button.disabled = true;
+  status.textContent = 'Autopilot is designing your survey…';
+  let createdStudyId = null;
+  try {
+    const result = await business.generateAiSurvey({
+      command,
+      target_city: targetCity,
+      sample_size: Number(document.getElementById('sample_size').value),
+      reward_per_response_rupees: Number(document.getElementById('reward').value),
+      target_min_age: Number(document.getElementById('min_age').value),
+      target_max_age: Number(document.getElementById('max_age').value),
+      target_gender: document.getElementById('target_gender').value,
+    });
+    status.textContent = 'Survey generated. Creating it and submitting for platform checks…';
+    createdStudyId = await createAndSubmitAutonomousSurvey(result.survey);
+    status.textContent = 'Autopilot finished: survey submitted. It is not public yet.';
+    document.getElementById('aiSurveyPreview').classList.add('hidden');
+    document.getElementById('aiSurveyPreview').innerHTML = '';
+    AI_SURVEY_DRAFT = null;
+    showAlert('alert', 'Autopilot created and submitted your survey. It remains pending for payment confirmation and platform approval; it has not been published.', 'success');
+    switchTab('studies');
+    await loadStudies();
+  } catch (err) {
+    const partialStudyId = err.partialStudyId || createdStudyId;
+    status.textContent = partialStudyId
+      ? `Autopilot paused. Draft study ${partialStudyId} may need recovery before retrying.`
+      : '';
+    showAlert('alert', err.message || 'Autopilot could not complete the survey.');
+  } finally {
+    AI_REQUEST_BUSY = false;
+    button.disabled = false;
+  }
+}
+
+async function createAndSubmitAutonomousSurvey(survey) {
+  if (!survey || !Array.isArray(survey.questions) || survey.questions.length < 1 || survey.questions.length > 8) {
+    throw new Error('The AI survey failed validation. Nothing was submitted.');
+  }
+  const params = {
+    template_type: survey.template_type,
+    title: survey.title,
+    objective: survey.objective,
+    target_city: document.getElementById('target_city').value.trim(),
+    target_min_age: Number(document.getElementById('min_age').value),
+    target_max_age: Number(document.getElementById('max_age').value),
+    target_gender: document.getElementById('target_gender').value,
+    target_tags: document.getElementById('target_tags').value.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
+    sample_size: Number(document.getElementById('sample_size').value),
+    reward_per_response_paise: Math.round(Number(document.getElementById('reward').value) * 100),
+  };
+  const study = await business.createStudy(params);
+  try {
+    for (const question of survey.questions) {
+      await business.addQuestion(study.id, {
+        question_text: question.question_text,
+        question_type: question.question_type,
+        options: question.options || null,
+        is_required: question.is_required !== false,
+      });
+    }
+    await business.submitForApproval(study.id);
+    return study.id;
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : 'Unknown error';
+    const recoveryError = new Error(`Autopilot stopped after creating draft ${study.id}. Do not retry until this draft is checked. Details: ${detail}`);
+    recoveryError.partialStudyId = study.id;
+    throw recoveryError;
+  }
+}
+
+function renderAiSurveyPreview() {
+  const survey = AI_SURVEY_DRAFT;
+  const el = document.getElementById('aiSurveyPreview');
+  if (!survey) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+  const typeOptions = ['single_choice', 'multi_choice', 'yes_no', 'rating_5', 'rating_10', 'short_text', 'long_text'];
+  el.innerHTML = `
+    <div class="card" style="background:#fff;">
+      <div class="row"><h3 style="flex:1;">Review your AI-generated survey</h3><span class="badge amber">Draft only</span></div>
+      <label for="aiTitle">Survey title</label>
+      <input id="aiTitle" maxlength="120" value="${escapeHtml(survey.title)}">
+      <label for="aiObjective">Research objective</label>
+      <textarea id="aiObjective" maxlength="500">${escapeHtml(survey.objective)}</textarea>
+      <div id="aiQuestionsEditor">
+        ${survey.questions.map((q, i) => `
+          <div class="card" style="padding:14px;margin-top:12px;">
+            <h4>Question ${i + 1}</h4>
+            <label for="aiQuestionText${i}">Question text</label>
+            <input id="aiQuestionText${i}" maxlength="300" value="${escapeHtml(q.question_text)}">
+            <label for="aiQuestionType${i}">Answer type</label>
+            <select id="aiQuestionType${i}">
+              ${typeOptions.map((type) => `<option value="${type}" ${type === q.question_type ? 'selected' : ''}>${type.replaceAll('_', ' ')}</option>`).join('')}
+            </select>
+            <label for="aiQuestionOptions${i}">Answer options (comma-separated for choice questions)</label>
+            <input id="aiQuestionOptions${i}" maxlength="700" value="${escapeHtml((q.options || []).join(', '))}" placeholder="Option A, Option B">
+          </div>`).join('')}
+      </div>
+      <div class="row" style="margin-top:16px;">
+        <button id="submitAiSurveyBtn" type="button">Create & submit for admin approval</button>
+        <button class="secondary" id="discardAiSurveyBtn" type="button">Discard draft</button>
+      </div>
+      <p class="muted">Nothing is sent until you press the submit button. After submission, the study stays pending until admin approval.</p>
+    </div>`;
+  el.classList.remove('hidden');
+  document.getElementById('submitAiSurveyBtn').addEventListener('click', submitAiSurvey);
+  document.getElementById('discardAiSurveyBtn').addEventListener('click', () => {
+    AI_SURVEY_DRAFT = null;
+    el.innerHTML = '';
+    el.classList.add('hidden');
+    document.getElementById('aiStatus').textContent = 'Draft discarded.';
+  });
+}
+
+function readEditedAiSurvey() {
+  if (!AI_SURVEY_DRAFT) throw new Error('Generate a survey draft first.');
+  const title = document.getElementById('aiTitle').value.trim();
+  const objective = document.getElementById('aiObjective').value.trim();
+  if (!title || !objective) throw new Error('Survey title and objective are required.');
+  const questions = AI_SURVEY_DRAFT.questions.map((original, i) => {
+    const question_text = document.getElementById(`aiQuestionText${i}`).value.trim();
+    const question_type = document.getElementById(`aiQuestionType${i}`).value;
+    const rawOptions = document.getElementById(`aiQuestionOptions${i}`).value.trim();
+    let options = null;
+    if (question_type === 'single_choice' || question_type === 'multi_choice') {
+      options = rawOptions.split(',').map((s) => s.trim()).filter(Boolean);
+      if (options.length < 2) throw new Error(`Question ${i + 1} needs at least two answer options.`);
+      if (options.length > 8) throw new Error(`Question ${i + 1} can have at most eight answer options.`);
+    } else if (question_type === 'yes_no') {
+      options = ['Yes', 'No'];
+    }
+    if (!question_text) throw new Error(`Question ${i + 1} cannot be empty.`);
+    return { question_text, question_type, options, is_required: original.is_required !== false };
+  });
+  if (questions.length < 1 || questions.length > 8) throw new Error('A survey must contain 1 to 8 questions.');
+  return { ...AI_SURVEY_DRAFT, title, objective, questions };
+}
+
+async function submitAiSurvey() {
+  clearAlert('alert');
+  const button = document.getElementById('submitAiSurveyBtn');
+  button.disabled = true;
+  try {
+    const survey = readEditedAiSurvey();
+    const params = {
+      template_type: survey.template_type,
+      title: survey.title,
+      objective: survey.objective,
+      target_city: document.getElementById('target_city').value.trim(),
+      target_min_age: Number(document.getElementById('min_age').value),
+      target_max_age: Number(document.getElementById('max_age').value),
+      target_gender: document.getElementById('target_gender').value,
+      target_tags: document.getElementById('target_tags').value.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
+      sample_size: Number(document.getElementById('sample_size').value),
+      reward_per_response_paise: Math.round(Number(document.getElementById('reward').value) * 100),
+    };
+    const study = await business.createStudy(params);
+    for (const question of survey.questions) {
+      await business.addQuestion(study.id, question);
+    }
+    const result = await business.submitForApproval(study.id);
+    AI_SURVEY_DRAFT = null;
+    document.getElementById('aiSurveyPreview').innerHTML = `
+      <div class="alert success">
+        <strong>Survey submitted for admin approval.</strong><br>
+        Your survey was created with ${survey.questions.length} questions. It is not public yet; it must pass admin approval. Payment status: ${escapeHtml(result.paymentStatus || 'pending')}.
+      </div>`;
+    document.getElementById('aiStatus').textContent = 'Submitted for review.';
+    showAlert('alert', 'Survey submitted for admin approval. It will not go live until approved.', 'success');
+    switchTab('studies');
+  } catch (err) {
+    showAlert('alert', err.message || 'Could not submit the survey.');
+    if (document.getElementById('submitAiSurveyBtn')) document.getElementById('submitAiSurveyBtn').disabled = false;
+  }
 }
 
 async function createStudy() {
