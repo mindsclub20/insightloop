@@ -110,7 +110,8 @@ async function generateAiSurvey() {
   const status = document.getElementById('aiStatus');
   AI_REQUEST_BUSY = true;
   button.disabled = true;
-  status.textContent = 'Generating a survey draft…';
+  status.textContent = 'Autopilot is designing your survey…';
+  let createdStudyId = null;
   try {
     const result = await business.generateAiSurvey({
       command,
@@ -121,16 +122,53 @@ async function generateAiSurvey() {
       target_max_age: Number(document.getElementById('max_age').value),
       target_gender: document.getElementById('target_gender').value,
     });
-    AI_SURVEY_DRAFT = result.survey;
-    renderAiSurveyPreview();
-    status.textContent = 'Draft ready. Review and edit it below.';
+    status.textContent = 'Survey generated. Creating it and submitting for platform checks…';
+    createdStudyId = await createAndSubmitAutonomousSurvey(result.survey);
+    status.textContent = 'Autopilot finished: survey submitted. It is not public yet.';
+    document.getElementById('aiSurveyPreview').classList.add('hidden');
+    document.getElementById('aiSurveyPreview').innerHTML = '';
+    AI_SURVEY_DRAFT = null;
+    showAlert('alert', 'Autopilot created and submitted your survey. It remains pending for payment confirmation and platform approval; it has not been published.', 'success');
+    switchTab('studies');
+    await loadStudies();
   } catch (err) {
-    status.textContent = '';
-    showAlert('alert', err.message || 'Could not generate the survey.');
+    status.textContent = createdStudyId
+      ? `Autopilot paused. A draft study (${createdStudyId}) may need recovery before retrying.`
+      : '';
+    showAlert('alert', err.message || 'Autopilot could not complete the survey.');
   } finally {
     AI_REQUEST_BUSY = false;
     button.disabled = false;
   }
+}
+
+async function createAndSubmitAutonomousSurvey(survey) {
+  if (!survey || !Array.isArray(survey.questions) || survey.questions.length < 1 || survey.questions.length > 8) {
+    throw new Error('The AI survey failed validation. Nothing was submitted.');
+  }
+  const params = {
+    template_type: survey.template_type,
+    title: survey.title,
+    objective: survey.objective,
+    target_city: document.getElementById('target_city').value.trim(),
+    target_min_age: Number(document.getElementById('min_age').value),
+    target_max_age: Number(document.getElementById('max_age').value),
+    target_gender: document.getElementById('target_gender').value,
+    target_tags: document.getElementById('target_tags').value.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
+    sample_size: Number(document.getElementById('sample_size').value),
+    reward_per_response_paise: Math.round(Number(document.getElementById('reward').value) * 100),
+  };
+  const study = await business.createStudy(params);
+  for (const question of survey.questions) {
+    await business.addQuestion(study.id, {
+      question_text: question.question_text,
+      question_type: question.question_type,
+      options: question.options || null,
+      is_required: question.is_required !== false,
+    });
+  }
+  await business.submitForApproval(study.id);
+  return study.id;
 }
 
 function renderAiSurveyPreview() {
