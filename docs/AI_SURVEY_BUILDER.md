@@ -5,10 +5,10 @@ The AI survey builder is available only inside the authenticated Supabase busine
 ## Flow and safeguards
 
 1. A signed-in business user enters a plain-language research command and audience settings.
-2. The authenticated `generate-ai-survey` Edge Function asks Gemini for a structured JSON survey draft. It does not create or publish a study.
-3. The business reviews and can edit the title, objective, question text, answer types, and options.
-4. Only after the business clicks **Create & submit for admin approval** does the browser call the existing create-study, add-question, and submit-for-approval functions.
-5. The existing backend checks business verification. Submitted surveys remain pending until an administrator approves them; they are not immediately public.
+2. The authenticated `generate-ai-survey` Edge Function asks Gemini for a structured JSON survey.
+3. The business clicks **Run AI Autopilot** once. The dashboard automatically creates the study, adds the validated questions, and submits it through the existing authenticated functions.
+4. Existing backend checks enforce business verification and question limits. If any step fails, Autopilot stops and reports that a draft may need recovery; retrying blindly could create duplicates.
+5. Submission is not publication: the current payment provider is manual-only and the existing platform approval gate remains in place. A survey is not live and participants are not promised rewards until the payment and platform gates are genuinely satisfied.
 
 The Edge Function verifies the caller's Supabase JWT and BUSINESS role, checks that a business membership exists, limits the command and audience fields, and validates the generated output against supported question types. The Gemini API key is server-side only.
 
@@ -29,5 +29,5 @@ Never put the Gemini API key in HTML, JavaScript delivered to browsers, or Git. 
 - Choice questions: 2–8 unique options.
 - Target respondents: 10–500; reward: ₹1–₹10,000 per response.
 - Target age: 18–100.
-- AI output is a draft, not research truth. The business must review it before submission.
-- No real payment or payout is initiated by this feature.
+- Autopilot can create and submit a survey without manual question-by-question supervision; it does not guarantee that every generated survey is suitable.
+- No real payment, escrow, payout, or automated platform approval is implemented by this feature. Do not represent this as a fully autonomous live marketplace yet.
