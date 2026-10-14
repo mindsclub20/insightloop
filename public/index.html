@@ -1,46 +1,28 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>InsightLoop — Ask Real Customers Before You Decide</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f5f0ff">
+<title>InsightLoop — Research, made clearer</title>
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">InsightLoop</div>
-  <nav>
-    <a href="/login.html">Log in</a>
-  </nav>
-</header>
-
-<div class="container" style="padding-top:40px; text-align:center;">
-  <h1 style="font-size:30px;">Ask Real Customers Before You Make the Decision.</h1>
-  <p class="muted">Get fast, targeted customer research from a verified local panel, backed by persistent Supabase storage.</p>
-
-  <div class="row" style="justify-content:center; margin-top:20px;">
-    <a class="btn" href="/register-business.html">Start Research</a>
-    <a class="btn secondary" href="/register-participant.html">Earn by Participating</a>
-  </div>
-
-  <div class="grid cols-2" style="margin-top:40px; text-align:left;">
-    <div class="card">
-      <h3>For businesses</h3>
-      <p class="muted">Create a research brief from a guided template, get admin-approved, and receive an insights report — not just raw answers.</p>
-    </div>
-    <div class="card">
-      <h3>For participants</h3>
-      <p class="muted">Answer short, relevant surveys and earn a small reward once your response passes quality checks. 18+ only.</p>
-    </div>
-  </div>
-
-  <div class="alert info" style="margin-top:30px; text-align:left;">
-    <strong>Demo notice:</strong> This is a local P0 MVP build. No real payments are processed anywhere in this deployment —
-    all rewards, withdrawals and business payments are recorded in an internal ledger and marked accordingly. See README.md
-    "What is still mocked/manual" for full detail.
-  </div>
-</div>
-
-<footer class="foot">InsightLoop — Supabase-backed account and research platform</footer>
-</body>
-</html>
+<header class="topbar"><a class="brand" href="/">insightloop</a><nav><a href="#how-it-works">How it works</a><a href="/login.html">Log in</a></nav></header>
+<main>
+<section class="hero">
+<p class="eyebrow">YOUR CUSTOMER-RESEARCH WORKSPACE</p>
+<h1>Better questions.<br><span class="gradient">Clearer decisions.</span></h1>
+<p class="hero-copy">A guided workspace that connects businesses and research participants, helping teams learn what people think before deciding what to build next.</p>
+<div class="hero-actions"><a class="btn" href="/register-business.html">Start business research</a><a class="btn secondary" href="/register-participant.html">Join as a participant</a></div>
+<p class="muted">A simple workspace for surveys, responses and insights.</p>
+</section>
+<section class="feature-grid" id="how-it-works">
+<article class="feature-card"><div class="feature-icon">✦</div><h3>For businesses</h3><p>Shape a research brief, define your audience and track your study.</p></article>
+<article class="feature-card"><div class="feature-icon">↗</div><h3>For participants</h3><p>Explore eligible surveys, share your perspective and review rewards.</p></article>
+<article class="feature-card"><div class="feature-icon">◎</div><h3>Trust by design</h3><p>Clear review steps and role-based workspaces keep research organised.</p></article>
+<article class="feature-card"><div class="feature-icon">✧</div><h3>AI-ready foundation</h3><p>A future AI survey builder can be added without exposing API keys in the browser.</p></article>
+</section>
+<div class="status-note"><strong>Development notice:</strong> Payments and payouts are not connected to real money. Verify production authentication and persistent storage before onboarding real users.</div>
+</main>
+<footer class="foot">InsightLoop · Research with a little more clarity</footer>
+</body></html>
