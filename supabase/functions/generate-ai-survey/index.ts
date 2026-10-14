@@ -58,7 +58,7 @@ serve(async (req) => {
       'template_type must be one of: pricing_test, feature_preference, purchase_intent, satisfaction, timing_location, custom.',
       'Generate 3 to 8 questions. Each question must have question_text, question_type, options, is_required.',
       'question_type must be one of: single_choice, multi_choice, yes_no, rating_5, rating_10, short_text, long_text.',
-      'single_choice and multi_choice need 2 to 8 short options. Use ['Yes','No'] for yes_no. Other types should use an empty options array.',
+      'single_choice and multi_choice need 2 to 8 short options. Use [\"Yes\",\"No\"] for yes_no. Other types should use an empty options array.',
       'Keep questions in plain language and suitable for adults. Keep objective and title brief.',
       `Business command: ${command}`,
       `Target city: ${targetCity}`,
