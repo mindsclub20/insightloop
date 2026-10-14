@@ -57,6 +57,8 @@ function switchTab(name) {
 async function init() {
   CURRENT = await requireRoleSupabase('BUSINESS');
   if (!CURRENT) return;
+  document.getElementById('dashboardContent').hidden = false;
+  document.getElementById('businessNav').hidden = false;
   document.getElementById('userName').textContent = CURRENT.profile.full_name || CURRENT.user.email;
 
   const biz = await business.getMyBusiness();
@@ -503,4 +505,7 @@ function escapeHtml(str) {
 // Attach everything referenced from injected-HTML onclick="..." strings.
 Object.assign(window, { addSuggested, addCustomQuestion, submitForApproval, viewStudy, cancelStudy, viewReport });
 
-init();
+init().catch((error) => {
+  console.error('Business dashboard initialization failed.');
+  window.location.href = '/supabase-login.html';
+});
