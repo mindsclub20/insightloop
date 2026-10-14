@@ -17,6 +17,10 @@ export async function createStudy(params) {
   return invoke('create-research-project', params);
 }
 
+export async function generateAiSurvey(params) {
+  return invoke('generate-ai-survey', params);
+}
+
 export async function addQuestion(researchProjectId, question) {
   return invoke('add-survey-question', { research_project_id: researchProjectId, ...question });
 }
