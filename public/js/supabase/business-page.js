@@ -132,8 +132,9 @@ async function generateAiSurvey() {
     switchTab('studies');
     await loadStudies();
   } catch (err) {
-    status.textContent = createdStudyId
-      ? `Autopilot paused. A draft study (${createdStudyId}) may need recovery before retrying.`
+    const partialStudyId = err.partialStudyId || createdStudyId;
+    status.textContent = partialStudyId
+      ? `Autopilot paused. Draft study ${partialStudyId} may need recovery before retrying.`
       : '';
     showAlert('alert', err.message || 'Autopilot could not complete the survey.');
   } finally {
@@ -159,16 +160,23 @@ async function createAndSubmitAutonomousSurvey(survey) {
     reward_per_response_paise: Math.round(Number(document.getElementById('reward').value) * 100),
   };
   const study = await business.createStudy(params);
-  for (const question of survey.questions) {
-    await business.addQuestion(study.id, {
-      question_text: question.question_text,
-      question_type: question.question_type,
-      options: question.options || null,
-      is_required: question.is_required !== false,
-    });
+  try {
+    for (const question of survey.questions) {
+      await business.addQuestion(study.id, {
+        question_text: question.question_text,
+        question_type: question.question_type,
+        options: question.options || null,
+        is_required: question.is_required !== false,
+      });
+    }
+    await business.submitForApproval(study.id);
+    return study.id;
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : 'Unknown error';
+    const recoveryError = new Error(`Autopilot stopped after creating draft ${study.id}. Do not retry until this draft is checked. Details: ${detail}`);
+    recoveryError.partialStudyId = study.id;
+    throw recoveryError;
   }
-  await business.submitForApproval(study.id);
-  return study.id;
 }
 
 function renderAiSurveyPreview() {
