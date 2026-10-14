@@ -60,6 +60,19 @@
       <button style="margin-top:10px;" id="createStudyBtn">Create draft study</button>
     </div>
 
+    <div class="card" id="aiSurveyCard" style="max-width:760px;border-color:#d8c9ff;background:linear-gradient(145deg,#fff 0%,#f8f4ff 100%);">
+      <p class="eyebrow">INSIGHTLOOP BUSINESS AI</p>
+      <h2>Describe your research. AI builds the survey.</h2>
+      <p class="muted">Write a plain-language command. AI will create a draft with questions and answer options. Review and edit it before sending it for admin approval.</p>
+      <label for="aiCommand">What do you want to learn?</label>
+      <textarea id="aiCommand" maxlength="1200" placeholder="Example: I run a small cafe. Find out which breakfast items local working adults prefer, what price feels fair, and how often they would visit. Keep it neutral and under 6 questions."></textarea>
+      <div class="row" style="margin-top:12px;">
+        <button id="generateAiSurveyBtn" type="button">✦ Generate survey with AI</button>
+        <span id="aiStatus" class="muted" aria-live="polite"></span>
+      </div>
+      <div id="aiSurveyPreview" class="hidden" style="margin-top:20px;"></div>
+      <p class="muted" style="margin-top:14px;">AI drafts are not published automatically. You must review and confirm submission; InsightLoop's admin approval process still applies. Business verification is required to submit a survey.</p>
+    </div>
     <div id="draftBuilder"></div>
   </section>
 
