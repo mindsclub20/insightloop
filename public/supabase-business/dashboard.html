@@ -73,6 +73,25 @@
       <div id="aiSurveyPreview" class="hidden" style="margin-top:20px;"></div>
       <p class="muted" style="margin-top:14px;">Autopilot handles routine creation and submission. Only verified businesses can create studies. Payment confirmation and platform approval are still required before a survey can go live.</p>
     </div>
+
+    <div class="card" id="aiAdCard" style="max-width:760px;border-color:#d8c9ff;background:linear-gradient(145deg,#fff 0%,#f8f4ff 100%);">
+      <p class="eyebrow">INSIGHTLOOP BUSINESS AI</p>
+      <h2>Create an advertisement draft</h2>
+      <p class="muted">AI is included in your platform service, subject to fair-use limits. Generated advertisements are drafts only and are never published without approval.</p>
+      <label for="adProduct">Product or service</label>
+      <textarea id="adProduct" maxlength="800" placeholder="Describe what you offer and the verified benefits."></textarea>
+      <label for="adAudience">Intended audience (optional)</label>
+      <input id="adAudience" maxlength="300" placeholder="e.g. local families, office workers">
+      <div class="row">
+        <div style="flex:1"><label for="adGoal">Campaign goal</label>
+          <select id="adGoal"><option value="awareness">Awareness</option><option value="leads">Leads</option><option value="sales">Sales</option><option value="visits">Store visits</option><option value="launch">Product launch</option></select>
+        </div>
+        <div style="flex:1"><label for="adTone">Tone</label><input id="adTone" maxlength="80" value="clear and friendly"></div>
+      </div>
+      <button id="generateAiAdBtn" type="button">✦ Generate advertisement</button>
+      <span id="adStatus" class="muted" aria-live="polite"></span>
+      <div id="aiAdPreview" class="hidden" style="margin-top:16px;"></div>
+    </div>
     <div id="draftBuilder"></div>
   </section>
 
