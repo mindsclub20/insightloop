@@ -65,7 +65,7 @@ async function init() {
   ['sample_size', 'reward'].forEach((id) => document.getElementById(id).addEventListener('input', updateBudgetPreview));
   updateBudgetPreview();
   document.getElementById('createStudyBtn').addEventListener('click', createStudy);
-  document.getElementById('generateAiSurveyBtn').addEventListener('click', generateAiSurvey);
+  document.getElementById('generateAiSurveyBtn').addEventListener('click', generateAiSurvey);\n  document.getElementById('generateAiAdBtn').addEventListener('click', generateAiAd);
   document.getElementById('aiCommand').addEventListener('keydown', (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') generateAiSurvey();
   });
@@ -280,6 +280,45 @@ async function submitAiSurvey() {
   } catch (err) {
     showAlert('alert', err.message || 'Could not submit the survey.');
     if (document.getElementById('submitAiSurveyBtn')) document.getElementById('submitAiSurveyBtn').disabled = false;
+  }
+}
+
+
+async function generateAiAd() {
+  const product = document.getElementById('adProduct').value.trim();
+  const audience = document.getElementById('adAudience').value.trim();
+  const goal = document.getElementById('adGoal').value;
+  const tone = document.getElementById('adTone').value.trim() || 'clear and friendly';
+  const button = document.getElementById('generateAiAdBtn');
+  const status = document.getElementById('adStatus');
+  const preview = document.getElementById('aiAdPreview');
+  preview.classList.add('hidden');
+  preview.innerHTML = '';
+  if (product.length < 3) { status.textContent = 'Describe your product or service first.'; return; }
+  button.disabled = true;
+  status.textContent = 'Generating a draft…';
+  try {
+    const result = await business.generateAiAd({ product, audience, goal, tone });
+    const ad = result.ad;
+    const safe = (value) => escapeHtml(value ?? '');
+    preview.innerHTML = `
+      <div class="card">
+        <span class="badge amber">Draft only · Review before publishing</span>
+        <h3>${safe(ad.headline)}</h3>
+        <p>${safe(ad.primary_text)}</p>
+        <p><strong>Call to action:</strong> ${safe(ad.call_to_action)}</p>
+        <h4>Alternative versions</h4>
+        <ul>${ad.variations.map((item) => `<li>${safe(item)}</li>`).join('')}</ul>
+        <h4>Claims to review</h4>
+        <ul>${ad.review_notes.map((item) => `<li>${safe(item)}</li>`).join('') || '<li>Verify every product claim before use.</li>'}</ul>
+        <p class="muted">Provider: ${safe(result.provider)}. This draft has not been published.</p>
+      </div>`;
+    preview.classList.remove('hidden');
+    status.textContent = 'Draft ready. Check every claim before using it.';
+  } catch (error) {
+    status.textContent = error.message || 'Could not generate an advertisement.';
+  } finally {
+    button.disabled = false;
   }
 }
 
