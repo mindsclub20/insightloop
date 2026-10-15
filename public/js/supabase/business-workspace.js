@@ -75,7 +75,7 @@ async function generateForNewDraft(){
 function normalizeQuestion(q){return {question_text:q.question_text||'',question_type:types.includes(q.question_type)?q.question_type:'short_text',options:Array.isArray(q.options)?q.options.slice():[],is_required:q.is_required!==false};}
 function renderEditor(mode){
   const el=$('editor');el.classList.remove('hidden');
-  el.innerHTML='<div class="row"><div class="spacer"><p class="eyebrow">'+(mode==='ai'?'AI-GENERATED DRAFT':'MANUAL DRAFT')+'</p><h2>'+esc(activeDraft.title)+'</h2></div><span class="badge amber">Draft</span></div><p class="muted">Edit the questions below. A survey can contain up to 8 questions.</p><div id="questionEditorList"></div><button class="secondary" id="addQuestionBtn">＋ Add question</button> <button id="saveDraftBtn">Save draft</button> <button class="secondary" id="publishBtn">Publish survey</button>';
+  el.innerHTML='<div class="row"><div class="spacer"><p class="eyebrow">'+(mode==='ai'?'AI-GENERATED DRAFT':'MANUAL DRAFT')+'</p><h2>Edit your survey</h2></div><span class="badge amber">Draft</span></div><label for="editTitle">Survey title</label><input id="editTitle" maxlength="120" value="'+esc(activeDraft.title)+'"><label for="editObjective">Research objective</label><textarea id="editObjective" maxlength="500">'+esc(activeDraft.objective||'')+'</textarea><p class="muted">Edit the details and questions below. A survey can contain up to 8 questions.</p><div id="questionEditorList"></div><button class="secondary" id="addQuestionBtn">＋ Add question</button> <button id="saveDraftBtn">Save draft</button> <button class="secondary" id="publishBtn">Publish survey</button>';
   drawQuestionEditors();
   $('addQuestionBtn').addEventListener('click',()=>{if(editorQuestions.length>=8){alertMsg('A survey can have at most 8 questions.');return;}editorQuestions.push({question_text:'',question_type:'short_text',options:[],is_required:true});drawQuestionEditors();});
   $('saveDraftBtn').addEventListener('click',saveQuestions);
@@ -104,8 +104,10 @@ async function saveQuestions(){
  try{
   if(!activeDraft)throw new Error('Open a draft first.');
   const qs=validatedQuestions();
-  await business.saveDraft(activeDraft.id,{title:activeDraft.title,objective:activeDraft.objective||'Survey research',questions:qs});
-  editorQuestions=qs;alertMsg('Draft saved. You can continue editing or publish when ready.','success');
+  const title=$('editTitle').value.trim(), objective=$('editObjective').value.trim();
+  if(!title||!objective)throw new Error('Survey title and objective are required.');
+  await business.saveDraft(activeDraft.id,{title,objective,questions:qs});
+  activeDraft={...activeDraft,title,objective};editorQuestions=qs;alertMsg('Draft saved. You can continue editing or publish when ready.','success');
   await loadDrafts();
  }catch(e){alertMsg(e.message||'Could not save questions.');}
 }
@@ -141,7 +143,9 @@ async function publishActiveDraft(){
  try{
   if(!activeDraft)throw new Error('Open a draft first.');
   const qs=validatedQuestions();
-  await business.saveDraft(activeDraft.id,{title:activeDraft.title,objective:activeDraft.objective||'Survey research',questions:qs});
+  const title=$('editTitle').value.trim(), objective=$('editObjective').value.trim();
+  if(!title||!objective)throw new Error('Survey title and objective are required.');
+  await business.saveDraft(activeDraft.id,{title,objective,questions:qs});
   await business.publishSurvey(activeDraft.id);
   alertMsg('Survey published successfully. No payment step or admin approval was added.','success');
   activeDraft=null;$('editor').classList.add('hidden');await loadDrafts();panel('results');
