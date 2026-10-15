@@ -20,8 +20,9 @@
   <div id="verificationBanner"></div>
 
   <div class="tabs">
-    <div class="tab active" data-tab="create">Create Research</div>
-    <div class="tab" data-tab="studies">My Studies</div>
+    <button class="tab active" type="button" data-tab="create">1. Survey Generation</button>
+    <button class="tab" type="button" data-tab="studies">2. Saved Drafts</button>
+    <button class="tab" type="button" data-tab="results">3. Survey Results</button>
   </div>
 
   <div id="alert" class="alert error hidden"></div>
@@ -77,8 +78,17 @@
   </section>
 
   <section id="tab-studies" class="hidden">
+    <h2>Saved Drafts</h2>
+    <p class="muted">Review drafts and track surveys awaiting platform checks.</p>
     <div id="studyList"></div>
     <div id="studyDetail"></div>
+  </section>
+
+  <section id="tab-results" class="hidden">
+    <h2>Survey Results</h2>
+    <p class="muted">Open results for surveys that have been published or completed.</p>
+    <div id="resultsList"></div>
+    <div id="resultsDetail"></div>
   </section>
 </div>
 
