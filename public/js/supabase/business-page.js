@@ -67,6 +67,14 @@ async function init() {
   ['sample_size', 'reward'].forEach((id) => document.getElementById(id).addEventListener('input', updateBudgetPreview));
   updateBudgetPreview();
   document.getElementById('createStudyBtn').addEventListener('click', createStudy);
+  const aiCity = document.getElementById('aiTargetCity');
+  aiCity.value = document.getElementById('target_city').value;
+  aiCity.addEventListener('input', () => { document.getElementById('target_city').value = aiCity.value; });
+  document.querySelectorAll('.ai-chip').forEach((chip) => chip.addEventListener('click', () => {
+    const prompt = document.getElementById('aiCommand');
+    prompt.value = chip.dataset.prompt || '';
+    prompt.focus();
+  }));
   document.getElementById('generateAiSurveyBtn').addEventListener('click', generateAiSurvey);
   document.getElementById('aiCommand').addEventListener('keydown', (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') generateAiSurvey();
@@ -102,7 +110,7 @@ async function generateAiSurvey() {
     showAlert('alert', 'Describe what you want to learn in at least 8 characters.');
     return;
   }
-  const targetCity = document.getElementById('target_city').value.trim();
+  const targetCity = (document.getElementById('aiTargetCity')?.value || document.getElementById('target_city').value).trim();
   if (!targetCity) {
     showAlert('alert', 'Enter the target city in the research details above first.');
     document.getElementById('target_city').focus();
@@ -127,8 +135,9 @@ async function generateAiSurvey() {
       throw new Error('The AI survey failed validation. Please generate it again.');
     }
     AI_SURVEY_DRAFT = result.survey;
-    status.textContent = 'Survey generated. Review it, then save your draft or publish.';
+    status.textContent = 'Survey ready — review and edit the questions below.';
     renderAiSurveyPreview();
+    document.getElementById('aiSurveyPreview').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (err) {
     showAlert('alert', err.message || 'AI could not generate the survey.');
     status.textContent = '';
@@ -256,7 +265,7 @@ async function persistAiSurvey(publish) {
         template_type: survey.template_type || document.getElementById('template_type').value,
         title: survey.title,
         objective: survey.objective,
-        target_city: document.getElementById('target_city').value.trim(),
+        target_city: (document.getElementById('aiTargetCity')?.value || document.getElementById('target_city').value).trim(),
         target_min_age: Number(document.getElementById('min_age').value),
         target_max_age: Number(document.getElementById('max_age').value),
         target_gender: document.getElementById('target_gender').value,
