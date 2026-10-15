@@ -29,6 +29,19 @@ export async function submitForApproval(researchProjectId) {
   return invoke('submit-study-for-approval', { research_project_id: researchProjectId });
 }
 
+export async function saveSurveyDraft(researchProjectId, survey) {
+  return invoke('save-survey-draft', {
+    research_project_id: researchProjectId,
+    title: survey.title,
+    objective: survey.objective,
+    questions: survey.questions,
+  });
+}
+
+export async function publishSurvey(researchProjectId) {
+  return invoke('publish-survey', { research_project_id: researchProjectId });
+}
+
 // Deliberately a DIRECT client write, not an Edge Function - see
 // migrations/004_rls_hardening.sql's tightened "business writes own DRAFT
 // or SUBMITTED-cancel projects" policy, which was widened specifically so
