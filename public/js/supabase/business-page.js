@@ -51,7 +51,9 @@ function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
   document.getElementById('tab-create').classList.toggle('hidden', name !== 'create');
   document.getElementById('tab-studies').classList.toggle('hidden', name !== 'studies');
+  document.getElementById('tab-results').classList.toggle('hidden', name !== 'results');
   if (name === 'studies') loadStudies();
+  if (name === 'results') loadResults();
 }
 
 async function init() {
@@ -386,7 +388,8 @@ async function submitForApproval() {
 async function loadStudies() {
   clearAlert('alert');
   try {
-    const studies = await business.listMyStudies();
+    const allStudies = await business.listMyStudies();
+    const studies = allStudies.filter((s) => ['DRAFT', 'SUBMITTED', 'PENDING', 'UNDER_REVIEW'].includes(String(s.status).toUpperCase()));
     document.getElementById('studyList').innerHTML = studies.length ? studies.map((s) => `
       <div class="card">
         <div class="row"><h3 style="flex:1;">${escapeHtml(s.title)}</h3>${badge(s.status)}</div>
@@ -396,8 +399,59 @@ async function loadStudies() {
           ${['DRAFT', 'SUBMITTED'].includes(s.status) ? `<button class="danger" onclick="cancelStudy('${s.id}')">Cancel</button>` : ''}
         </div>
       </div>
-    `).join('') : '<p class="muted">No studies yet — create one from the "Create Research" tab.</p>';
+    `).join('') : '<p class="muted">No saved drafts or pending surveys yet. Create one from Survey Generation.</p>';
   } catch (err) { showAlert('alert', err.message); }
+}
+
+async function loadResults() {
+  const list = document.getElementById('resultsList');
+  list.innerHTML = '<p class="muted">Loading survey results…</p>';
+  document.getElementById('resultsDetail').innerHTML = '';
+  try {
+    const studies = await business.listMyStudies();
+    const published = studies.filter((s) => ['ACTIVE', 'COMPLETED', 'REPORT_READY'].includes(String(s.status).toUpperCase()));
+    list.innerHTML = published.length ? published.map((s) => `
+      <div class="card">
+        <div class="row"><h3 style="flex:1;">${escapeHtml(s.title)}</h3>${badge(s.status)}</div>
+        <p class="muted">${escapeHtml(s.target_city)} · ${s.sample_size} target respondents</p>
+        <button type="button" onclick="viewResultsReport('${s.id}')">View results</button>
+      </div>
+    `).join('') : '<p class="muted">No published surveys with results yet. Once a survey is active or completed, its results will appear here.</p>';
+  } catch (err) {
+    list.innerHTML = '<div class="alert error">Could not load survey results. Please try again.</div>';
+    showAlert('alert', err.message);
+  }
+}
+
+async function viewResultsReport(id) {
+  const detail = document.getElementById('resultsDetail');
+  detail.innerHTML = '<p class="muted">Loading report…</p>';
+  try {
+    const report = await business.getStudyReport(id);
+    const qHtml = (report.questionAnalytics || []).map((q) => {
+      if (q.breakdown) {
+        return `<div class="card"><h3>${escapeHtml(q.questionText)}</h3>
+          <table><tbody>${q.breakdown.map((b) => `<tr><td>${escapeHtml(b.option)}</td><td>${b.count}</td><td>${b.percent ?? b.percentOfRespondents}%</td></tr>`).join('')}</tbody></table></div>`;
+      }
+      if (q.average !== undefined) {
+        return `<div class="card"><h3>${escapeHtml(q.questionText)}</h3><p>Average rating: <strong>${q.average ?? 'N/A'}</strong> (${q.responseCount} responses)</p></div>`;
+      }
+      return `<div class="card"><h3>${escapeHtml(q.questionText)}</h3><p class="muted">Top themes: ${(q.topThemes || []).map((t) => escapeHtml(t.word)).join(', ') || 'Not enough data'}</p></div>`;
+    }).join('');
+    detail.innerHTML = `
+      <div class="card">
+        <h3>Observed Results</h3>
+        <p>Total responses: ${report.observedResults.totalResponses} · Valid: ${report.observedResults.validResponses} · Flagged/Rejected: ${report.observedResults.flaggedOrRejected}</p>
+        <h3>Calculated Statistics</h3>
+        <p>Completion rate: ${report.calculatedStatistics.completionRatePercent}% · Valid response rate: ${report.calculatedStatistics.validResponseRatePercent}%</p>
+        <h3>Question Analytics</h3>${qHtml}
+        <h3>Recommendations</h3>
+        <div class="alert info">${(report.platformRecommendations || []).map((r) => `<p>${escapeHtml(r)}</p>`).join('') || '<p>No recommendations generated yet.</p>'}</div>
+      </div>`;
+  } catch (err) {
+    detail.innerHTML = '<div class="alert error">Results are not available yet for this survey.</div>';
+    showAlert('alert', err.message);
+  }
 }
 
 async function cancelStudy(id) {
@@ -462,6 +516,6 @@ function escapeHtml(str) {
 }
 
 // Attach everything referenced from injected-HTML onclick="..." strings.
-Object.assign(window, { addSuggested, addCustomQuestion, submitForApproval, viewStudy, cancelStudy, viewReport });
+Object.assign(window, { addSuggested, addCustomQuestion, submitForApproval, viewStudy, cancelStudy, viewReport, viewResultsReport });
 
 init();
