@@ -1,88 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Business Dashboard — InsightLoop (Supabase)</title>
-<link rel="stylesheet" href="/css/style.css">
-</head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Business Workspace — InsightLoop</title><link rel="stylesheet" href="/css/style.css">
+<style>
+.workspace{max-width:1180px;margin:auto;padding:26px 20px}.welcome{padding:28px;background:linear-gradient(130deg,#f0eaff,#fff 68%);border:1px solid #e1d6ff;border-radius:24px;margin-bottom:22px}.panel-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0}.panel-tab{background:#fff;color:#62518d;border:1px solid #e5dcfb;box-shadow:none;min-height:72px;flex-direction:column}.panel-tab.active{background:#7755d9;color:#fff}.panel{display:none}.panel.active{display:block}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.question-card{border:1px solid var(--border);padding:14px;border-radius:14px;margin:12px 0}.draft-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.draft-row .draft-main{flex:1;min-width:180px}.small{font-size:12px;color:var(--muted)}.question-editor{margin:12px 0;padding:16px;border:1px solid var(--border);border-radius:14px;background:#fff}.notice{padding:12px 14px;border-radius:12px;background:#f0eaff;color:#5b438e;margin:12px 0}@media(max-width:700px){.panel-nav{grid-template-columns:1fr}.two-col{grid-template-columns:1fr}.workspace{padding:16px}}
+</style></head>
 <body>
-<header class="topbar">
-  <a class="brand" href="/supabase-business/dashboard.html">InsightLoop</a>
-  <nav>
-    <span id="userName" class="muted"></span>
-    <a href="#" onclick="logoutSupabase()">Log out</a>
-  </nav>
-</header>
-
-<div class="container">
-  
-  <div id="verificationBanner"></div>
-
-  <div class="tabs">
-    <div class="tab active" data-tab="create">Create Research</div>
-    <div class="tab" data-tab="studies">My Studies</div>
-  </div>
-
-  <div id="alert" class="alert error hidden"></div>
-
-  <section id="tab-create">
-    <div class="card" style="max-width:560px;">
-      <h2>I want to understand...</h2>
-      <label>Research goal / template</label>
-      <select id="template_type">
-        <option value="pricing_test">Pricing Test — would customers pay X?</option>
-        <option value="feature_preference">Feature / Product Preference</option>
-        <option value="purchase_intent">Purchase Intent</option>
-        <option value="satisfaction">Customer Satisfaction</option>
-        <option value="timing_location">Timing & Location Preference</option>
-        <option value="custom">Custom</option>
-      </select>
-      <label>Study title</label>
-      <input id="title" placeholder="e.g. Lunch combo pricing test">
-      <label>Objective (plain language)</label>
-      <textarea id="objective" placeholder="e.g. I'm opening a cafe near a college and want to know what students want."></textarea>
-      <label>Target city</label>
-      <input id="target_city" placeholder="e.g. Visakhapatnam">
-      <div class="row">
-        <div style="flex:1;"><label>Min age</label><input type="number" id="min_age" value="18"></div>
-        <div style="flex:1;"><label>Max age</label><input type="number" id="max_age" value="35"></div>
-      </div>
-      <label>Gender</label>
-      <select id="target_gender"><option value="any">Any</option><option value="male">Male</option><option value="female">Female</option></select>
-      <label>Interest tags (comma-separated, optional)</label>
-      <input id="target_tags" placeholder="e.g. food, students">
-      <label>Sample size</label>
-      <select id="sample_size"><option value="50">50 respondents</option><option value="100" selected>100 respondents</option><option value="150">150 respondents</option></select>
-      <label>Reward per response (₹)</label>
-      <input type="number" id="reward" value="5" min="1">
-      <p class="muted" id="budgetPreview"></p>
-      <button style="margin-top:10px;" id="createStudyBtn">Create draft study</button>
-    </div>
-
-    <div class="card" id="aiSurveyCard" style="max-width:760px;border-color:#d8c9ff;background:linear-gradient(145deg,#fff 0%,#f8f4ff 100%);">
-      <p class="eyebrow">INSIGHTLOOP BUSINESS AI</p>
-      <h2>Describe your research. AI builds the survey.</h2>
-      <p class="muted">Give AI a plain-language command. Autopilot generates the survey, creates it, and submits it for platform checks automatically.</p>
-      <label for="aiCommand">What do you want to learn?</label>
-      <textarea id="aiCommand" maxlength="1200" placeholder="Example: I run a small cafe. Find out which breakfast items local working adults prefer, what price feels fair, and how often they would visit. Keep it neutral and under 6 questions."></textarea>
-      <div class="row" style="margin-top:12px;">
-        <button id="generateAiSurveyBtn" type="button">✦ Run AI Autopilot</button>
-        <span id="aiStatus" class="muted" aria-live="polite"></span>
-      </div>
-      <div id="aiSurveyPreview" class="hidden" style="margin-top:20px;"></div>
-      <p class="muted" style="margin-top:14px;">Autopilot handles routine creation and submission. Only verified businesses can create studies. Payment confirmation and platform approval are still required before a survey can go live.</p>
-    </div>
-    <div id="draftBuilder"></div>
-  </section>
-
-  <section id="tab-studies" class="hidden">
-    <div id="studyList"></div>
-    <div id="studyDetail"></div>
-  </section>
-</div>
-
-<script src="/js/api.js"></script>
-<script type="module" src="/js/supabase/business-page.js"></script>
-</body>
-</html>
+<header class="topbar"><a class="brand" href="/supabase-business/dashboard.html">InsightLoop</a><nav><span id="userName" class="muted"></span><a href="#" onclick="logoutSupabase()">Log out</a></nav></header>
+<main class="workspace">
+<section class="welcome"><p class="eyebrow">BUSINESS WORKSPACE</p><h1>Your research, in one place.</h1><p class="muted">Create a survey manually or with AI, keep drafts, and review results when responses arrive.</p><div id="businessNotice"></div></section>
+<div id="alert" class="alert hidden"></div>
+<nav class="panel-nav" aria-label="Business dashboard panels">
+<button class="panel-tab active" data-panel="create">✦ <strong>Survey Creation</strong><span class="small">Manual or AI</span></button>
+<button class="panel-tab" data-panel="drafts">▤ <strong>Saved Drafts</strong><span class="small">Continue and publish</span></button>
+<button class="panel-tab" data-panel="results">◫ <strong>Survey Results</strong><span class="small">Published surveys</span></button>
+</nav>
+<section id="panel-create" class="panel active">
+<div class="two-col">
+<article class="card"><h2>Create manually</h2><p class="muted">Set the research details and add questions yourself.</p>
+<label for="title">Survey title</label><input id="title" maxlength="120" placeholder="e.g. Breakfast preferences">
+<label for="objective">What do you want to learn?</label><textarea id="objective" maxlength="500" placeholder="Describe the research goal"></textarea>
+<div class="two-col"><div><label for="city">Target city</label><input id="city" placeholder="e.g. Anantapur"></div><div><label for="sample">Target responses</label><select id="sample"><option>50</option><option selected>100</option><option>150</option></select></div></div>
+<div class="two-col"><div><label for="reward">Reward per response (₹)</label><input id="reward" type="number" min="1" value="5"></div><div><label for="template">Research type</label><select id="template"><option value="custom">Custom</option><option value="pricing_test">Pricing test</option><option value="feature_preference">Product preference</option><option value="purchase_intent">Purchase intent</option><option value="satisfaction">Customer satisfaction</option><option value="timing_location">Timing & location</option></select></div></div>
+<button id="startManual" style="margin-top:16px">Create editable draft</button>
+</article>
+<article class="card"><p class="eyebrow">INSIGHTLOOP AI</p><h2>Let AI build the first version</h2><p class="muted">Describe your research. Review and edit every question before saving.</p>
+<label for="aiPrompt">Your research brief</label><textarea id="aiPrompt" maxlength="1200" placeholder="I run a cafe. Find out which breakfast options local workers prefer and what price feels fair."></textarea>
+<button id="generateAI" style="margin-top:14px">✦ Generate with AI</button><p id="aiStatus" class="muted" aria-live="polite"></p>
+</article></div>
+<div id="editor" class="card hidden"></div>
+</section>
+<section id="panel-drafts" class="panel"><div class="row"><div class="spacer"><h2>Saved drafts</h2><p class="muted">Continue editing, ask AI to complete a draft, or publish when ready.</p></div><button class="secondary" id="refreshDrafts">Refresh</button></div><div id="draftList"></div></section>
+<section id="panel-results" class="panel"><div class="row"><div class="spacer"><h2>Survey results</h2><p class="muted">Aggregate results for your published surveys.</p></div><button class="secondary" id="refreshResults">Refresh</button></div><div id="resultList"></div><div id="resultDetail"></div></section>
+</main>
+<script src="/js/api.js"></script><script type="module" src="/js/supabase/business-workspace.js"></script>
+</body></html>
