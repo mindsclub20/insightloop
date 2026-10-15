@@ -104,10 +104,8 @@ async function saveQuestions(){
  try{
   if(!activeDraft)throw new Error('Open a draft first.');
   const qs=validatedQuestions();
-  const existing=await business.getStudy(activeDraft.id);
-  if(existing.questions.length)throw new Error('This draft already has saved questions. Use AI completion only for empty drafts, or publish the existing draft.');
-  for(const q of qs)await business.addQuestion(activeDraft.id,q);
-  editorQuestions=qs;alertMsg('Draft and questions saved. You can publish when ready.','success');
+  await business.saveDraft(activeDraft.id,{title:activeDraft.title,objective:activeDraft.objective||'Survey research',questions:qs});
+  editorQuestions=qs;alertMsg('Draft saved. You can continue editing or publish when ready.','success');
   await loadDrafts();
  }catch(e){alertMsg(e.message||'Could not save questions.');}
 }
@@ -141,12 +139,10 @@ async function completeDraftWithAI(id){
 async function publishActiveDraft(){
  clearAlert();
  try{
-  const qs=await business.getStudy(activeDraft.id);
-  if(!qs.questions.length){
-   const pending=validatedQuestions();
-   for(const q of pending)await business.addQuestion(activeDraft.id,q);
-  }
-  const result=await business.publishSurvey(activeDraft.id);
+  if(!activeDraft)throw new Error('Open a draft first.');
+  const qs=validatedQuestions();
+  await business.saveDraft(activeDraft.id,{title:activeDraft.title,objective:activeDraft.objective||'Survey research',questions:qs});
+  await business.publishSurvey(activeDraft.id);
   alertMsg('Survey published successfully. No payment step or admin approval was added.','success');
   activeDraft=null;$('editor').classList.add('hidden');await loadDrafts();panel('results');
  }catch(e){alertMsg(e.message||'Could not publish survey.');}
