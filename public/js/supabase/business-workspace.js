@@ -166,4 +166,4 @@ async function showReport(id){
  }catch(e){alertMsg(e.message||'Could not load results.');}
 }
 Object.assign(window,{});
-init();
+init().catch((error) => { console.error("Business workspace initialization failed", error); window.location.href = "/supabase-login.html"; });
