@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Business Dashboard — InsightLoop (Supabase)</title>
 <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/business-dashboard.css">
 </head>
 <body>
 <header class="topbar">
@@ -16,7 +17,12 @@
 </header>
 
 <div class="container">
-  
+  <section class="dashboard-intro" aria-labelledby="dashboardTitle">
+    <p class="eyebrow">INSIGHTLOOP · BUSINESS WORKSPACE</p>
+    <h1 id="dashboardTitle">Turn questions into clear decisions.</h1>
+    <p>Create thoughtful research, keep your drafts organised, and explore results—all in one calm workspace.</p>
+    <div class="dashboard-pills"><span class="dashboard-pill">✦ AI-assisted research</span><span class="dashboard-pill">↗ Drafts stay in your account</span><span class="dashboard-pill">◎ Results when ready</span></div>
+  </section>
   <div id="verificationBanner"></div>
 
   <div class="tabs">
@@ -28,6 +34,7 @@
   <div id="alert" class="alert error hidden"></div>
 
   <section id="tab-create">
+    <div class="dashboard-workspace">
     <div class="card" style="max-width:560px;">
       <h2>I want to understand...</h2>
       <label>Research goal / template</label>
@@ -73,6 +80,7 @@
       </div>
       <div id="aiSurveyPreview" class="hidden" style="margin-top:20px;"></div>
       <p class="muted" style="margin-top:14px;">Your drafts are saved to your account. Publishing does not require admin verification or approval. Payments are disabled for now.</p>
+    </div>
     </div>
     <div id="draftBuilder"></div>
   </section>
