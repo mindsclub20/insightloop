@@ -80,9 +80,9 @@ function renderVerificationBanner(biz) {
   } else if (biz.verification_status === 'VERIFIED') {
     el.innerHTML = '';
   } else if (biz.verification_status === 'PENDING') {
-    el.innerHTML = `<div class="alert info">Your business is pending admin verification. You can build a draft study now, but it cannot be submitted for approval until verified.</div>`;
+    el.innerHTML = `<div class="alert info">Your business can create and save drafts without admin verification. Keep drafts private until you choose to publish.</div>`;
   } else {
-    el.innerHTML = `<div class="alert error">Your business verification was rejected. Contact support.</div>`;
+    el.innerHTML = `<div class="alert error">Business verification is not required to create or publish a survey.</div>`;
   }
 }
 
@@ -113,7 +113,6 @@ async function generateAiSurvey() {
   AI_REQUEST_BUSY = true;
   button.disabled = true;
   status.textContent = 'Autopilot is designing your survey…';
-  let createdStudyId = null;
   try {
     const result = await business.generateAiSurvey({
       command,
@@ -124,21 +123,15 @@ async function generateAiSurvey() {
       target_max_age: Number(document.getElementById('max_age').value),
       target_gender: document.getElementById('target_gender').value,
     });
-    status.textContent = 'Survey generated. Creating it and submitting for platform checks…';
-    createdStudyId = await createAndSubmitAutonomousSurvey(result.survey);
-    status.textContent = 'Autopilot finished: survey submitted. It is not public yet.';
-    document.getElementById('aiSurveyPreview').classList.add('hidden');
-    document.getElementById('aiSurveyPreview').innerHTML = '';
-    AI_SURVEY_DRAFT = null;
-    showAlert('alert', 'Autopilot created and submitted your survey. It remains pending for payment confirmation and platform approval; it has not been published.', 'success');
-    switchTab('studies');
-    await loadStudies();
+    if (!result?.survey || !Array.isArray(result.survey.questions) || result.survey.questions.length < 1 || result.survey.questions.length > 8) {
+      throw new Error('The AI survey failed validation. Please generate it again.');
+    }
+    AI_SURVEY_DRAFT = result.survey;
+    status.textContent = 'Survey generated. Review it, then save your draft or publish.';
+    renderAiSurveyPreview();
   } catch (err) {
-    const partialStudyId = err.partialStudyId || createdStudyId;
-    status.textContent = partialStudyId
-      ? `Autopilot paused. Draft study ${partialStudyId} may need recovery before retrying.`
-      : '';
-    showAlert('alert', err.message || 'Autopilot could not complete the survey.');
+    showAlert('alert', err.message || 'AI could not generate the survey.');
+    status.textContent = '';
   } finally {
     AI_REQUEST_BUSY = false;
     button.disabled = false;
@@ -208,13 +201,15 @@ function renderAiSurveyPreview() {
           </div>`).join('')}
       </div>
       <div class="row" style="margin-top:16px;">
-        <button id="submitAiSurveyBtn" type="button">Create & submit for admin approval</button>
+        <button id="saveAiSurveyBtn" type="button">Save Draft</button>
+        <button id="publishAiSurveyBtn" type="button">Publish Survey</button>
         <button class="secondary" id="discardAiSurveyBtn" type="button">Discard draft</button>
       </div>
-      <p class="muted">Nothing is sent until you press the submit button. After submission, the study stays pending until admin approval.</p>
+      <p class="muted">Saving stores this draft in your account. Publishing makes it active; no admin verification or approval step is required.</p>
     </div>`;
   el.classList.remove('hidden');
-  document.getElementById('submitAiSurveyBtn').addEventListener('click', submitAiSurvey);
+  document.getElementById('saveAiSurveyBtn').addEventListener('click', () => persistAiSurvey(false));
+  document.getElementById('publishAiSurveyBtn').addEventListener('click', () => persistAiSurvey(true));
   document.getElementById('discardAiSurveyBtn').addEventListener('click', () => {
     AI_SURVEY_DRAFT = null;
     el.innerHTML = '';
@@ -247,41 +242,53 @@ function readEditedAiSurvey() {
   return { ...AI_SURVEY_DRAFT, title, objective, questions };
 }
 
-async function submitAiSurvey() {
+async function persistAiSurvey(publish) {
   clearAlert('alert');
-  const button = document.getElementById('submitAiSurveyBtn');
-  button.disabled = true;
+  const saveButton = document.getElementById('saveAiSurveyBtn');
+  const publishButton = document.getElementById('publishAiSurveyBtn');
+  if (saveButton) saveButton.disabled = true;
+  if (publishButton) publishButton.disabled = true;
+  let savedId = AI_SURVEY_DRAFT?.research_project_id || null;
   try {
     const survey = readEditedAiSurvey();
-    const params = {
-      template_type: survey.template_type,
-      title: survey.title,
-      objective: survey.objective,
-      target_city: document.getElementById('target_city').value.trim(),
-      target_min_age: Number(document.getElementById('min_age').value),
-      target_max_age: Number(document.getElementById('max_age').value),
-      target_gender: document.getElementById('target_gender').value,
-      target_tags: document.getElementById('target_tags').value.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
-      sample_size: Number(document.getElementById('sample_size').value),
-      reward_per_response_paise: Math.round(Number(document.getElementById('reward').value) * 100),
-    };
-    const study = await business.createStudy(params);
-    for (const question of survey.questions) {
-      await business.addQuestion(study.id, question);
+    if (!savedId) {
+      const params = {
+        template_type: survey.template_type || document.getElementById('template_type').value,
+        title: survey.title,
+        objective: survey.objective,
+        target_city: document.getElementById('target_city').value.trim(),
+        target_min_age: Number(document.getElementById('min_age').value),
+        target_max_age: Number(document.getElementById('max_age').value),
+        target_gender: document.getElementById('target_gender').value,
+        target_tags: document.getElementById('target_tags').value.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
+        sample_size: Number(document.getElementById('sample_size').value),
+        reward_per_response_paise: Math.round(Number(document.getElementById('reward').value) * 100),
+      };
+      const study = await business.createStudy(params);
+      savedId = study.id;
+      AI_SURVEY_DRAFT = { ...survey, research_project_id: savedId };
     }
-    const result = await business.submitForApproval(study.id);
+    await business.saveSurveyDraft(savedId, survey);
+    if (!publish) {
+      document.getElementById('aiStatus').textContent = 'Draft saved to your account.';
+      showAlert('alert', 'Draft saved successfully. You can return to Saved Drafts later.', 'success');
+      await loadStudies();
+      return;
+    }
+    const result = await business.publishSurvey(savedId);
     AI_SURVEY_DRAFT = null;
-    document.getElementById('aiSurveyPreview').innerHTML = `
-      <div class="alert success">
-        <strong>Survey submitted for admin approval.</strong><br>
-        Your survey was created with ${survey.questions.length} questions. It is not public yet; it must pass admin approval. Payment status: ${escapeHtml(result.paymentStatus || 'pending')}.
-      </div>`;
-    document.getElementById('aiStatus').textContent = 'Submitted for review.';
-    showAlert('alert', 'Survey submitted for admin approval. It will not go live until approved.', 'success');
-    switchTab('studies');
+    document.getElementById('aiSurveyPreview').innerHTML = `<div class="alert success"><strong>Survey published successfully.</strong><br>${escapeHtml(result.survey?.title || survey.title)} is now active.</div>`;
+    document.getElementById('aiStatus').textContent = 'Published.';
+    showAlert('alert', 'Survey published successfully.', 'success');
+    switchTab('results');
   } catch (err) {
-    showAlert('alert', err.message || 'Could not submit the survey.');
-    if (document.getElementById('submitAiSurveyBtn')) document.getElementById('submitAiSurveyBtn').disabled = false;
+    showAlert('alert', err.message || 'Could not save or publish the survey.');
+    document.getElementById('aiStatus').textContent = savedId
+      ? 'Your draft record exists. Try saving again; do not create a duplicate.'
+      : '';
+  } finally {
+    if (document.getElementById('saveAiSurveyBtn')) document.getElementById('saveAiSurveyBtn').disabled = false;
+    if (document.getElementById('publishAiSurveyBtn')) document.getElementById('publishAiSurveyBtn').disabled = false;
   }
 }
 
@@ -311,7 +318,7 @@ function renderDraftBuilder() {
   el.innerHTML = `
     <div class="card">
       <h3>Draft created: ${escapeHtml(DRAFT_STUDY.title)}</h3>
-      <p class="muted">Suggested questions for this template (edit or add your own below, then submit for admin approval). Max 8 questions.</p>
+      <p class="muted">Suggested questions for this template (add the questions you want, then save or publish). Max 8 questions.</p>
       <div id="suggestedQuestions">
         ${suggestions.map((q, i) => `
           <div class="row" style="border:1px solid var(--border); padding:8px; border-radius:8px; margin-bottom:6px;">
@@ -339,7 +346,7 @@ function renderDraftBuilder() {
       <h3 style="margin-top:16px;">Questions added so far</h3>
       <div id="addedQuestions"><p class="muted">None yet.</p></div>
 
-      <button style="margin-top:16px;" onclick="submitForApproval()">Submit study for admin approval</button>
+      <div class="row" style="margin-top:16px;"><button class="secondary" onclick="saveManualDraft()">Save Draft</button><button onclick="submitForApproval()">Publish Survey</button></div>
     </div>`;
   window._suggestions = suggestions;
   refreshAddedQuestions();
@@ -375,13 +382,24 @@ async function addCustomQuestion() {
   } catch (err) { showAlert('alert', err.message); }
 }
 
+async function saveManualDraft() {
+  if (!DRAFT_STUDY) { showAlert('alert', 'Create a draft first.'); return; }
+  try {
+    await business.getStudy(DRAFT_STUDY.id);
+    showAlert('alert', 'Draft and its questions are saved to your account.', 'success');
+    await loadStudies();
+  } catch (err) { showAlert('alert', err.message || 'Could not confirm the draft was saved.'); }
+}
+
 async function submitForApproval() {
   clearAlert('alert');
   try {
-    const result = await business.submitForApproval(DRAFT_STUDY.id);
-    document.getElementById('draftBuilder').innerHTML = `<div class="alert success">Study submitted for admin approval. Payment status: ${result.paymentStatus} (P0: manual payment confirmation, see demo notice).</div>`;
+    const { questions } = await business.getStudy(DRAFT_STUDY.id);
+    if (!questions.length) throw new Error('Add at least one question before publishing.');
+    const result = await business.publishSurvey(DRAFT_STUDY.id);
+    document.getElementById('draftBuilder').innerHTML = `<div class="alert success">Survey published successfully: ${escapeHtml(result.survey?.title || DRAFT_STUDY.title)}.</div>`;
     DRAFT_STUDY = null;
-    switchTab('studies');
+    switchTab('results');
   } catch (err) { showAlert('alert', err.message); }
 }
 
