@@ -1,6 +1,6 @@
 -- 021_role_claim_guard_update.sql
 -- Keep role-escalation checks compatible with current Supabase guidance:
--- auth.role() is deprecated; inspect the signed JWT role claim instead.
+-- inspect the signed JWT role claim instead of the deprecated role helper.
 create or replace function private.prevent_profile_role_escalation()
 returns trigger
 language plpgsql
