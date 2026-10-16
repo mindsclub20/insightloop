@@ -18,26 +18,26 @@ export async function persistPendingInterests(supabase, user) {
   const tags = normalizeInterests(user?.user_metadata?.pending_interests);
   if (!user?.id || !tags.length) return { saved: 0 };
 
-  const { data: existingRows, error: readError } = await supabase
-    .from('user_interests')
-    .select('tag')
-    .eq('user_id', user.id);
-  if (readError) throw readError;
-
-  const existing = new Set((existingRows || []).map((row) => String(row.tag).toLowerCase()));
-  const rows = tags
-    .filter((tag) => !existing.has(tag))
-    .map((tag) => ({ user_id: user.id, tag }));
-
-  if (rows.length) {
-    const { error: insertError } = await supabase.from('user_interests').insert(rows);
-    if (insertError) throw insertError;
+  // The interests table is intentionally protected by RLS. Only call the
+  // trusted endpoint with a valid session for the same user; never weaken RLS
+  // to hide an authentication/session mismatch.
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) throw sessionError;
+  if (!session?.access_token || session.user?.id !== user.id) {
+    throw new Error('Your email is verified, but your session is not ready to save interests. Log in again to finish setting up your profile.');
   }
 
-  const { error: metadataError } = await supabase.auth.updateUser({
-    data: { pending_interests: null },
+  const { data, error } = await supabase.functions.invoke('save-user-interests', {
+    body: { interests: tags },
   });
-  if (metadataError) throw metadataError;
-
-  return { saved: rows.length };
+  if (error) {
+    let message = error.message || 'Could not save interests.';
+    try {
+      const details = await error.context?.json();
+      if (details?.error) message = details.error;
+    } catch { /* keep the SDK message */ }
+    throw new Error(message);
+  }
+  if (data?.error) throw new Error(data.error);
+  return data || { saved: 0 };
 }
