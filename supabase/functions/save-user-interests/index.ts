@@ -38,8 +38,10 @@ Deno.serve(async (req: Request) => {
       if (insertError) throw new HttpError(500, 'Could not save interests.');
     }
 
+    const { data: authData, error: authReadError } = await admin.auth.admin.getUserById(userId);
+    if (authReadError || !authData.user) throw new HttpError(500, 'Interests saved, but profile setup could not be finalized.');
     const { error: metadataError } = await admin.auth.admin.updateUserById(userId, {
-      user_metadata: { pending_interests: null },
+      user_metadata: { ...authData.user.user_metadata, pending_interests: null },
     });
     if (metadataError) throw new HttpError(500, 'Interests saved, but pending preferences could not be cleared.');
 
