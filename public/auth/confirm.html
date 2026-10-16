@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Confirm email — InsightLoop</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/style.css">
 <style>
   body{font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;padding:24px}
@@ -16,10 +17,11 @@
 <main>
   <h1>Confirm your email</h1>
   <p id="status" role="status" aria-live="polite">Checking your confirmation link…</p>
-  <a id="login" href="/supabase-login.html" hidden>Continue to login</a>
+  <a id="login" href="/login.html" hidden>Continue to login</a>
 </main>
 <script type="module">
 import { supabase } from '/js/supabase/client.js';
+import { persistPendingInterests } from '/js/supabase/interests.js';
 
 const status = document.getElementById('status');
 const login = document.getElementById('login');
@@ -29,23 +31,45 @@ function showError(message) {
   login.hidden = false;
 }
 
+async function finishConfirmation(user) {
+  try {
+    await persistPendingInterests(supabase, user);
+    status.textContent = 'Email confirmed successfully! Your profile preferences are saved. You can now log in to InsightLoop.';
+  } catch {
+    // Verification has succeeded even if a secondary profile write fails.
+    // Do not tell the user that the email confirmation itself failed.
+    status.textContent = 'Email confirmed successfully. Some profile preferences could not be saved; you can continue to login.';
+  }
+  login.hidden = false;
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+
 try {
   const params = new URLSearchParams(window.location.search);
   const tokenHash = params.get('token_hash');
   const type = params.get('type');
-  if (!tokenHash || !type) {
-    showError('This confirmation link is missing its verification token. Open the latest confirmation email or request a new link.');
-  } else if (!['email', 'signup', 'magiclink', 'invite', 'email_change', 'recovery'].includes(type)) {
-    showError('This confirmation link has an unsupported verification type. Request a new confirmation email.');
-  } else {
-    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
-    if (error) {
-      showError(error.message || 'We could not verify this email. The link may have expired or already been used. Request a new confirmation email.');
+
+  if (tokenHash && type) {
+    if (!['email', 'signup', 'magiclink', 'invite', 'email_change', 'recovery'].includes(type)) {
+      showError('This confirmation link has an unsupported verification type. Request a new confirmation email.');
     } else {
-      status.textContent = 'Email confirmed successfully! You can now log in to InsightLoop.';
-      login.hidden = false;
-      // Remove the one-time token from the address bar after processing.
-      window.history.replaceState({}, document.title, window.location.pathname);
+      const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+      if (error) {
+        showError(error.message || 'We could not verify this email. The link may have expired or already been used. Request a new confirmation email.');
+      } else {
+        await finishConfirmation(data.user);
+      }
+    }
+  } else {
+    // Supabase's standard ConfirmationURL flow usually returns with a PKCE
+    // code or access-token fragment, not token_hash query parameters.
+    // createClient({ detectSessionInUrl: true }) processes that callback.
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    if (session?.user) {
+      await finishConfirmation(session.user);
+    } else {
+      showError('This confirmation link is missing its verification session. Open the latest email or request a new confirmation link.');
     }
   }
 } catch (error) {

@@ -50,13 +50,21 @@ serve(async (req) => {
     }
 
     if (action === 'approve') {
-      const { data: payment } = await admin.from('business_payments').select('id')
+      const { data: payment, error: paymentError } = await admin.from('business_payments').select('id,status')
         .eq('research_project_id', research_project_id).order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (paymentError) throw new HttpError(500, paymentError.message);
       if (!payment) throw new HttpError(400, 'No payment record found for this study - cannot activate');
+      if (payment.status !== 'SUCCESS') {
+        throw new HttpError(400, 'Reward funding is not confirmed. This survey cannot be activated until payment status is SUCCESS.');
+      }
 
-      await admin.from('research_projects').update({ status: 'APPROVED' }).eq('id', research_project_id);
+      const { error: approveError } = await admin.from('research_projects')
+        .update({ status: 'APPROVED' }).eq('id', research_project_id).eq('status', project.status);
+      if (approveError) throw new HttpError(500, approveError.message);
       if (!canTransition('APPROVED', 'ACTIVE')) throw new HttpError(500, 'Lifecycle graph inconsistency: APPROVED -> ACTIVE should always be legal');
-      await admin.from('research_projects').update({ status: 'ACTIVE' }).eq('id', research_project_id);
+      const { error: activateError } = await admin.from('research_projects')
+        .update({ status: 'ACTIVE' }).eq('id', research_project_id).eq('status', 'APPROVED');
+      if (activateError) throw new HttpError(500, activateError.message);
     } else if (action === 'reject') {
       await admin.from('research_projects').update({ status: 'REJECTED', rejection_reason: reason ?? 'No reason provided' }).eq('id', research_project_id);
     } else {

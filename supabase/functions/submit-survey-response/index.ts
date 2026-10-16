@@ -1,7 +1,6 @@
 // supabase/functions/submit-survey-response/index.ts
 //
-// WRITTEN, NOT EXECUTED — see docs/SUPABASE_SETUP.md for deployment and
-// smoke-test steps. Direct port of src/routes/participant.js's
+// Supabase Edge Function source. Direct port of src/routes/participant.js's
 // submitStudy(), preserving every check in the same order: eligibility
 // re-verified server-side (never trusts the client's claim), required-field
 // validation, duplicate-response rejection, fraud evaluation, then reward
@@ -38,6 +37,18 @@ serve(async (req) => {
       .from('research_projects').select('*').eq('id', research_project_id).single();
     if (projectErr || !project) throw new HttpError(404, 'Study not found');
     if (project.status !== 'ACTIVE') throw new HttpError(400, 'This study is not currently accepting responses');
+
+    // A legacy endpoint once activated studies without confirmed funding. Check
+    // funding before creating a response so an unfunded study cannot collect
+    // answers that later fail to receive a reward.
+    const { data: funding, error: fundingError } = await admin.from('business_payments')
+      .select('id')
+      .eq('research_project_id', research_project_id)
+      .eq('status', 'SUCCESS')
+      .limit(1)
+      .maybeSingle();
+    if (fundingError) throw new HttpError(500, fundingError.message);
+    if (!funding) throw new HttpError(403, 'This study is paused because reward funding is not confirmed.');
 
     // Server-side eligibility re-check - never trust the client's claim of
     // eligibility, exactly per the original brief's matching-engine
