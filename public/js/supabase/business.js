@@ -38,8 +38,10 @@ export async function saveSurveyDraft(researchProjectId, survey) {
   });
 }
 
+// Publishing always enters the review queue; only an admin can activate a
+// survey, and activation remains blocked until its reward funding is confirmed.
 export async function publishSurvey(researchProjectId) {
-  return invoke('publish-survey', { research_project_id: researchProjectId });
+  return submitForApproval(researchProjectId);
 }
 
 // Deliberately a DIRECT client write, not an Edge Function - see
