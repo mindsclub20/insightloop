@@ -11,6 +11,7 @@
 
 import { requireRoleSupabase } from './page-auth.js';
 import * as business from './business.js';
+import { estimateParticipantRewardBudget } from './budget.js';
 
 let CURRENT = null;
 let DRAFT_STUDY = null;
@@ -95,11 +96,16 @@ function renderVerificationBanner(biz) {
 }
 
 function updateBudgetPreview() {
-  const sample = parseInt(document.getElementById('sample_size').value, 10);
-  const reward = Math.round(parseFloat(document.getElementById('reward').value || 0) * 100);
-  const fee = Math.round(sample * reward * 0.3);
-  const budget = sample * reward + fee;
-  document.getElementById('budgetPreview').textContent = `Estimated budget: ${paise(budget)} (${paise(reward)}/response × ${sample} + platform fee)`;
+  const sampleInput = document.getElementById('sample_size').value;
+  const rewardInput = document.getElementById('reward').value;
+  try {
+    const estimate = estimateParticipantRewardBudget(sampleInput, rewardInput);
+    document.getElementById('budgetPreview').textContent =
+      `Estimated participant rewards: ${paise(estimate.totalRewardBudgetPaise)} (${paise(estimate.rewardPerResponsePaise)}/response × ${estimate.sampleSize}). Platform fee is not finalized and is not included.`;
+  } catch {
+    document.getElementById('budgetPreview').textContent =
+      'Enter a positive sample size and reward to estimate participant rewards. Platform fee is not finalized.';
+  }
 }
 
 async function generateAiSurvey() {
@@ -284,12 +290,13 @@ async function persistAiSurvey(publish) {
       await loadStudies();
       return;
     }
-    const result = await business.publishSurvey(savedId);
+    const result = await business.submitForApproval(savedId);
     AI_SURVEY_DRAFT = null;
-    document.getElementById('aiSurveyPreview').innerHTML = `<div class="alert success"><strong>Survey published successfully.</strong><br>${escapeHtml(result.survey?.title || survey.title)} is now active.</div>`;
-    document.getElementById('aiStatus').textContent = 'Published.';
-    showAlert('alert', 'Survey published successfully.', 'success');
-    switchTab('results');
+    document.getElementById('aiSurveyPreview').innerHTML = `<div class="alert success"><strong>Survey submitted for review.</strong><br>${escapeHtml(result.title || survey.title)} remains inactive until reward funding is confirmed.</div>`;
+    document.getElementById('aiStatus').textContent = 'Submitted for review.';
+    showAlert('alert', 'Survey submitted for review. Activation is disabled until reward funding is confirmed.', 'success');
+    await loadStudies();
+    switchTab('studies');
   } catch (err) {
     showAlert('alert', err.message || 'Could not save or publish the survey.');
     document.getElementById('aiStatus').textContent = savedId
@@ -405,10 +412,11 @@ async function submitForApproval() {
   try {
     const { questions } = await business.getStudy(DRAFT_STUDY.id);
     if (!questions.length) throw new Error('Add at least one question before publishing.');
-    const result = await business.publishSurvey(DRAFT_STUDY.id);
-    document.getElementById('draftBuilder').innerHTML = `<div class="alert success">Survey published successfully: ${escapeHtml(result.survey?.title || DRAFT_STUDY.title)}.</div>`;
+    const result = await business.submitForApproval(DRAFT_STUDY.id);
+    document.getElementById('draftBuilder').innerHTML = `<div class="alert success">Survey submitted for review: ${escapeHtml(result.title || DRAFT_STUDY.title)}. It remains inactive until reward funding is confirmed.</div>`;
     DRAFT_STUDY = null;
-    switchTab('results');
+    await loadStudies();
+    switchTab('studies');
   } catch (err) { showAlert('alert', err.message); }
 }
 
