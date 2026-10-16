@@ -39,6 +39,18 @@ serve(async (req) => {
     if (projectErr || !project) throw new HttpError(404, 'Study not found');
     if (project.status !== 'ACTIVE') throw new HttpError(400, 'This study is not currently accepting responses');
 
+    // A legacy endpoint once activated studies without confirmed funding. Check
+    // funding before creating a response so an unfunded study cannot collect
+    // answers that later fail to receive a reward.
+    const { data: funding, error: fundingError } = await admin.from('business_payments')
+      .select('id')
+      .eq('research_project_id', research_project_id)
+      .eq('status', 'SUCCESS')
+      .limit(1)
+      .maybeSingle();
+    if (fundingError) throw new HttpError(500, fundingError.message);
+    if (!funding) throw new HttpError(403, 'This study is paused because reward funding is not confirmed.');
+
     // Server-side eligibility re-check - never trust the client's claim of
     // eligibility, exactly per the original brief's matching-engine
     // requirement, preserved unchanged from the Node version's design.
