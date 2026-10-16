@@ -1,7 +1,6 @@
 // supabase/functions/submit-survey-response/index.ts
 //
-// WRITTEN, NOT EXECUTED — see docs/SUPABASE_SETUP.md for deployment and
-// smoke-test steps. Direct port of src/routes/participant.js's
+// Supabase Edge Function source. Direct port of src/routes/participant.js's
 // submitStudy(), preserving every check in the same order: eligibility
 // re-verified server-side (never trusts the client's claim), required-field
 // validation, duplicate-response rejection, fraud evaluation, then reward
