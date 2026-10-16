@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const migration = await readFile(new URL('../migrations/020_live_security_hardening.sql', import.meta.url), 'utf8');
+const roleClaimMigration = await readFile(new URL('../migrations/021_role_claim_guard_update.sql', import.meta.url), 'utf8');
 
 test('security migration blocks self-service role escalation and records legitimate role changes', () => {
   assert.match(migration, /private\.prevent_profile_role_escalation/);
@@ -33,4 +34,9 @@ test('security migration removes participant self-write policies for submitted r
   ]) {
     assert.match(migration, new RegExp('drop policy if exists ' + policy));
   }
+});
+
+test('follow-up uses the current JWT role claim instead of deprecated auth.role()', () => {
+  assert.match(roleClaimMigration, /auth\.jwt\(\)\s*->>\s*'role'/);
+  assert.doesNotMatch(roleClaimMigration, /auth\.role\(\)/);
 });
