@@ -1,7 +1,7 @@
 {
   "name": "insightloop-mvp",
   "version": "0.1.0",
-  "description": "InsightLoop P0 MVP - rapid customer-research platform (participant / business / admin)",
+  "description": "Anvesh P0 MVP - rapid customer-research platform (participant / business / admin)",
   "type": "module",
   "engines": {
     "node": ">=22.13.0"

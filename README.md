@@ -1,4 +1,4 @@
-# InsightLoop — P0 MVP + Option A Production Scaffolding
+# Anvesh — P0 MVP + Option A Production Scaffolding
 
 **Three things live in this repo now, at different levels of verification:**
 
@@ -19,7 +19,7 @@ For #2 and #3, go straight to `docs/SUPABASE_SETUP.md` and `mobile/README.md`.
 ---
 
 
-A working P0 build of the InsightLoop research marketplace: participants answer
+A working P0 build of the Anvesh research marketplace: participants answer
 short surveys for a small reward, businesses buy structured research studies,
 admin moderates everything in between. This is a **real, runnable
 application**, not a mockup — see "How to run it" below.

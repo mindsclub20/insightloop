@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Log in — InsightLoop</title>
+<title>Log in — Anvesh</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<header class="topbar"><a class="brand" href="/index.html">InsightLoop</a></header>
+<header class="topbar"><a class="brand" href="/index.html">Anvesh</a></header>
 <div class="narrow">
   <h1>Log in</h1>
   <div id="alert" class="alert error hidden" role="alert"></div>
@@ -35,7 +35,7 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
     const { profile } = await getCurrentUserAndProfile();
     if (!profile || profile.status === 'SUSPENDED') {
       await supabase.auth.signOut();
-      throw new Error('This account is not active. Contact InsightLoop support.');
+      throw new Error('This account is not active. Contact Anvesh support.');
     }
     if (profile.role === 'BUSINESS') location.href = '/supabase-business/dashboard.html';
     else if (profile.role === 'ADMIN' || profile.role === 'SUPER_ADMIN') location.href = '/supabase-admin/dashboard.html';

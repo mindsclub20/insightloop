@@ -27,7 +27,7 @@ export async function registerParticipant({
   const dob = new Date(date_of_birth + 'T00:00:00Z');
   if (Number.isNaN(dob.getTime())) throw new Error('Enter a valid date of birth.');
   const age = (Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-  if (age < 18) throw new Error('InsightLoop participants must be 18 or older.');
+  if (age < 18) throw new Error('Anvesh participants must be 18 or older.');
 
   const { data, error } = await supabase.auth.signUp({
     email,
