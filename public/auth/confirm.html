@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Confirm email — InsightLoop</title>
+<title>Confirm email — Anvesh</title>
 <link rel="stylesheet" href="/css/style.css">
 <style>
   body{font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;padding:24px}
@@ -42,7 +42,7 @@ try {
     if (error) {
       showError(error.message || 'We could not verify this email. The link may have expired or already been used. Request a new confirmation email.');
     } else {
-      status.textContent = 'Email confirmed successfully! You can now log in to InsightLoop.';
+      status.textContent = 'Email confirmed successfully! You can now log in to Anvesh.';
       login.hidden = false;
       // Remove the one-time token from the address bar after processing.
       window.history.replaceState({}, document.title, window.location.pathname);
