@@ -1,11 +1,11 @@
-// Shared Supabase client for persistent InsightLoop auth and Postgres data.
+// Shared Supabase client for persistent Anvesh auth and Postgres data.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = 'https://dqfdecvmhzmipqvghvwl.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_4grIGVXg906CtVOgcbvH_A_jg3jZWrH';
 
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  throw new Error('InsightLoop Supabase configuration is missing.');
+  throw new Error('Anvesh Supabase configuration is missing.');
 }
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
