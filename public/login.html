@@ -25,7 +25,7 @@
 <script src="/js/api.js"></script>
 <script type="module">
 import { login, getCurrentUserAndProfile } from '/js/supabase/auth.js';
-import { syncPendingInterests } from '/js/supabase/pending-interests.js';
+import { syncUserInterests } from '/js/supabase/pending-interests.js';
 import { supabase } from '/js/supabase/client.js';
 
 document.getElementById('loginForm').addEventListener('submit', async (event) => {
@@ -38,11 +38,11 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
       await supabase.auth.signOut();
       throw new Error('This account is not active. Contact Anvesh support.');
     }
-    // A pending participant signup may have been confirmed on another visit.
-    // Sync is best-effort: a temporary interest-sync error must not block login.
     if (user) {
-      try { await syncPendingInterests(window.localStorage, user.id, supabase); }
-      catch { /* Keep pending interests for the participant dashboard to retry. */ }
+      try { await syncUserInterests(window.localStorage, user, supabase); }
+      catch (syncError) {
+        console.error('Interest sync will retry on the participant dashboard.', syncError);
+      }
     }
     if (profile.role === 'BUSINESS') location.href = '/supabase-business/dashboard.html';
     else if (profile.role === 'ADMIN' || profile.role === 'SUPER_ADMIN') location.href = '/supabase-admin/dashboard.html';
