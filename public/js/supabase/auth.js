@@ -30,6 +30,11 @@ export async function registerParticipant({
   const age = (Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
   if (age < 18) throw new Error('Anvesh participants must be 18 or older.');
 
+  const normalizedInterests = [...new Set((Array.isArray(interests) ? interests : [])
+    .filter((tag) => typeof tag === 'string')
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean))];
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -38,22 +43,21 @@ export async function registerParticipant({
       data: {
         full_name, city, area, age_range, gender, occupation_category,
         date_of_birth, account_type: 'participant',
+        // Auth metadata survives email confirmation across tabs/origins. The
+        // client syncs these tags into user_interests after a valid session.
+        interests: normalizedInterests,
       },
     },
   });
   if (error) throw error;
 
-  // Do not write interests until Supabase has issued a session. With email
-  // confirmation enabled, signup returns a user but no session, so RLS must
-  // reject direct inserts. Keep the tags locally and sync them after login.
-  if (data.user && interests?.length) {
-    rememberPendingInterests(window.localStorage, data.user.id, interests);
+  if (data.user && normalizedInterests.length) {
+    rememberPendingInterests(window.localStorage, data.user.id, normalizedInterests);
     if (data.session) {
       try {
         await syncPendingInterests(window.localStorage, data.user.id, supabase);
       } catch {
-        // Preserve the pending entry; login/dashboard will retry without
-        // falsely telling the user that account creation failed.
+        // Preserve the pending entry; login/dashboard will retry.
       }
     }
   }
