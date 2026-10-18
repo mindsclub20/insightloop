@@ -47,7 +47,15 @@ document.getElementById('form').addEventListener('submit', async (event) => {
       if (error) throw error;
       location.href = '/supabase-business/dashboard.html';
     }
-  } catch (error) { showAlert('alert', error.message || 'Could not create the account.'); }
+  } catch (error) {
+    const code = error?.code || '';
+    const message = error?.message || '';
+    if (code === 'over_email_send_rate_limit' || /over_email_send_rate_limit|email rate limit/i.test(message)) {
+      showAlert('alert', 'Email confirmation is temporarily rate-limited. Please wait before trying again; repeated submissions will not speed it up.');
+    } else {
+      showAlert('alert', message || 'Could not create the account.');
+    }
+  }
 });
 </script>
 </body>
