@@ -59,3 +59,47 @@ test('sync preserves pending interests when the database rejects an insert', asy
   await assert.rejects(syncPendingInterests(storage, 'user-a', client), /temporary database error/);
   assert.ok(storage.getItem('anvesh.pendingInterests:user-a'));
 });
+
+
+test('sync restores interests from durable Auth metadata when local pending storage is empty', async () => {
+  const storage = makeStorage();
+  let inserted;
+  const client = {
+    from(table) {
+      assert.equal(table, 'user_interests');
+      return {
+        select() { return { eq: async () => ({ data: [], error: null }) }; },
+        insert: async (rows) => { inserted = rows; return { error: null }; },
+      };
+    },
+  };
+  const { syncUserInterests } = await import('../public/js/supabase/pending-interests.js');
+  assert.equal(await syncUserInterests(storage, {
+    id: 'user-a', user_metadata: { interests: [' Food ', 'books', 'food'] },
+  }, client), true);
+  assert.deepEqual(inserted, [
+    { user_id: 'user-a', tag: 'food' },
+    { user_id: 'user-a', tag: 'books' },
+  ]);
+  assert.equal(storage.getItem('anvesh.pendingInterests:user-a'), null);
+});
+
+test('sync merges Auth metadata and local pending interests without duplicates', async () => {
+  const storage = makeStorage();
+  rememberPendingInterests(storage, 'user-a', ['books', 'music']);
+  let inserted;
+  const client = {
+    from() {
+      return {
+        select() { return { eq: async () => ({ data: [{ tag: 'books' }], error: null }) }; },
+        insert: async (rows) => { inserted = rows; return { error: null }; },
+      };
+    },
+  };
+  const { syncUserInterests } = await import('../public/js/supabase/pending-interests.js');
+  await syncUserInterests(storage, { id: 'user-a', user_metadata: { interests: ['food', 'books'] } }, client);
+  assert.deepEqual(inserted, [
+    { user_id: 'user-a', tag: 'food' },
+    { user_id: 'user-a', tag: 'music' },
+  ]);
+});
