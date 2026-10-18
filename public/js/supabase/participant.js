@@ -15,9 +15,13 @@ function ageOverlaps(userAgeRange, min, max) {
 }
 
 export async function getProfile() {
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-  const { data: tags } = await supabase.from('user_interests').select('tag').eq('user_id', user.id);
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  if (!user) throw new Error('Please log in to view your profile.');
+  const { data: profile, error: profileError } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  if (profileError) throw profileError;
+  const { data: tags, error: tagsError } = await supabase.from('user_interests').select('tag').eq('user_id', user.id);
+  if (tagsError) throw tagsError;
   return { profile, tags: (tags ?? []).map((t) => t.tag) };
 }
 
@@ -38,24 +42,29 @@ export async function updateProfile({ city, area, age_range, occupation_category
 // submit-survey-response Edge Function re-verifies eligibility server-side
 // on every submission regardless of what this function returned.
 export async function listEligibleStudies() {
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase.from('profiles').select('city, age_range').eq('id', user.id).single();
-  const { data: tagRows } = await supabase.from('user_interests').select('tag').eq('user_id', user.id);
-  const tags = (tagRows ?? []).map((t) => t.tag);
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  if (!user) throw new Error('Please log in to view surveys.');
+  const { data: profile, error: profileError } = await supabase.from('profiles').select('city, age_range').eq('id', user.id).single();
+  if (profileError) throw profileError;
+  const { data: tagRows, error: tagsError } = await supabase.from('user_interests').select('tag').eq('user_id', user.id);
+  if (tagsError) throw tagsError;
+  const tags = (tagRows ?? []).map((t) => String(t.tag).trim().toLowerCase());
 
   const { data: active, error } = await supabase.from('research_projects')
     .select('id, title, objective, target_city, reward_per_response_paise, target_min_age, target_max_age, target_tags')
     .eq('status', 'ACTIVE');
   if (error) throw error;
 
-  const { data: responded } = await supabase.from('survey_responses').select('research_project_id').eq('user_id', user.id);
+  const { data: responded, error: responsesError } = await supabase.from('survey_responses').select('research_project_id').eq('user_id', user.id);
+  if (responsesError) throw responsesError;
   const respondedIds = new Set((responded ?? []).map((r) => r.research_project_id));
 
   return (active ?? []).filter((s) => {
     if (respondedIds.has(s.id)) return false;
     if (s.target_city && profile?.city && s.target_city.toLowerCase() !== profile.city.toLowerCase()) return false;
     if (!ageOverlaps(profile?.age_range, s.target_min_age, s.target_max_age)) return false;
-    if (s.target_tags?.length && !s.target_tags.some((t) => tags.includes(t))) return false;
+    if (s.target_tags?.length && !s.target_tags.some((t) => tags.includes(String(t).trim().toLowerCase()))) return false;
     return true;
   });
 }
@@ -74,9 +83,11 @@ export async function getStudyDetail(studyId) {
   if (error) throw error;
   if (!study) return null; // RLS silently filtered it out - correct "not found" behavior, not an error
 
-  const { data: questions } = await supabase.from('survey_questions').select('*').eq('research_project_id', studyId).order('order_index');
+  const { data: questions, error: questionsError } = await supabase.from('survey_questions').select('*').eq('research_project_id', studyId).order('order_index');
+  if (questionsError) throw questionsError;
   const withOptions = await Promise.all((questions ?? []).map(async (q) => {
-    const { data: opts } = await supabase.from('question_options').select('*').eq('question_id', q.id).order('order_index');
+    const { data: opts, error: optionsError } = await supabase.from('question_options').select('*').eq('question_id', q.id).order('order_index');
+    if (optionsError) throw optionsError;
     return { ...q, options: opts ?? [] };
   }));
   return { study, questions: withOptions };

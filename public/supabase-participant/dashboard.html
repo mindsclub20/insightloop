@@ -8,23 +8,24 @@
 <body>
 <header class="topbar">
 <a class="brand" href="/supabase-participant/dashboard.html">Anvesh</a>
-<nav><span id="userName" class="muted"></span><button id="logoutButton" class="secondary">Log out</button></nav>
+<nav><a href="/supabase-participant/surveys.html">Available surveys</a><span id="userName" class="muted"></span><button id="logoutButton" class="secondary">Log out</button></nav>
 </header>
 <div class="container">
 <h1>Participant dashboard</h1>
+<p><a class="btn" href="/supabase-participant/surveys.html">Find available surveys →</a></p>
 <div id="alert" class="alert error hidden" role="alert"></div>
 <div class="grid cols-2">
 <section class="card"><h2>Your profile</h2><div id="profile">Loading…</div></section>
 <section class="card"><h2>Your wallet</h2><div id="wallet">Loading…</div><p class="muted">Rewards and withdrawals appear here once you participate in eligible research.</p></section>
 </div>
-<section class="card" style="margin-top:20px"><h2>Your interests</h2><div id="interests">Loading…</div></section>
+<section class="card" style="margin-top:20px"><h2>Your interests</h2><div id="interests">Loading…</div><p class="muted">Interests help match you with relevant surveys.</p></section>
 </div>
 <script src="/js/api.js"></script>
 <script type="module">
 import { supabase } from '/js/supabase/client.js';
 import { getProfile, getWallet } from '/js/supabase/participant.js';
 import { logout } from '/js/supabase/auth.js';
-import { syncPendingInterests } from '/js/supabase/pending-interests.js';
+import { syncUserInterests } from '/js/supabase/pending-interests.js';
 
 const money = (paise) => '₹' + (Number(paise || 0) / 100).toFixed(2);
 document.getElementById('logoutButton').addEventListener('click', async () => {
@@ -36,10 +37,10 @@ async function load() {
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) { location.href = '/login.html'; return; }
-    // Retry deferred signup preferences after the user's authenticated session
-    // is restored; failures leave the preferences queued for a later visit.
-    try { await syncPendingInterests(window.localStorage, user.id, supabase); }
-    catch { /* Interest syncing is non-blocking for the dashboard. */ }
+    try { await syncUserInterests(window.localStorage, user, supabase); }
+    catch (syncError) {
+      console.error('Interest sync failed; pending interests will be retained.', syncError);
+    }
     const [{ profile, tags }, wallet] = await Promise.all([getProfile(), getWallet()]);
     if (profile.status === 'SUSPENDED') { await logout(); location.href = '/login.html'; return; }
     document.getElementById('userName').textContent = profile.full_name || user.email;
@@ -62,5 +63,4 @@ function escapeHtml(value) {
 }
 load();
 </script>
-</body>
-</html>
+</body></html>
