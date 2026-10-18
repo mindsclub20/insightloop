@@ -25,6 +25,7 @@
 <script src="/js/api.js"></script>
 <script type="module">
 import { login, getCurrentUserAndProfile } from '/js/supabase/auth.js';
+import { syncPendingInterests } from '/js/supabase/pending-interests.js';
 import { supabase } from '/js/supabase/client.js';
 
 document.getElementById('loginForm').addEventListener('submit', async (event) => {
@@ -32,16 +33,28 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
   clearAlert('alert');
   try {
     await login(document.getElementById('email').value.trim(), document.getElementById('password').value);
-    const { profile } = await getCurrentUserAndProfile();
+    const { user, profile } = await getCurrentUserAndProfile();
     if (!profile || profile.status === 'SUSPENDED') {
       await supabase.auth.signOut();
       throw new Error('This account is not active. Contact Anvesh support.');
+    }
+    // A pending participant signup may have been confirmed on another visit.
+    // Sync is best-effort: a temporary interest-sync error must not block login.
+    if (user) {
+      try { await syncPendingInterests(window.sessionStorage, user.id, supabase); }
+      catch { /* Keep pending interests for the participant dashboard to retry. */ }
     }
     if (profile.role === 'BUSINESS') location.href = '/supabase-business/dashboard.html';
     else if (profile.role === 'ADMIN' || profile.role === 'SUPER_ADMIN') location.href = '/supabase-admin/dashboard.html';
     else location.href = '/supabase-participant/dashboard.html';
   } catch (error) {
-    showAlert('alert', error.message || 'Could not sign in.');
+    const code = error?.code || '';
+    const message = error?.message || '';
+    if (code === 'over_email_send_rate_limit' || /over_email_send_rate_limit|email rate limit/i.test(message)) {
+      showAlert('alert', 'Email confirmation is temporarily rate-limited. Please wait before trying again; repeated submissions will not speed it up.');
+    } else {
+      showAlert('alert', message || 'Could not sign in.');
+    }
   }
 });
 </script>

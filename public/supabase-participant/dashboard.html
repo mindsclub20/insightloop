@@ -24,6 +24,7 @@
 import { supabase } from '/js/supabase/client.js';
 import { getProfile, getWallet } from '/js/supabase/participant.js';
 import { logout } from '/js/supabase/auth.js';
+import { syncPendingInterests } from '/js/supabase/pending-interests.js';
 
 const money = (paise) => '₹' + (Number(paise || 0) / 100).toFixed(2);
 document.getElementById('logoutButton').addEventListener('click', async () => {
@@ -35,6 +36,10 @@ async function load() {
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) { location.href = '/login.html'; return; }
+    // Retry deferred signup preferences after the user's authenticated session
+    // is restored; failures leave the preferences queued for a later visit.
+    try { await syncPendingInterests(window.sessionStorage, user.id, supabase); }
+    catch { /* Interest syncing is non-blocking for the dashboard. */ }
     const [{ profile, tags }, wallet] = await Promise.all([getProfile(), getWallet()]);
     if (profile.status === 'SUSPENDED') { await logout(); location.href = '/login.html'; return; }
     document.getElementById('userName').textContent = profile.full_name || user.email;
