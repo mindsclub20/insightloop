@@ -37,17 +37,34 @@ export async function syncPendingInterests(storage, userId, client) {
   if (pending?.userId !== userId || !Array.isArray(pending.tags)) return false;
 
   const tags = normalizeTags(pending.tags);
-  const { data: existing, error: readError } = await client
-    .from('user_interests').select('tag').eq('user_id', userId);
-  if (readError) throw readError;
+  if (!tags.length) {
+    storage.removeItem(key);
+    return true;
+  }
 
-  const existingTags = new Set((existing || []).map((row) => String(row.tag).trim().toLowerCase()));
-  const missing = tags.filter((tag) => !existingTags.has(tag));
-  if (missing.length) {
-    const { error: insertError } = await client.from('user_interests').insert(
-      missing.map((tag) => ({ user_id: userId, tag })),
-    );
-    if (insertError) throw insertError;
+  // Prefer the deployed, JWT-verified Edge Function: it writes with the
+  // server-side client after validating the caller and role, avoiding fragile
+  // direct browser inserts that depend on the project's exact RLS grants.
+  if (client.functions?.invoke) {
+    const { error } = await client.functions.invoke('save-user-interests', {
+      body: { interests: tags },
+    });
+    if (error) throw error;
+  } else {
+    // Lightweight fallback for isolated unit tests and clients without the
+    // Edge Function API. Production Supabase clients use the branch above.
+    const { data: existing, error: readError } = await client
+      .from('user_interests').select('tag').eq('user_id', userId);
+    if (readError) throw readError;
+
+    const existingTags = new Set((existing || []).map((row) => String(row.tag).trim().toLowerCase()));
+    const missing = tags.filter((tag) => !existingTags.has(tag));
+    if (missing.length) {
+      const { error: insertError } = await client.from('user_interests').insert(
+        missing.map((tag) => ({ user_id: userId, tag })),
+      );
+      if (insertError) throw insertError;
+    }
   }
 
   storage.removeItem(key);
@@ -70,5 +87,11 @@ export async function syncUserInterests(storage, user, client) {
   const combined = normalizeTags([...metadataTags, ...localTags]);
   if (!combined.length) return false;
   rememberPendingInterests(storage, user.id, combined);
-  return syncPendingInterests(storage, user.id, client);
+  const synced = await syncPendingInterests(storage, user.id, client);
+  if (synced && client.auth?.updateUser && metadataTags.length) {
+    // The DB is now authoritative; clear the temporary Auth metadata backup
+    // so every dashboard visit does not re-sync the same tags.
+    await client.auth.updateUser({ data: { interests: null } }).catch(() => {});
+  }
+  return synced;
 }
