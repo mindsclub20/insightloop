@@ -1,5 +1,6 @@
 // Supabase Auth is the source of truth for credentials and sessions.
 import { supabase } from './client.js';
+import { rememberPendingInterests, syncPendingInterests } from './pending-interests.js';
 
 // Use the current app origin so production confirmation links do not fall back
 // to Supabase's default localhost:3000 URL. This origin must be allowed in
@@ -42,11 +43,19 @@ export async function registerParticipant({
   });
   if (error) throw error;
 
+  // Do not write interests until Supabase has issued a session. With email
+  // confirmation enabled, signup returns a user but no session, so RLS must
+  // reject direct inserts. Keep the tags locally and sync them after login.
   if (data.user && interests?.length) {
-    const { error: interestsError } = await supabase.from('user_interests').insert(
-      interests.map((tag) => ({ user_id: data.user.id, tag })),
-    );
-    if (interestsError) throw interestsError;
+    rememberPendingInterests(window.sessionStorage, data.user.id, interests);
+    if (data.session) {
+      try {
+        await syncPendingInterests(window.sessionStorage, data.user.id, supabase);
+      } catch {
+        // Preserve the pending entry; login/dashboard will retry without
+        // falsely telling the user that account creation failed.
+      }
+    }
   }
   return { ...data, needsEmailConfirmation: !data.session };
 }
