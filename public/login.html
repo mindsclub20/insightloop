@@ -41,7 +41,7 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
     // A pending participant signup may have been confirmed on another visit.
     // Sync is best-effort: a temporary interest-sync error must not block login.
     if (user) {
-      try { await syncPendingInterests(window.sessionStorage, user.id, supabase); }
+      try { await syncPendingInterests(window.localStorage, user.id, supabase); }
       catch { /* Keep pending interests for the participant dashboard to retry. */ }
     }
     if (profile.role === 'BUSINESS') location.href = '/supabase-business/dashboard.html';
