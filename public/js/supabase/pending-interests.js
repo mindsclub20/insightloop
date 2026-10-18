@@ -1,6 +1,6 @@
 // Keep participant interests until the user has an authenticated session.
-// Supabase rejects user_interests inserts before email confirmation because RLS
-// correctly requires auth.uid() to match user_id.
+// Signup metadata is the durable fallback when email confirmation happens on
+// another tab, browser, or Vercel alias where localStorage is not shared.
 const STORAGE_PREFIX = 'anvesh.pendingInterests:';
 
 function normalizeTags(tags) {
@@ -41,7 +41,7 @@ export async function syncPendingInterests(storage, userId, client) {
     .from('user_interests').select('tag').eq('user_id', userId);
   if (readError) throw readError;
 
-  const existingTags = new Set((existing || []).map((row) => String(row.tag).toLowerCase()));
+  const existingTags = new Set((existing || []).map((row) => String(row.tag).trim().toLowerCase()));
   const missing = tags.filter((tag) => !existingTags.has(tag));
   if (missing.length) {
     const { error: insertError } = await client.from('user_interests').insert(
@@ -52,4 +52,23 @@ export async function syncPendingInterests(storage, userId, client) {
 
   storage.removeItem(key);
   return true;
+}
+
+// Merge durable Auth metadata with any local queue before syncing. This
+// restores signup interests even if confirmation/login occurred on a
+// different origin and the original browser's localStorage is unavailable.
+export async function syncUserInterests(storage, user, client) {
+  if (!user?.id || !storage || !client) return false;
+  const key = storageKey(user.id);
+  let localTags = [];
+  try {
+    const pending = JSON.parse(storage.getItem(key) || 'null');
+    if (pending?.userId === user.id && Array.isArray(pending.tags)) localTags = pending.tags;
+  } catch { storage.removeItem(key); }
+
+  const metadataTags = Array.isArray(user.user_metadata?.interests) ? user.user_metadata.interests : [];
+  const combined = normalizeTags([...metadataTags, ...localTags]);
+  if (!combined.length) return false;
+  rememberPendingInterests(storage, user.id, combined);
+  return syncPendingInterests(storage, user.id, client);
 }
