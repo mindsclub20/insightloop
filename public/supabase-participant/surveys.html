@@ -223,7 +223,6 @@ async function submitSurvey(event) {
     detail.innerHTML = `<div class="card"><h2>Thank you for participating!</h2><p class="alert success">${escapeHtml(result.message || 'Your response was submitted.')}</p><button id="backToList" type="button">Back to available surveys</button></div>`;
     document.getElementById('backToList').addEventListener('click', loadSurveys);
     currentStudy = null;
-    await loadSurveys();
   } catch (error) {
     showError(error.message || 'Survey submission failed. Your answers have not been confirmed.');
     button.disabled = false;
