@@ -47,10 +47,10 @@ export async function registerParticipant({
   // confirmation enabled, signup returns a user but no session, so RLS must
   // reject direct inserts. Keep the tags locally and sync them after login.
   if (data.user && interests?.length) {
-    rememberPendingInterests(window.sessionStorage, data.user.id, interests);
+    rememberPendingInterests(window.localStorage, data.user.id, interests);
     if (data.session) {
       try {
-        await syncPendingInterests(window.sessionStorage, data.user.id, supabase);
+        await syncPendingInterests(window.localStorage, data.user.id, supabase);
       } catch {
         // Preserve the pending entry; login/dashboard will retry without
         // falsely telling the user that account creation failed.
