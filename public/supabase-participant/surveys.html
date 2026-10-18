@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Available Surveys — Anvesh</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/supabase-participant/dashboard.html">Anvesh</a>
+  <nav><a href="/supabase-participant/dashboard.html">Dashboard</a><button id="logoutButton" class="secondary" type="button">Log out</button></nav>
+</header>
+<main class="container">
+  <p class="eyebrow">PARTICIPANT WORKSPACE</p>
+  <h1>Available surveys</h1>
+  <p class="muted">Surveys shown here are active opportunities that match your profile and interests.</p>
+  <div id="alert" class="alert error hidden" role="alert"></div>
+  <div class="row" style="margin:16px 0"><button id="refreshButton" class="secondary" type="button">Refresh surveys</button><span id="status" class="muted" aria-live="polite"></span></div>
+  <section id="surveyList" aria-live="polite"><p class="muted">Loading available surveys…</p></section>
+  <section id="surveyDetail" aria-live="polite"></section>
+</main>
+<script src="/js/api.js"></script>
+<script type="module">
+import { supabase, invoke } from '/js/supabase/client.js';
+import { listEligibleStudies, getStudyDetail } from '/js/supabase/participant.js';
+import { logout } from '/js/supabase/auth.js';
+import { syncUserInterests } from '/js/supabase/pending-interests.js';
+
+const list = document.getElementById('surveyList');
+const detail = document.getElementById('surveyDetail');
+const status = document.getElementById('status');
+let currentStudy = null;
+let startedAt = 0;
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;',
+  }[char]));
+}
+function showError(message) {
+  const alert = document.getElementById('alert');
+  alert.textContent = message;
+  alert.classList.remove('hidden');
+}
+function clearError() {
+  const alert = document.getElementById('alert');
+  alert.textContent = '';
+  alert.classList.add('hidden');
+}
+function money(paise) {
+  return '₹' + (Number(paise || 0) / 100).toFixed(2);
+}
+function fingerprint() {
+  let value = localStorage.getItem('anvesh_device_signature');
+  if (!value) {
+    value = 'web_' + crypto.randomUUID();
+    localStorage.setItem('anvesh_device_signature', value);
+  }
+  return value;
+}
+
+async function requireParticipant() {
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) { location.href = '/login.html'; return null; }
+  const { data: profile, error: profileError } = await supabase.from('profiles')
+    .select('role,status').eq('id', user.id).single();
+  if (profileError) throw profileError;
+  if (!profile || profile.role !== 'USER' || profile.status === 'SUSPENDED') {
+    await logout();
+    location.href = '/login.html';
+    return null;
+  }
+  try { await syncUserInterests(localStorage, user, supabase); }
+  catch (error) { console.error('Interest sync will retry later.', error); }
+  return user;
+}
+
+async function loadSurveys() {
+  clearError();
+  detail.replaceChildren();
+  list.innerHTML = '<p class="muted">Loading available surveys…</p>';
+  status.textContent = '';
+  try {
+    const user = await requireParticipant();
+    if (!user) return;
+    const studies = await listEligibleStudies();
+    if (!studies.length) {
+      list.innerHTML = '<div class="card"><h2>No matching surveys yet</h2><p>There are no active surveys matching your profile and saved interests right now. You can check again later. If you just added interests, refresh this page after your dashboard shows them.</p><a class="btn secondary" href="/supabase-participant/dashboard.html">Review my profile</a></div>';
+      return;
+    }
+    list.innerHTML = studies.map((study) => `
+      <article class="card">
+        <h2>${escapeHtml(study.title)}</h2>
+        <p>${escapeHtml(study.objective || 'Share your perspective in this research survey.')}</p>
+        <div class="row">
+          <span class="badge green">Reward: ${money(study.reward_per_response_paise)}</span>
+          <span class="muted">Target city: ${escapeHtml(study.target_city || 'Any')}</span>
+        </div>
+        <button type="button" data-study-id="${escapeHtml(study.id)}" style="margin-top:12px">View survey</button>
+      </article>`).join('');
+    list.querySelectorAll('[data-study-id]').forEach((button) => {
+      button.addEventListener('click', () => openSurvey(button.dataset.studyId));
+    });
+    status.textContent = studies.length + (studies.length === 1 ? ' survey available' : ' surveys available');
+  } catch (error) {
+    list.innerHTML = '';
+    showError(error.message || 'Could not load surveys. Please try again.');
+  }
+}
+
+async function openSurvey(id) {
+  clearError();
+  detail.innerHTML = '<div class="card"><p class="muted">Loading survey questions…</p></div>';
+  try {
+    const result = await getStudyDetail(id);
+    if (!result) throw new Error('This survey is no longer available.');
+    currentStudy = result;
+    startedAt = Date.now();
+    renderSurvey(result);
+    detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (error) {
+    detail.replaceChildren();
+    showError(error.message || 'Could not open this survey.');
+  }
+}
+
+function renderSurvey(result) {
+  const { study, questions } = result;
+  if (!questions.length) {
+    detail.innerHTML = '<div class="card"><h2>' + escapeHtml(study.title) + '</h2><p>This survey has no questions yet. Please choose another survey.</p></div>';
+    return;
+  }
+  const fields = questions.map((question, index) => {
+    const qid = escapeHtml(question.id);
+    let control = '';
+    if (['single_choice', 'yes_no'].includes(question.question_type)) {
+      control = (question.options || []).map((option) => `
+        <label style="display:flex;align-items:center;gap:10px;font-weight:400;padding:8px 0">
+          <input style="width:auto" type="radio" name="q-${qid}" value="${escapeHtml(option.id)}">
+          <span>${escapeHtml(option.option_text)}</span>
+        </label>`).join('');
+    } else if (question.question_type === 'multi_choice') {
+      control = (question.options || []).map((option) => `
+        <label style="display:flex;align-items:center;gap:10px;font-weight:400;padding:8px 0">
+          <input style="width:auto" type="checkbox" name="q-${qid}" value="${escapeHtml(option.id)}">
+          <span>${escapeHtml(option.option_text)}</span>
+        </label>`).join('');
+    } else if (['rating_5', 'rating_10'].includes(question.question_type)) {
+      const max = question.question_type === 'rating_5' ? 5 : 10;
+      control = `<label for="q-${qid}">Choose a rating (1–${max})</label><input id="q-${qid}" name="q-${qid}" type="number" min="1" max="${max}" step="1" style="max-width:180px">`;
+    } else if (question.question_type === 'long_text') {
+      control = `<textarea id="q-${qid}" name="q-${qid}" rows="4"></textarea>`;
+    } else {
+      control = `<input id="q-${qid}" name="q-${qid}" type="text" maxlength="2000">`;
+    }
+    return `<fieldset class="card" data-question-id="${qid}" data-question-type="${escapeHtml(question.question_type)}" data-required="${question.is_required ? 'true' : 'false'}" style="border:1px solid var(--border)">
+      <legend><strong>${index + 1}. ${escapeHtml(question.question_text)}</strong>${question.is_required ? ' *' : ' (optional)'}</legend>
+      ${control}
+    </fieldset>`;
+  }).join('');
+  detail.innerHTML = `
+    <form id="surveyForm" class="card">
+      <h2>${escapeHtml(study.title)}</h2>
+      <p class="muted">${escapeHtml(study.objective || '')}</p>
+      <p><span class="badge green">Reward: ${money(study.reward_per_response_paise)}</span></p>
+      ${fields}
+      <div class="row"><button type="submit" id="submitSurveyButton">Submit responses</button><button type="button" id="cancelSurveyButton" class="secondary">Back to surveys</button></div>
+      <p class="muted">Submit only once. Your eligibility and response are checked securely by Anvesh.</p>
+    </form>`;
+  document.getElementById('cancelSurveyButton').addEventListener('click', () => {
+    detail.replaceChildren();
+    currentStudy = null;
+    list.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  document.getElementById('surveyForm').addEventListener('submit', submitSurvey);
+}
+
+async function submitSurvey(event) {
+  event.preventDefault();
+  clearError();
+  if (!currentStudy) return;
+  const form = event.currentTarget;
+  const answers = [];
+  for (const question of currentStudy.questions) {
+    const name = 'q-' + question.id;
+    const fieldset = form.querySelector('[data-question-id="' + CSS.escape(question.id) + '"]');
+    const type = question.question_type;
+    let answer = { question_id: question.id };
+    if (['single_choice', 'yes_no'].includes(type)) {
+      const selected = form.querySelector('input[name="' + CSS.escape(name) + '"]:checked');
+      if (selected) answer.selected_option_ids = [selected.value];
+      else answer.selected_option_ids = [];
+    } else if (type === 'multi_choice') {
+      answer.selected_option_ids = [...form.querySelectorAll('input[name="' + CSS.escape(name) + '"]:checked')].map((input) => input.value);
+    } else if (['rating_5', 'rating_10'].includes(type)) {
+      const value = form.querySelector('[name="' + CSS.escape(name) + '"]').value;
+      if (value !== '') answer.rating_value = Number(value);
+    } else {
+      const input = form.querySelector('[name="' + CSS.escape(name) + '"]');
+      if (input && input.value.trim()) answer.text_answer = input.value.trim();
+    }
+    const hasAnswer = (answer.selected_option_ids && answer.selected_option_ids.length > 0)
+      || (answer.text_answer !== undefined && answer.text_answer.length > 0)
+      || answer.rating_value !== undefined;
+    if (fieldset.dataset.required === 'true' && !hasAnswer) {
+      showError('Please answer the required question: ' + question.question_text);
+      fieldset.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    answers.push(answer);
+  }
+  const button = document.getElementById('submitSurveyButton');
+  button.disabled = true;
+  button.textContent = 'Submitting…';
+  try {
+    const result = await invoke('submit-survey-response', {
+      research_project_id: currentStudy.study.id,
+      answers,
+      duration_seconds: Math.max(1, Math.round((Date.now() - startedAt) / 1000)),
+      device_fingerprint: fingerprint(),
+    });
+    detail.innerHTML = `<div class="card"><h2>Thank you for participating!</h2><p class="alert success">${escapeHtml(result.message || 'Your response was submitted.')}</p><button id="backToList" type="button">Back to available surveys</button></div>`;
+    document.getElementById('backToList').addEventListener('click', loadSurveys);
+    currentStudy = null;
+    await loadSurveys();
+  } catch (error) {
+    showError(error.message || 'Survey submission failed. Your answers have not been confirmed.');
+    button.disabled = false;
+    button.textContent = 'Submit responses';
+  }
+}
+
+document.getElementById('refreshButton').addEventListener('click', loadSurveys);
+document.getElementById('logoutButton').addEventListener('click', async () => {
+  try { await logout(); location.href = '/login.html'; }
+  catch (error) { showError(error.message || 'Could not log out.'); }
+});
+loadSurveys();
+</script>
+</body>
+</html>
