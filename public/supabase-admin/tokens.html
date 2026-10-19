@@ -6,6 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <title>Token Control — Anvesh Admin</title>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <style>
     .token-hero{padding:28px;border-radius:22px;background:linear-gradient(135deg,#f1eaff,#fff 70%);border:1px solid #e4d9ff;margin-bottom:20px}
     .token-balance{font:700 clamp(28px,5vw,42px) 'Space Grotesk',sans-serif;color:#5b3ab8}
@@ -29,7 +30,7 @@
   <div id="tokenAlert" class="alert hidden" role="status" aria-live="polite"></div>
   <section class="card">
     <h2>Grant tokens to a business</h2>
-    <p class="muted">Only an authenticated ADMIN or SUPER_ADMIN can grant tokens. Grants are recorded in the database ledger.</p>
+    <p class="muted">Only the designated token administrator can grant tokens. Every grant is recorded in the database ledger.</p>
     <form id="grantForm">
       <label for="businessSelect">Business account</label>
       <select id="businessSelect" required><option value="">Loading business accounts…</option></select>
