@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Token Control — Anvesh Admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .token-hero{padding:28px;border-radius:22px;background:linear-gradient(135deg,#f1eaff,#fff 70%);border:1px solid #e4d9ff;margin-bottom:20px}
+    .token-balance{font:700 clamp(28px,5vw,42px) 'Space Grotesk',sans-serif;color:#5b3ab8}
+    .token-table-wrap{overflow-x:auto}.token-table-wrap table{min-width:620px}
+    .token-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(120px,.5fr);gap:12px}
+    @media(max-width:560px){.token-form{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/supabase-admin/dashboard.html">Anvesh Admin</a>
+  <nav><span id="userName" class="muted"></span><a href="/supabase-admin/dashboard.html">Admin dashboard</a><a href="#" id="logoutLink">Log out</a></nav>
+</header>
+<main class="container">
+  <section class="token-hero">
+    <p class="eyebrow">PLATFORM CONTROLS · INTERNAL CREDITS</p>
+    <h1>Token control</h1>
+    <p class="muted">Grant internal tokens to business accounts and audit the token ledger. Tokens are not cash and are not redeemable for money.</p>
+    <div id="tokenStats" class="token-balance">Loading balances…</div>
+  </section>
+  <div id="tokenAlert" class="alert hidden" role="status" aria-live="polite"></div>
+  <section class="card">
+    <h2>Grant tokens to a business</h2>
+    <p class="muted">Only an authenticated ADMIN or SUPER_ADMIN can grant tokens. Grants are recorded in the database ledger.</p>
+    <form id="grantForm">
+      <label for="businessSelect">Business account</label>
+      <select id="businessSelect" required><option value="">Loading business accounts…</option></select>
+      <div class="token-form">
+        <div><label for="grantAmount">Tokens to grant</label><input id="grantAmount" type="number" min="1" max="1000000000" step="1" required placeholder="e.g. 500"></div>
+        <div><label for="grantNote">Admin note (optional)</label><input id="grantNote" maxlength="500" placeholder="Pilot allocation"></div>
+      </div>
+      <button id="grantButton" type="submit" style="margin-top:16px">Grant tokens</button>
+    </form>
+  </section>
+  <section class="card">
+    <div class="row"><div class="spacer"><h2>Account balances</h2><p class="muted">Business and participant balances.</p></div><button class="secondary" id="refreshTokens">Refresh</button></div>
+    <div id="tokenAccounts" class="token-table-wrap">Loading…</div>
+  </section>
+  <section class="card">
+    <h2>Recent token transactions</h2>
+    <div id="tokenTransactions" class="token-table-wrap">Loading…</div>
+  </section>
+</main>
+<script type="module" src="/js/supabase/token-admin-page.js"></script>
+</body>
+</html>
