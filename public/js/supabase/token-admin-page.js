@@ -63,4 +63,16 @@ $('grantForm').addEventListener('submit', async (event) => {
 $('refreshTokens').addEventListener('click', load);
 $('logoutLink').addEventListener('click', async (e) => { e.preventDefault(); await logoutSupabase(); });
 const session = await requireRoleSupabase('ADMIN');
-if (session) { $('userName').textContent = session.profile.full_name || session.user.email; await load(); }
+if (session) {
+  $('userName').textContent = session.profile.full_name || session.user.email;
+  const { data: allowed, error } = await supabase.rpc('is_token_admin');
+  if (error || allowed !== true) {
+    $('grantForm').classList.add('hidden');
+    $('tokenAccounts').textContent = 'Restricted: this page is reserved for the designated token administrator.';
+    $('tokenTransactions').textContent = 'Access denied.';
+    $('tokenStats').textContent = 'Restricted access';
+    alertBox('This token control panel is restricted to the designated administrator account.');
+  } else {
+    await load();
+  }
+}
