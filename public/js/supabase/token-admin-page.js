@@ -62,17 +62,37 @@ $('grantForm').addEventListener('submit', async (event) => {
 });
 $('refreshTokens').addEventListener('click', load);
 $('logoutLink').addEventListener('click', async (e) => { e.preventDefault(); await logoutSupabase(); });
-const session = await requireRoleSupabase('ADMIN');
-if (session) {
-  $('userName').textContent = session.profile.full_name || session.user.email;
-  const { data: allowed, error } = await supabase.rpc('is_token_admin');
-  if (error || allowed !== true) {
-    $('grantForm').classList.add('hidden');
-    $('tokenAccounts').textContent = 'Restricted: this page is reserved for the designated token administrator.';
-    $('tokenTransactions').textContent = 'Access denied.';
-    $('tokenStats').textContent = 'Restricted access';
-    alertBox('This token control panel is restricted to the designated administrator account.');
-  } else {
+async function startTokenAdminPage() {
+  try {
+    const { data: { session: authSession }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+    if (!authSession) {
+      $('grantForm').classList.add('hidden');
+      $('tokenStats').textContent = 'Sign-in required';
+      $('tokenAccounts').textContent = 'Please sign in with the designated administrator account.';
+      $('tokenTransactions').textContent = 'Sign-in required.';
+      setTimeout(() => { window.location.replace('/supabase-login.html'); }, 700);
+      return;
+    }
+    const session = await requireRoleSupabase('ADMIN');
+    if (!session) return;
+    $('userName').textContent = session.profile.full_name || session.user.email;
+    const { data: allowed, error } = await supabase.rpc('is_token_admin');
+    if (error || allowed !== true) {
+      $('grantForm').classList.add('hidden');
+      $('tokenAccounts').textContent = 'Restricted: this page is reserved for the designated token administrator.';
+      $('tokenTransactions').textContent = 'Access denied.';
+      $('tokenStats').textContent = 'Restricted access';
+      alertBox('This token control panel is restricted to the designated administrator account.');
+      return;
+    }
     await load();
+  } catch (error) {
+    alertBox(error.message || 'Sign-in is required to access token controls.');
+    $('grantForm').classList.add('hidden');
+    $('tokenStats').textContent = 'Access unavailable';
+    $('tokenAccounts').textContent = 'Could not verify administrator access.';
+    $('tokenTransactions').textContent = 'Access unavailable.';
   }
 }
+startTokenAdminPage();
