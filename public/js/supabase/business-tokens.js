@@ -56,11 +56,13 @@ $('tokenTransferForm').addEventListener('submit', async e => {
   } catch(error) { show(error.message || 'Token allocation failed.'); }
   finally { btn.disabled=false; btn.textContent='Allocate tokens'; }
 });
-const session = await requireRoleSupabase('BUSINESS');
-if(session) {
+async function startBusinessTokenPanel() {
   try {
-    const {data:{user}}=await supabase.auth.getUser();
-    if(!user) throw new Error('Please sign in again.');
-    await refresh();
-  } catch(error) { show(error.message || 'Token wallet could not load.'); }
+    const { data: { session: authSession }, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    if (!authSession) { panel.classList.add('hidden'); return; }
+    const session = await requireRoleSupabase('BUSINESS');
+    if (session) await refresh();
+  } catch (error) { show(error.message || 'Token wallet could not load.'); }
 }
+startBusinessTokenPanel();
