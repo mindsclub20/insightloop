@@ -5,6 +5,7 @@ import {
   applyPasswordReset,
   isMissingAuthSessionError,
   getPasswordRecoveryRedirectTo,
+  isPasswordRecoveryLink,
 } from '../public/js/supabase/password-recovery.js';
 
 function fakeClient({ resetError = null, updateError = null } = {}) {
@@ -82,4 +83,11 @@ test('does not misclassify unrelated errors as missing sessions', () => {
 
 test('password recovery redirects to the existing site root URL', () => {
   assert.equal(getPasswordRecoveryRedirectTo('https://example.test'), 'https://example.test/');
+});
+
+test('recognizes Supabase recovery links and the explicit recovery query', () => {
+  assert.equal(isPasswordRecoveryLink('#type=recovery', ''), true);
+  assert.equal(isPasswordRecoveryLink('', '?recovery=1'), true);
+  assert.equal(isPasswordRecoveryLink('#type=signup', ''), false);
+  assert.equal(isPasswordRecoveryLink('', ''), false);
 });
