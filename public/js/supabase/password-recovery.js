@@ -4,6 +4,12 @@ export function getPasswordRecoveryRedirectTo(origin) {
   return new URL('/', origin).toString();
 }
 
+export function isPasswordRecoveryLink(hash, search = '') {
+  const hashParams = new URLSearchParams(String(hash || '').replace(/^#/, ''));
+  const searchParams = new URLSearchParams(String(search || '').replace(/^\?/, ''));
+  return hashParams.get('type') === 'recovery' || searchParams.get('recovery') === '1';
+}
+
 export async function requestPasswordReset(supabase, email, redirectTo) {
   const normalizedEmail = typeof email === 'string' ? email.trim() : '';
   if (!normalizedEmail) throw new Error('Enter your email address first.');
