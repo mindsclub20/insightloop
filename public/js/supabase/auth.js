@@ -4,12 +4,10 @@ import { rememberPendingInterests, syncPendingInterests } from './pending-intere
 import {
   requestPasswordReset as requestPasswordResetWithClient,
   applyPasswordReset as applyPasswordResetWithClient,
+  getPasswordRecoveryRedirectTo,
   isMissingAuthSessionError,
 } from './password-recovery.js';
 
-// Use the current app origin so production confirmation links do not fall back
-// to Supabase's default localhost:3000 URL. This origin must be allowed in
-// Supabase Dashboard → Authentication → URL Configuration.
 function getEmailRedirectTo() {
   return new URL('/', window.location.origin).toString();
 }
@@ -21,7 +19,7 @@ export async function login(email, password) {
 }
 
 export async function requestPasswordReset(email) {
-  const redirectTo = new URL('/supabase-login.html', window.location.origin).toString();
+  const redirectTo = getPasswordRecoveryRedirectTo(window.location.origin);
   return requestPasswordResetWithClient(supabase, email, redirectTo);
 }
 
@@ -57,8 +55,6 @@ export async function registerParticipant({
       data: {
         full_name, city, area, age_range, gender, occupation_category,
         date_of_birth, account_type: 'participant',
-        // Auth metadata survives email confirmation across tabs/origins. The
-        // client syncs these tags into user_interests after a valid session.
         interests: normalizedInterests,
       },
     },
@@ -82,8 +78,6 @@ export async function registerBusiness({
   email, password, full_name, legal_name, city, category, gstin,
 }) {
   if (!legal_name?.trim()) throw new Error('Business legal name is required.');
-  // Migration 019 creates the profile, wallet, business, and owner membership
-  // transactionally from this server-verified Auth signup event.
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -106,8 +100,6 @@ export async function registerBusiness({
 export async function getCurrentUserAndProfile() {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError) {
-    // A missing session is a normal logged-out state on protected pages.
-    // Return a null identity so role guards can redirect to the login page.
     if (isMissingAuthSessionError(userError)) return { user: null, profile: null };
     throw userError;
   }
