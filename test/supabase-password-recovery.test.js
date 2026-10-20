@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { requestPasswordReset, applyPasswordReset } from '../public/js/supabase/password-recovery.js';
+import { requestPasswordReset, applyPasswordReset, isMissingAuthSessionError } from '../public/js/supabase/password-recovery.js';
 
 function fakeClient({ resetError = null, updateError = null } = {}) {
   const calls = { reset: [], update: [] };
@@ -64,4 +64,13 @@ test('new password updates the authenticated recovery session', async () => {
 test('new password surfaces Supabase update errors', async () => {
   const client = fakeClient({ updateError: new Error('recovery session expired') });
   await assert.rejects(() => applyPasswordReset(client, 'correct-horse-1', 'correct-horse-1'), /recovery session expired/);
+});
+
+test('recognizes Supabase missing-session errors', () => {
+  assert.equal(isMissingAuthSessionError({ name: 'AuthSessionMissingError', message: 'Auth session missing!' }), true);
+  assert.equal(isMissingAuthSessionError(new Error('Auth session missing!')), true);
+});
+
+test('does not misclassify unrelated errors as missing sessions', () => {
+  assert.equal(isMissingAuthSessionError(new Error('Network request failed')), false);
 });
