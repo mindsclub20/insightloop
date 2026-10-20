@@ -1,4 +1,9 @@
 // Small, dependency-injected helpers so auth recovery behavior can be tested without a browser.
+export function getPasswordRecoveryRedirectTo(origin) {
+  if (!origin || typeof origin !== 'string') throw new Error('Password recovery site origin is missing.');
+  return new URL('/', origin).toString();
+}
+
 export async function requestPasswordReset(supabase, email, redirectTo) {
   const normalizedEmail = typeof email === 'string' ? email.trim() : '';
   if (!normalizedEmail) throw new Error('Enter your email address first.');
