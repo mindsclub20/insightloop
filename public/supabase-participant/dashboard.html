@@ -26,6 +26,7 @@ import { supabase, invoke } from '/js/supabase/client.js';
 import { getProfile, getWallet } from '/js/supabase/participant.js';
 import { logout } from '/js/supabase/auth.js';
 import { syncUserInterests } from '/js/supabase/pending-interests.js';
+import { SHARED_LOGIN_PATH } from '/js/supabase/role-routing.js';
 
 const money = (paise) => '₹' + (Number(paise || 0) / 100).toFixed(2);
 document.getElementById('interestForm').addEventListener('submit', async (event) => {
@@ -55,20 +56,20 @@ document.getElementById('interestForm').addEventListener('submit', async (event)
   }
 });
 document.getElementById('logoutButton').addEventListener('click', async () => {
-  try { await logout(); location.href = '/login.html'; }
+  try { await logout(); location.replace(SHARED_LOGIN_PATH); }
   catch (error) { showAlert('alert', error.message); }
 });
 
 async function load() {
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) { location.href = '/login.html'; return; }
+    if (userError || !user) { location.replace(SHARED_LOGIN_PATH); return; }
     try { await syncUserInterests(window.localStorage, user, supabase); }
     catch (syncError) {
       console.error('Interest sync failed; pending interests will be retained.', syncError);
     }
     const [{ profile, tags }, wallet] = await Promise.all([getProfile(), getWallet()]);
-    if (profile.status === 'SUSPENDED') { await logout(); location.href = '/login.html'; return; }
+    if (profile.status === 'SUSPENDED') { await logout(); location.replace(SHARED_LOGIN_PATH); return; }
     document.getElementById('userName').textContent = profile.full_name || user.email;
     document.getElementById('profile').innerHTML =
       '<p><strong>Name:</strong> ' + escapeHtml(profile.full_name || '—') + '</p>' +
