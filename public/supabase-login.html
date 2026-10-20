@@ -3,55 +3,84 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Log in — Anvesh (Supabase track)</title>
+<title>Log in — Anvesh</title>
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<header class="topbar">
-  <a class="brand" href="/index.html">Anvesh</a>
-</header>
-
+<header class="topbar"><a class="brand" href="/index.html">Anvesh</a></header>
 <div class="narrow">
   <h1>Log in</h1>
-  <div class="alert info">
-    This page talks to Supabase directly, not the local SQLite demo server.
-    It will not work until you've deployed the migrations/Edge Functions and
-    filled in your real project URL/anon key in
-    <code>public/js/supabase/client.js</code> — see docs/SUPABASE_SETUP.md.
-  </div>
-  <div id="alert" class="alert error hidden"></div>
+  <p class="muted">Business, participant, and admin accounts share this login page.</p>
+  <div id="alert" class="alert error hidden" role="status" aria-live="polite"></div>
   <form id="loginForm">
-    <label>Email</label>
-    <input type="email" id="email" required>
-    <label>Password</label>
-    <input type="password" id="password" required>
-    <button style="width:100%; margin-top:16px;">Log in</button>
+    <label for="email">Email</label><input type="email" id="email" autocomplete="username" required>
+    <label for="password">Password</label><input type="password" id="password" autocomplete="current-password" required>
+    <button style="width:100%;margin-top:16px">Log in</button>
   </form>
-  <p class="muted" style="margin-top:16px;">
-    <a href="/supabase-admin/first-time-setup.html">First-time admin verification</a><br>
-    New business? <a href="/supabase-register-business.html">Register your business</a><br>
-    Participants use the Android app, not this web track — see mobile/README.md.
-  </p>
+  <p class="muted"><a href="#" id="forgotPasswordLink">Forgot password?</a></p>
+  <form id="passwordRecoveryForm" class="hidden">
+    <h2>Choose a new password</h2>
+    <label for="newPassword">New password</label><input type="password" id="newPassword" autocomplete="new-password" minlength="8" required>
+    <label for="confirmNewPassword">Confirm new password</label><input type="password" id="confirmNewPassword" autocomplete="new-password" minlength="8" required>
+    <button id="updatePasswordButton" style="width:100%;margin-top:16px">Update password</button>
+    <button id="cancelRecoveryButton" type="button" class="secondary" style="width:100%;margin-top:8px">Back to login</button>
+  </form>
+  <p class="muted" style="margin-top:16px"><a href="/supabase-admin/first-time-setup.html">First-time admin verification</a><br>New business? <a href="/supabase-register-business.html">Register your business</a></p>
 </div>
-
 <script src="/js/api.js"></script>
 <script type="module">
-import { login } from '/js/supabase/auth.js';
+import { login, requestPasswordReset, applyPasswordReset } from '/js/supabase/auth.js';
 import { supabase } from '/js/supabase/client.js';
-
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  clearAlert('alert');
+import { getDashboardPath } from '/js/supabase/role-routing.js';
+const $ = (id) => document.getElementById(id);
+const loginForm = $('loginForm'), recoveryForm = $('passwordRecoveryForm'), forgot = $('forgotPasswordLink');
+function showRecovery() {
+  loginForm.classList.add('hidden'); forgot.classList.add('hidden'); recoveryForm.classList.remove('hidden');
+  clearAlert('alert'); showAlert('alert', 'Choose a new password for your account.', 'info');
+}
+function showLogin() {
+  recoveryForm.classList.add('hidden'); loginForm.classList.remove('hidden'); forgot.classList.remove('hidden');
+}
+forgot.addEventListener('click', async (event) => {
+  event.preventDefault(); clearAlert('alert');
+  const email = $('email').value.trim();
+  if (!email) { showAlert('alert', 'Enter your account email above first.'); $('email').focus(); return; }
+  forgot.textContent = 'Sending reset link…'; forgot.setAttribute('aria-disabled', 'true');
   try {
-    await login(document.getElementById('email').value, document.getElementById('password').value);
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile.role === 'BUSINESS') window.location.href = '/supabase-business/dashboard.html';
-    else if (profile.role === 'ADMIN' || profile.role === 'SUPER_ADMIN') window.location.href = '/supabase-admin/dashboard.html';
-    else showAlert('alert', 'This web login is for business/admin accounts. Participants should use the Android app.');
-  } catch (err) {
-    showAlert('alert', err.message);
-  }
+    await requestPasswordReset(email);
+    showAlert('alert', 'If an account exists for that email, a password reset link has been sent. Check your inbox.', 'success');
+  } catch (error) { showAlert('alert', error.message || 'Could not request a password reset.'); }
+  finally { forgot.textContent = 'Forgot password?'; forgot.removeAttribute('aria-disabled'); }
+});
+recoveryForm.addEventListener('submit', async (event) => {
+  event.preventDefault(); clearAlert('alert');
+  const button = $('updatePasswordButton'); button.disabled = true; button.textContent = 'Updating…';
+  try {
+    await applyPasswordReset($('newPassword').value, $('confirmNewPassword').value);
+    recoveryForm.reset();
+    try { await supabase.auth.signOut(); } catch { /* Password has already been updated. */ }
+    history.replaceState(null, '', location.pathname); showLogin();
+    showAlert('alert', 'Password updated successfully. Please log in with your new password.', 'success');
+  } catch (error) { showAlert('alert', error.message || 'Open the newest reset link and try again.'); }
+  finally { button.disabled = false; button.textContent = 'Update password'; }
+});
+$('cancelRecoveryButton').addEventListener('click', () => { history.replaceState(null, '', location.pathname); showLogin(); clearAlert('alert'); });
+supabase.auth.onAuthStateChange((event) => { if (event === 'PASSWORD_RECOVERY') showRecovery(); });
+const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+if (hash.get('type') === 'recovery' || new URLSearchParams(location.search).get('recovery') === '1') showRecovery();
+loginForm.addEventListener('submit', async (event) => {
+  event.preventDefault(); clearAlert('alert');
+  try {
+    await login($('email').value.trim(), $('password').value);
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user) throw new Error('Sign-in succeeded but no authenticated user was returned.');
+    const { data: profile, error: profileError } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (profileError) throw profileError;
+    const path = getDashboardPath(profile.role);
+    if (path) location.replace(path);
+    else showAlert('alert', 'This account does not have a supported Anvesh dashboard role.');
+  } catch (error) { showAlert('alert', error.message || 'Could not log in. Check your email and password.'); }
 });
 </script>
 </body>

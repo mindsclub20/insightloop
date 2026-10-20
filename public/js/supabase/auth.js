@@ -1,10 +1,13 @@
 // Supabase Auth is the source of truth for credentials and sessions.
 import { supabase } from './client.js';
 import { rememberPendingInterests, syncPendingInterests } from './pending-interests.js';
+import {
+  requestPasswordReset as requestPasswordResetWithClient,
+  applyPasswordReset as applyPasswordResetWithClient,
+  getPasswordRecoveryRedirectTo,
+  isMissingAuthSessionError,
+} from './password-recovery.js';
 
-// Use the current app origin so production confirmation links do not fall back
-// to Supabase's default localhost:3000 URL. This origin must be allowed in
-// Supabase Dashboard → Authentication → URL Configuration.
 function getEmailRedirectTo() {
   return new URL('/', window.location.origin).toString();
 }
@@ -13,6 +16,15 @@ export async function login(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return data.session;
+}
+
+export async function requestPasswordReset(email) {
+  const redirectTo = getPasswordRecoveryRedirectTo(window.location.origin);
+  return requestPasswordResetWithClient(supabase, email, redirectTo);
+}
+
+export async function applyPasswordReset(password, confirmPassword) {
+  return applyPasswordResetWithClient(supabase, password, confirmPassword);
 }
 
 export async function logout() {
@@ -43,8 +55,6 @@ export async function registerParticipant({
       data: {
         full_name, city, area, age_range, gender, occupation_category,
         date_of_birth, account_type: 'participant',
-        // Auth metadata survives email confirmation across tabs/origins. The
-        // client syncs these tags into user_interests after a valid session.
         interests: normalizedInterests,
       },
     },
@@ -68,8 +78,6 @@ export async function registerBusiness({
   email, password, full_name, legal_name, city, category, gstin,
 }) {
   if (!legal_name?.trim()) throw new Error('Business legal name is required.');
-  // Migration 019 creates the profile, wallet, business, and owner membership
-  // transactionally from this server-verified Auth signup event.
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -91,7 +99,10 @@ export async function registerBusiness({
 
 export async function getCurrentUserAndProfile() {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError) throw userError;
+  if (userError) {
+    if (isMissingAuthSessionError(userError)) return { user: null, profile: null };
+    throw userError;
+  }
   if (!user) return { user: null, profile: null };
   const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
   if (error) throw error;
