@@ -1,6 +1,11 @@
 // Supabase Auth is the source of truth for credentials and sessions.
 import { supabase } from './client.js';
 import { rememberPendingInterests, syncPendingInterests } from './pending-interests.js';
+import {
+  requestPasswordReset as requestPasswordResetWithClient,
+  applyPasswordReset as applyPasswordResetWithClient,
+  isMissingAuthSessionError,
+} from './password-recovery.js';
 
 // Use the current app origin so production confirmation links do not fall back
 // to Supabase's default localhost:3000 URL. This origin must be allowed in
@@ -13,6 +18,15 @@ export async function login(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return data.session;
+}
+
+export async function requestPasswordReset(email) {
+  const redirectTo = new URL('/supabase-login.html', window.location.origin).toString();
+  return requestPasswordResetWithClient(supabase, email, redirectTo);
+}
+
+export async function applyPasswordReset(password, confirmPassword) {
+  return applyPasswordResetWithClient(supabase, password, confirmPassword);
 }
 
 export async function logout() {
@@ -91,7 +105,12 @@ export async function registerBusiness({
 
 export async function getCurrentUserAndProfile() {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError) throw userError;
+  if (userError) {
+    // A missing session is a normal logged-out state on protected pages.
+    // Return a null identity so role guards can redirect to the login page.
+    if (isMissingAuthSessionError(userError)) return { user: null, profile: null };
+    throw userError;
+  }
   if (!user) return { user: null, profile: null };
   const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
   if (error) throw error;
