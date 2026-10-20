@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>First-Time Admin Verification — Anvesh</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.admin-setup { max-width: 560px; margin: 36px auto; padding: 24px; }
+.admin-setup .step { padding: 12px 14px; border: 1px solid #d8dee8; border-radius: 10px; margin: 12px 0; }
+.admin-setup input { width: 100%; box-sizing: border-box; margin: 8px 0 16px; }
+.admin-setup button { width: 100%; }
+.admin-setup .status { overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="/index.html">Anvesh</a><nav><a href="/supabase-login.html">Log in</a></nav></header>
+<main class="admin-setup">
+  <h1>First-Time Admin Verification</h1>
+  <p class="muted">Securely activate the first token administrator. This setup can succeed only once and only for the owner email configured on the server.</p>
+  <div id="setupStatus" class="alert info status" role="status" aria-live="polite">Checking your sign-in…</div>
+  <div class="step"><strong>Step 1 — Verify your account</strong><p id="accountStatus" class="muted">Checking Supabase session…</p><a id="loginLink" class="hidden" href="/supabase-login.html">Sign in first</a></div>
+  <form id="setupForm" class="hidden">
+    <label for="bootstrapSecret">One-time setup key</label>
+    <input id="bootstrapSecret" name="bootstrapSecret" type="password" autocomplete="one-time-code" minlength="32" required aria-describedby="keyHelp">
+    <small id="keyHelp" class="muted">Use the setup key configured privately in the Supabase Edge Function secrets. Never share it or commit it to GitHub.</small>
+    <button id="verifyButton" type="submit">Verify and activate admin</button>
+  </form>
+  <p class="muted">This page never asks for your email password or email verification code. It uses your existing Supabase sign-in session.</p>
+</main>
+<script type="module">
+import { supabase } from '/js/supabase/client.js';
+const $ = (id) => document.getElementById(id);
+const status = (message, kind = 'info') => { $('setupStatus').textContent = message; $('setupStatus').className = 'alert ' + kind + ' status'; };
+try {
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error) throw error;
+  if (!user) {
+    status('Sign in with your Anvesh account before continuing.');
+    $('accountStatus').textContent = 'No active session found.';
+    $('loginLink').classList.remove('hidden');
+  } else if (!user.email_confirmed_at) {
+    status('Email verification is required before admin setup.', 'error');
+    $('accountStatus').textContent = 'Signed in, but this email is not confirmed.';
+  } else {
+    $('accountStatus').textContent = 'Signed in as ' + (user.email || 'verified account') + '. Email confirmed.';
+    $('setupForm').classList.remove('hidden');
+    status('Account verified. Continue only if you are the designated Anvesh owner.');
+  }
+} catch (error) {
+  status(error.message || 'Could not verify your sign-in. Please log in again.', 'error');
+  $('accountStatus').textContent = 'Verification unavailable.';
+  $('loginLink').classList.remove('hidden');
+}
+$('setupForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = $('verifyButton');
+  button.disabled = true;
+  button.textContent = 'Verifying…';
+  status('Checking owner identity and one-time setup authorization…');
+  try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user || !user.email_confirmed_at) throw new Error('A confirmed sign-in is required. Please log in again.');
+    const secret = $('bootstrapSecret').value;
+    if (secret.length < 32) throw new Error('The setup key must contain at least 32 characters.');
+    const { data, error } = await supabase.functions.invoke('first-admin-setup', { body: { bootstrapSecret: secret } });
+    if (error) {
+      let message = error.message || 'Admin verification failed.';
+      try { const detail = await error.context?.json(); if (detail?.error) message = detail.error; } catch {}
+      throw new Error(message);
+    }
+    if (data?.ok !== true) throw new Error(data?.error || 'The server did not confirm admin activation.');
+    $('bootstrapSecret').value = '';
+    $('setupForm').classList.add('hidden');
+    status('Admin verification complete. Your token administrator access is active.', 'success');
+    $('accountStatus').textContent = 'Administrator access activated for the verified account.';
+    setTimeout(() => { window.location.replace('/supabase-admin/tokens.html'); }, 1000);
+  } catch (error) {
+    status(error.message || 'Admin verification failed. No success was assumed.', 'error');
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Verify and activate admin';
+  }
+});
+</script>
+</body>
+</html>
