@@ -7,129 +7,69 @@
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<header class="topbar">
-  <a class="brand" href="/index.html">Anvesh</a>
-</header>
-
+<header class="topbar"><a class="brand" href="/index.html">Anvesh</a></header>
 <div class="narrow">
   <h1>Log in</h1>
-  <p class="muted">Business and administrator accounts sign in here. Participants use the Android app.</p>
+  <p class="muted">Business, participant, and admin accounts share this login page.</p>
   <div id="alert" class="alert error hidden" role="status" aria-live="polite"></div>
   <form id="loginForm">
-    <label for="email">Email</label>
-    <input type="email" id="email" autocomplete="username" required>
-    <label for="password">Password</label>
-    <input type="password" id="password" autocomplete="current-password" required>
-    <button style="width:100%; margin-top:16px;">Log in</button>
+    <label for="email">Email</label><input type="email" id="email" autocomplete="username" required>
+    <label for="password">Password</label><input type="password" id="password" autocomplete="current-password" required>
+    <button style="width:100%;margin-top:16px">Log in</button>
   </form>
-  <p class="muted" style="margin-top:10px;"><a href="#" id="forgotPasswordLink">Forgot password?</a></p>
-
+  <p class="muted"><a href="#" id="forgotPasswordLink">Forgot password?</a></p>
   <form id="passwordRecoveryForm" class="hidden">
     <h2>Choose a new password</h2>
-    <p class="muted">Use at least 8 characters. You'll be asked to log in again after the password is updated.</p>
-    <label for="newPassword">New password</label>
-    <input type="password" id="newPassword" autocomplete="new-password" minlength="8" required>
-    <label for="confirmNewPassword">Confirm new password</label>
-    <input type="password" id="confirmNewPassword" autocomplete="new-password" minlength="8" required>
-    <button id="updatePasswordButton" style="width:100%; margin-top:16px;">Update password</button>
-    <button id="cancelRecoveryButton" type="button" class="secondary" style="width:100%; margin-top:8px;">Back to login</button>
+    <label for="newPassword">New password</label><input type="password" id="newPassword" autocomplete="new-password" minlength="8" required>
+    <label for="confirmNewPassword">Confirm new password</label><input type="password" id="confirmNewPassword" autocomplete="new-password" minlength="8" required>
+    <button id="updatePasswordButton" style="width:100%;margin-top:16px">Update password</button>
+    <button id="cancelRecoveryButton" type="button" class="secondary" style="width:100%;margin-top:8px">Back to login</button>
   </form>
-
-  <p class="muted" style="margin-top:16px;">
-    <a href="/supabase-admin/first-time-setup.html">First-time admin verification</a><br>
-    New business? <a href="/supabase-register-business.html">Register your business</a>
-  </p>
+  <p class="muted" style="margin-top:16px"><a href="/supabase-admin/first-time-setup.html">First-time admin verification</a><br>New business? <a href="/supabase-register-business.html">Register your business</a></p>
 </div>
-
 <script src="/js/api.js"></script>
 <script type="module">
 import { login, requestPasswordReset, applyPasswordReset } from '/js/supabase/auth.js';
 import { supabase } from '/js/supabase/client.js';
-
+import { getDashboardPath } from '/js/supabase/role-routing.js';
 const $ = (id) => document.getElementById(id);
-const loginForm = $('loginForm');
-const recoveryForm = $('passwordRecoveryForm');
-const forgotPasswordLink = $('forgotPasswordLink');
-
-function showRecoveryForm() {
-  loginForm.classList.add('hidden');
-  forgotPasswordLink.classList.add('hidden');
-  recoveryForm.classList.remove('hidden');
-  clearAlert('alert');
-  showAlert('alert', 'Choose a new password for your account.', 'info');
+const loginForm = $('loginForm'), recoveryForm = $('passwordRecoveryForm'), forgot = $('forgotPasswordLink');
+function showRecovery() {
+  loginForm.classList.add('hidden'); forgot.classList.add('hidden'); recoveryForm.classList.remove('hidden');
+  clearAlert('alert'); showAlert('alert', 'Choose a new password for your account.', 'info');
 }
-
-function showLoginForm() {
-  recoveryForm.classList.add('hidden');
-  loginForm.classList.remove('hidden');
-  forgotPasswordLink.classList.remove('hidden');
+function showLogin() {
+  recoveryForm.classList.add('hidden'); loginForm.classList.remove('hidden'); forgot.classList.remove('hidden');
 }
-
-forgotPasswordLink.addEventListener('click', async (event) => {
-  event.preventDefault();
-  clearAlert('alert');
+forgot.addEventListener('click', async (event) => {
+  event.preventDefault(); clearAlert('alert');
   const email = $('email').value.trim();
-  if (!email) {
-    showAlert('alert', 'Enter your account email above first.');
-    $('email').focus();
-    return;
-  }
-
-  forgotPasswordLink.textContent = 'Sending reset link…';
-  forgotPasswordLink.setAttribute('aria-disabled', 'true');
+  if (!email) { showAlert('alert', 'Enter your account email above first.'); $('email').focus(); return; }
+  forgot.textContent = 'Sending reset link…'; forgot.setAttribute('aria-disabled', 'true');
   try {
     await requestPasswordReset(email);
     showAlert('alert', 'If an account exists for that email, a password reset link has been sent. Check your inbox.', 'success');
-  } catch (error) {
-    showAlert('alert', error.message || 'Could not request a password reset. Please try again.');
-  } finally {
-    forgotPasswordLink.textContent = 'Forgot password?';
-    forgotPasswordLink.removeAttribute('aria-disabled');
-  }
+  } catch (error) { showAlert('alert', error.message || 'Could not request a password reset.'); }
+  finally { forgot.textContent = 'Forgot password?'; forgot.removeAttribute('aria-disabled'); }
 });
-
 recoveryForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  clearAlert('alert');
-  const button = $('updatePasswordButton');
-  button.disabled = true;
-  button.textContent = 'Updating…';
+  event.preventDefault(); clearAlert('alert');
+  const button = $('updatePasswordButton'); button.disabled = true; button.textContent = 'Updating…';
   try {
     await applyPasswordReset($('newPassword').value, $('confirmNewPassword').value);
     recoveryForm.reset();
     try { await supabase.auth.signOut(); } catch { /* Password has already been updated. */ }
-    window.history.replaceState(null, '', window.location.pathname);
-    showLoginForm();
+    history.replaceState(null, '', location.pathname); showLogin();
     showAlert('alert', 'Password updated successfully. Please log in with your new password.', 'success');
-  } catch (error) {
-    showAlert('alert', error.message || 'Could not update the password. Open the newest reset link and try again.');
-  } finally {
-    button.disabled = false;
-    button.textContent = 'Update password';
-  }
+  } catch (error) { showAlert('alert', error.message || 'Open the newest reset link and try again.'); }
+  finally { button.disabled = false; button.textContent = 'Update password'; }
 });
-
-$('cancelRecoveryButton').addEventListener('click', () => {
-  window.history.replaceState(null, '', window.location.pathname);
-  showLoginForm();
-  clearAlert('alert');
-});
-
-supabase.auth.onAuthStateChange((event) => {
-  if (event === 'PASSWORD_RECOVERY') showRecoveryForm();
-});
-
-// Supabase normally emits PASSWORD_RECOVERY after consuming the emailed link.
-// The hash check also makes the intended screen visible if the event arrived
-// before this page's listener was registered.
-const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-if (hashParams.get('type') === 'recovery' || new URLSearchParams(window.location.search).get('recovery') === '1') {
-  showRecoveryForm();
-}
-
+$('cancelRecoveryButton').addEventListener('click', () => { history.replaceState(null, '', location.pathname); showLogin(); clearAlert('alert'); });
+supabase.auth.onAuthStateChange((event) => { if (event === 'PASSWORD_RECOVERY') showRecovery(); });
+const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+if (hash.get('type') === 'recovery' || new URLSearchParams(location.search).get('recovery') === '1') showRecovery();
 loginForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  clearAlert('alert');
+  event.preventDefault(); clearAlert('alert');
   try {
     await login($('email').value.trim(), $('password').value);
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -137,12 +77,10 @@ loginForm.addEventListener('submit', async (event) => {
     if (!user) throw new Error('Sign-in succeeded but no authenticated user was returned.');
     const { data: profile, error: profileError } = await supabase.from('profiles').select('role').eq('id', user.id).single();
     if (profileError) throw profileError;
-    if (profile.role === 'BUSINESS') window.location.href = '/supabase-business/dashboard.html';
-    else if (profile.role === 'ADMIN' || profile.role === 'SUPER_ADMIN') window.location.href = '/supabase-admin/dashboard.html';
-    else showAlert('alert', 'This web login is for business/admin accounts. Participants should use the Android app.');
-  } catch (error) {
-    showAlert('alert', error.message || 'Could not log in. Check your email and password.');
-  }
+    const path = getDashboardPath(profile.role);
+    if (path) location.replace(path);
+    else showAlert('alert', 'This account does not have a supported Anvesh dashboard role.');
+  } catch (error) { showAlert('alert', error.message || 'Could not log in. Check your email and password.'); }
 });
 </script>
 </body>
