@@ -26,6 +26,7 @@ import { supabase, invoke } from '/js/supabase/client.js';
 import { listEligibleStudies, getStudyDetail } from '/js/supabase/participant.js';
 import { logout } from '/js/supabase/auth.js';
 import { syncUserInterests } from '/js/supabase/pending-interests.js';
+import { SHARED_LOGIN_PATH } from '/js/supabase/role-routing.js';
 
 const list = document.getElementById('surveyList');
 const detail = document.getElementById('surveyDetail');
@@ -62,13 +63,13 @@ function fingerprint() {
 
 async function requireParticipant() {
   const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) { location.href = '/login.html'; return null; }
+  if (error || !user) { location.replace(SHARED_LOGIN_PATH); return null; }
   const { data: profile, error: profileError } = await supabase.from('profiles')
     .select('role,status').eq('id', user.id).single();
   if (profileError) throw profileError;
   if (!profile || profile.role !== 'USER' || profile.status === 'SUSPENDED') {
     await logout();
-    location.href = '/login.html';
+    location.replace(SHARED_LOGIN_PATH);
     return null;
   }
   try { await syncUserInterests(localStorage, user, supabase); }
@@ -189,8 +190,7 @@ async function submitSurvey(event) {
     let answer = { question_id: question.id };
     if (['single_choice', 'yes_no'].includes(type)) {
       const selected = form.querySelector('input[name="' + CSS.escape(name) + '"]:checked');
-      if (selected) answer.selected_option_ids = [selected.value];
-      else answer.selected_option_ids = [];
+      answer.selected_option_ids = selected ? [selected.value] : [];
     } else if (type === 'multi_choice') {
       answer.selected_option_ids = [...form.querySelectorAll('input[name="' + CSS.escape(name) + '"]:checked')].map((input) => input.value);
     } else if (['rating_5', 'rating_10'].includes(type)) {
@@ -232,7 +232,7 @@ async function submitSurvey(event) {
 
 document.getElementById('refreshButton').addEventListener('click', loadSurveys);
 document.getElementById('logoutButton').addEventListener('click', async () => {
-  try { await logout(); location.href = '/login.html'; }
+  try { await logout(); location.replace(SHARED_LOGIN_PATH); }
   catch (error) { showError(error.message || 'Could not log out.'); }
 });
 loadSurveys();
