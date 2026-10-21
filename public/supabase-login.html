@@ -13,44 +13,62 @@
 
 <div class="narrow">
   <h1>Log in</h1>
-  <div class="alert info">
-    This page talks to Supabase directly, not the local SQLite demo server.
-    It will not work until you've deployed the migrations/Edge Functions and
-    filled in your real project URL/anon key in
-    <code>public/js/supabase/client.js</code> — see docs/SUPABASE_SETUP.md.
-  </div>
-  <div id="alert" class="alert error hidden"></div>
+  <div id="alert" class="alert error hidden" role="alert" aria-live="polite"></div>
   <form id="loginForm">
-    <label>Email</label>
-    <input type="email" id="email" required>
-    <label>Password</label>
-    <input type="password" id="password" required>
-    <button style="width:100%; margin-top:16px;">Log in</button>
+    <label for="username">Username or email</label>
+    <input type="text" id="username" name="username" autocomplete="username" required>
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" autocomplete="current-password" required>
+    <button id="loginButton" style="width:100%; margin-top:16px;">Log in</button>
   </form>
   <p class="muted" style="margin-top:16px;">
     <a href="/supabase-admin/first-time-setup.html">First-time admin verification</a><br>
     New business? <a href="/supabase-register-business.html">Register your business</a><br>
-    Participants use the Android app, not this web track — see mobile/README.md.
+    Participants use the Android app.
   </p>
 </div>
 
 <script src="/js/api.js"></script>
 <script type="module">
-import { login } from '/js/supabase/auth.js';
-import { supabase } from '/js/supabase/client.js';
+import { login, getCurrentUserAndProfile } from '/js/supabase/auth.js';
+const form = document.getElementById('loginForm');
+const button = document.getElementById('loginButton');
+const alertBox = document.getElementById('alert');
 
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  clearAlert('alert');
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  alertBox.textContent = '';
+  alertBox.classList.add('hidden');
+  button.disabled = true;
+  button.textContent = 'Signing in…';
   try {
-    await login(document.getElementById('email').value, document.getElementById('password').value);
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile.role === 'BUSINESS') window.location.href = '/supabase-business/dashboard.html';
-    else if (profile.role === 'ADMIN' || profile.role === 'SUPER_ADMIN') window.location.href = '/supabase-admin/dashboard.html';
-    else showAlert('alert', 'This web login is for business/admin accounts. Participants should use the Android app.');
-  } catch (err) {
-    showAlert('alert', err.message);
+    const enteredUsername = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    // Supabase Auth signs in with email. Support the owner's requested
+    // username as an alias while leaving password verification to Supabase.
+    const email = enteredUsername.toLowerCase() === 'shyamsundar'
+      ? 'bvshyam7777@gmail.com'
+      : enteredUsername;
+    if (!email.includes('@')) {
+      throw new Error('Enter your username or the email address registered to your account.');
+    }
+    await login(email, password);
+    const { user, profile } = await getCurrentUserAndProfile();
+    if (!user || !profile) throw new Error('Login succeeded, but your account profile could not be loaded. Please try again.');
+    if (profile.status === 'SUSPENDED') throw new Error('This account is suspended. Contact the administrator.');
+    if (profile.role === 'BUSINESS') {
+      window.location.replace('/supabase-business/dashboard.html');
+    } else if (profile.role === 'ADMIN' || profile.role === 'SUPER_ADMIN') {
+      window.location.replace('/supabase-admin/dashboard.html');
+    } else {
+      throw new Error('This web login is for business/admin accounts. Participants should use the Android app.');
+    }
+  } catch (error) {
+    alertBox.textContent = error?.message || 'Login failed. Please try again.';
+    alertBox.classList.remove('hidden');
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Log in';
   }
 });
 </script>
