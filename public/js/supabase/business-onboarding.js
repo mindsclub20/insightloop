@@ -24,3 +24,13 @@ export async function ensureBusinessCreated(supabase, user) {
   if (!data?.id) throw new Error('Business setup did not return a valid business record.');
   return { created: true, businessId: data.id };
 }
+// Login must distinguish valid credentials from a temporarily unavailable business
+// provisioning dependency. The caller can keep the authenticated session and retry.
+export async function ensureBusinessCreatedForLogin(supabase, user) {
+  try {
+    const result = await ensureBusinessCreated(supabase, user);
+    return { ready: true, ...result };
+  } catch (error) {
+    return { ready: false, error };
+  }
+}
