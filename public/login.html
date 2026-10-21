@@ -58,7 +58,15 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
       throw new Error('This account is not active. Contact Anvesh support.');
     }
     if (user && profile.role === 'BUSINESS') {
-      await ensureBusinessCreated(supabase, user);
+      try {
+        await ensureBusinessCreated(supabase, user);
+      } catch (setupError) {
+        // Authentication succeeded. Keep the session so the user does not
+        // mistake a provisioning outage for invalid credentials or re-register.
+        showAlert('alert', 'You are signed in, but business setup is still pending. Please retry shortly; do not create another account.');
+        console.error('Business onboarding remains pending after successful login.', setupError);
+        return;
+      }
     }
     if (user) {
       try { await syncUserInterests(window.localStorage, user, supabase); }
