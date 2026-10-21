@@ -26,7 +26,7 @@
 <script src="/js/api.js"></script>
 <script type="module">
 import { login, getCurrentUserAndProfile, requestPasswordReset } from '/js/supabase/auth.js';
-import { ensureBusinessCreated } from '/js/supabase/business-onboarding.js';
+import { ensureBusinessCreatedForLogin } from '/js/supabase/business-onboarding.js';
 import { syncUserInterests } from '/js/supabase/pending-interests.js';
 import { supabase } from '/js/supabase/client.js';
 
@@ -58,13 +58,12 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
       throw new Error('This account is not active. Contact Anvesh support.');
     }
     if (user && profile.role === 'BUSINESS') {
-      try {
-        await ensureBusinessCreated(supabase, user);
-      } catch (setupError) {
+      const setup = await ensureBusinessCreatedForLogin(supabase, user);
+      if (!setup.ready) {
         // Authentication succeeded. Keep the session so the user does not
         // mistake a provisioning outage for invalid credentials or re-register.
         showAlert('alert', 'You are signed in, but business setup is still pending. Please retry shortly; do not create another account.');
-        console.error('Business onboarding remains pending after successful login.', setupError);
+        console.error('Business onboarding remains pending after successful login.', setup.error);
         return;
       }
     }
