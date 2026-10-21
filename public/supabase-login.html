@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Log in — Anvesh (Supabase track)</title>
+<title>Log in — Anvesh</title>
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -13,22 +13,20 @@
 
 <div class="narrow">
   <h1>Log in</h1>
+  <p class="muted">One login for participants, businesses, and administrators. You'll be sent to the correct dashboard automatically.</p>
   <div id="alert" class="alert error hidden" role="alert" aria-live="polite"></div>
   <form id="loginForm">
-    <label for="username">Username or email</label>
+    <label for="username">Email or admin username</label>
     <input type="text" id="username" name="username" autocomplete="username" required>
     <label for="password">Password</label>
     <input type="password" id="password" name="password" autocomplete="current-password" required>
     <button id="loginButton" style="width:100%; margin-top:16px;">Log in</button>
   </form>
   <p class="muted" style="margin-top:16px;">
-    <a href="/supabase-admin/first-time-setup.html">First-time admin verification</a><br>
-    New business? <a href="/supabase-register-business.html">Register your business</a><br>
-    Participants use the Android app.
+    New business? <a href="/supabase-register-business.html">Register your business</a>
   </p>
 </div>
 
-<script src="/js/api.js"></script>
 <script type="module">
 import { login, getCurrentUserAndProfile } from '/js/supabase/auth.js';
 const form = document.getElementById('loginForm');
@@ -42,26 +40,34 @@ form.addEventListener('submit', async (event) => {
   button.disabled = true;
   button.textContent = 'Signing in…';
   try {
-    const enteredUsername = document.getElementById('username').value.trim();
+    const identifier = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
-    // Supabase Auth signs in with email. Support the owner's requested
-    // username as an alias while leaving password verification to Supabase.
-    const email = enteredUsername.toLowerCase() === 'shyamsundar'
+    // Supabase Auth uses email/password. Keep the owner's requested username
+    // as an alias; all other account types use their registered email.
+    const email = identifier.toLowerCase() === 'shyamsundar'
       ? 'bvshyam7777@gmail.com'
-      : enteredUsername;
+      : identifier;
     if (!email.includes('@')) {
-      throw new Error('Enter your username or the email address registered to your account.');
+      throw new Error('Enter your registered email address. The admin username is also accepted.');
     }
+
     await login(email, password);
     const { user, profile } = await getCurrentUserAndProfile();
-    if (!user || !profile) throw new Error('Login succeeded, but your account profile could not be loaded. Please try again.');
-    if (profile.status === 'SUSPENDED') throw new Error('This account is suspended. Contact the administrator.');
-    if (profile.role === 'BUSINESS') {
-      window.location.replace('/supabase-business/dashboard.html');
-    } else if (profile.role === 'ADMIN' || profile.role === 'SUPER_ADMIN') {
+    if (!user) throw new Error('Sign-in did not create a session. Please try again.');
+    if (!profile) throw new Error('Your account profile is missing. Contact support; no role was guessed.');
+    if (String(profile.status || 'ACTIVE').toUpperCase() === 'SUSPENDED') {
+      throw new Error('This account is suspended. Contact the administrator.');
+    }
+
+    const role = String(profile.role || '').toUpperCase();
+    if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
       window.location.replace('/supabase-admin/dashboard.html');
+    } else if (role === 'BUSINESS') {
+      window.location.replace('/supabase-business/dashboard.html');
+    } else if (role === 'PARTICIPANT') {
+      window.location.replace('/supabase-participant/dashboard.html');
     } else {
-      throw new Error('This web login is for business/admin accounts. Participants should use the Android app.');
+      throw new Error('Your account role is not recognised. Contact support.');
     }
   } catch (error) {
     alertBox.textContent = error?.message || 'Login failed. Please try again.';
