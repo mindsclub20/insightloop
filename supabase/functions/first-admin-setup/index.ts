@@ -49,7 +49,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const authHeader = req.headers.get("Authorization") ?? "";
-  const match = authHeader.match(/^Bearer\\s+(.+)$/i);
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
   if (!match) return response(req, 401, { error: "Please sign in with your Anvesh account." });
 
   let body: { bootstrapSecret?: unknown };
