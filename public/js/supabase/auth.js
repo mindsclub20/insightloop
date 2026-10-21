@@ -83,8 +83,9 @@ export async function registerBusiness({
   email, password, full_name, legal_name, city, category, gstin,
 }) {
   if (!legal_name?.trim()) throw new Error('Business legal name is required.');
-  // Migration 019 creates the profile, wallet, business, and owner membership
-  // transactionally from this server-verified Auth signup event.
+  // The Auth trigger creates the profile and wallet. The separately authorized
+  // create-business Edge Function creates the business and owner membership
+  // once a valid session exists; confirmed-email signups finish this at login.
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
