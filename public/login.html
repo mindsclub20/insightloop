@@ -26,6 +26,7 @@
 <script src="/js/api.js"></script>
 <script type="module">
 import { login, getCurrentUserAndProfile, requestPasswordReset } from '/js/supabase/auth.js';
+import { ensureBusinessCreated } from '/js/supabase/business-onboarding.js';
 import { syncUserInterests } from '/js/supabase/pending-interests.js';
 import { supabase } from '/js/supabase/client.js';
 
@@ -55,6 +56,9 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
     if (!profile || profile.status === 'SUSPENDED') {
       await supabase.auth.signOut();
       throw new Error('This account is not active. Contact Anvesh support.');
+    }
+    if (user && profile.role === 'BUSINESS') {
+      await ensureBusinessCreated(supabase, user);
     }
     if (user) {
       try { await syncUserInterests(window.localStorage, user, supabase); }
