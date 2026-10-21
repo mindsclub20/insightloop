@@ -17,6 +17,7 @@
     <label for="password">Password</label><input type="password" id="password" autocomplete="current-password" required>
     <button style="width:100%; margin-top:16px;">Log in</button>
   </form>
+  <p class="muted" style="margin-top:12px;"><a href="#" id="forgotPasswordLink">Forgot password?</a></p>
   <p class="muted" style="margin-top:16px;">
     New business? <a href="/register-business.html">Register your business</a><br>
     New participant? <a href="/register-participant.html">Sign up to participate</a>
@@ -24,9 +25,27 @@
 </div>
 <script src="/js/api.js"></script>
 <script type="module">
-import { login, getCurrentUserAndProfile } from '/js/supabase/auth.js';
+import { login, getCurrentUserAndProfile, requestPasswordReset } from '/js/supabase/auth.js';
+import { ensureBusinessCreatedForLogin } from '/js/supabase/business-onboarding.js';
 import { syncUserInterests } from '/js/supabase/pending-interests.js';
 import { supabase } from '/js/supabase/client.js';
+
+document.getElementById('forgotPasswordLink').addEventListener('click', async (event) => {
+  event.preventDefault();
+  clearAlert('alert');
+  const email = document.getElementById('email').value.trim();
+  if (!email) { showAlert('alert', 'Enter your account email above first.'); document.getElementById('email').focus(); return; }
+  const link = document.getElementById('forgotPasswordLink');
+  link.textContent = 'Sending reset link…'; link.setAttribute('aria-disabled', 'true');
+  try {
+    await requestPasswordReset(email);
+    showAlert('alert', 'If an account exists for that email, a password reset link has been sent. Check your inbox.', 'success');
+  } catch (error) {
+    showAlert('alert', error.message || 'Could not request a password reset.');
+  } finally {
+    link.textContent = 'Forgot password?'; link.removeAttribute('aria-disabled');
+  }
+});
 
 document.getElementById('loginForm').addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -37,6 +56,16 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
     if (!profile || profile.status === 'SUSPENDED') {
       await supabase.auth.signOut();
       throw new Error('This account is not active. Contact Anvesh support.');
+    }
+    if (user && profile.role === 'BUSINESS') {
+      const setup = await ensureBusinessCreatedForLogin(supabase, user);
+      if (!setup.ready) {
+        // Authentication succeeded. Keep the session so the user does not
+        // mistake a provisioning outage for invalid credentials or re-register.
+        showAlert('alert', 'You are signed in, but business setup is still pending. Please retry shortly; do not create another account.');
+        console.error('Business onboarding remains pending after successful login.', setup.error);
+        return;
+      }
     }
     if (user) {
       try { await syncUserInterests(window.localStorage, user, supabase); }

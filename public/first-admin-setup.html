@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Secure first-admin setup — Anvesh</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>.setup{max-width:520px;margin:48px auto;padding:24px}.setup input{display:block;width:100%;box-sizing:border-box;margin:8px 0 16px;padding:12px}.setup button{width:100%;padding:12px}.note{font-size:.92rem}</style>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="/index.html">Anvesh</a></header>
+<main class="setup">
+<h1>Activate first administrator</h1>
+<p class="note">One-time setup for the designated owner account only. This does not change business or participant accounts. Never share your setup secret.</p>
+<div id="message" class="alert hidden" role="status"></div>
+<form id="setupForm">
+<label for="email">Owner email</label>
+<input id="email" type="email" autocomplete="username" required value="bvshyam77@gmail.com">
+<label for="password">Owner account password</label>
+<input id="password" type="password" autocomplete="current-password" required>
+<label for="secret">Admin bootstrap secret</label>
+<input id="secret" type="password" autocomplete="off" required minlength="32">
+<button id="submit" type="submit">Verify and activate admin</button>
+</form>
+<p class="note">The secret is sent only to the protected Supabase Edge Function and is not saved in browser storage. If setup was already claimed, the function will reject this request.</p>
+</main>
+<script type="module">
+import { supabase } from '/js/supabase/client.js';
+const form = document.getElementById('setupForm');
+const message = document.getElementById('message');
+const button = document.getElementById('submit');
+function show(text, ok=false) {
+  message.textContent = text;
+  message.classList.remove('hidden','error','success');
+  message.classList.add('alert', ok ? 'success' : 'error');
+}
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  message.classList.add('hidden');
+  button.disabled = true;
+  button.textContent = 'Verifying…';
+  try {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const secret = document.getElementById('secret').value;
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw new Error('Login failed: ' + error.message);
+    if (!data.session) throw new Error('No active login session was returned.');
+    const { data: result, error: invokeError } = await supabase.functions.invoke('first-admin-setup', {
+      body: { bootstrapSecret: secret }
+    });
+    if (invokeError) {
+      let detail = invokeError.message || 'Admin setup request failed.';
+      try { const payload = await invokeError.context?.json(); if (payload?.error) detail = payload.error; } catch {}
+      throw new Error(detail);
+    }
+    if (!result?.ok) throw new Error(result?.error || 'Admin activation was not confirmed.');
+    document.getElementById('password').value = '';
+    document.getElementById('secret').value = '';
+    show('Admin activation succeeded. Sign out, sign in again, and verify that the Admin Panel opens.', true);
+  } catch (error) {
+    show(error?.message || 'Admin activation failed. No success was recorded.');
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Verify and activate admin';
+  }
+});
+</script>
+</body>
+</html>

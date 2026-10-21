@@ -1,6 +1,13 @@
 // Supabase Auth is the source of truth for credentials and sessions.
 import { supabase } from './client.js';
 import { rememberPendingInterests, syncPendingInterests } from './pending-interests.js';
+import { ensureBusinessCreated } from './business-onboarding.js';
+import {
+  requestPasswordReset as requestPasswordResetWithClient,
+  applyPasswordReset as applyPasswordResetWithClient,
+  getPasswordRecoveryRedirectTo,
+  isMissingAuthSessionError,
+} from './password-recovery.js';
 
 // Use the current app origin so production confirmation links do not fall back
 // to Supabase's default localhost:3000 URL. This origin must be allowed in
@@ -13,6 +20,14 @@ export async function login(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return data.session;
+}
+
+export async function requestPasswordReset(email) {
+  return requestPasswordResetWithClient(supabase, email, getPasswordRecoveryRedirectTo(window.location.origin));
+}
+
+export async function applyPasswordReset(password, confirmPassword) {
+  return applyPasswordResetWithClient(supabase, password, confirmPassword);
 }
 
 export async function logout() {
@@ -68,8 +83,9 @@ export async function registerBusiness({
   email, password, full_name, legal_name, city, category, gstin,
 }) {
   if (!legal_name?.trim()) throw new Error('Business legal name is required.');
-  // Migration 019 creates the profile, wallet, business, and owner membership
-  // transactionally from this server-verified Auth signup event.
+  // The Auth trigger creates the profile and wallet. The separately authorized
+  // create-business Edge Function creates the business and owner membership
+  // once a valid session exists; confirmed-email signups finish this at login.
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -86,12 +102,22 @@ export async function registerBusiness({
     },
   });
   if (error) throw error;
-  return { ...data, needsEmailConfirmation: !data.session };
+  let businessSetupPending = false;
+  // Email-confirmation projects return no session. Login will finish this
+  // second step after confirmation; when a session exists, try immediately.
+  if (data.session && data.user) {
+    try { await ensureBusinessCreated(supabase, data.user); }
+    catch { businessSetupPending = true; }
+  }
+  return { ...data, needsEmailConfirmation: !data.session, businessSetupPending };
 }
 
 export async function getCurrentUserAndProfile() {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError) throw userError;
+  if (userError) {
+    if (isMissingAuthSessionError(userError)) return { user: null, profile: null };
+    throw userError;
+  }
   if (!user) return { user: null, profile: null };
   const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
   if (error) throw error;
