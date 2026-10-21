@@ -40,7 +40,10 @@ document.getElementById('form').addEventListener('submit', async (event) => {
       legal_name: legal_name.value.trim(), city: city.value.trim(), category: category.value, gstin: gstin.value.trim() || null,
     });
     if (result.needsEmailConfirmation) {
-      showAlert('alert', 'Account created. Check your email to confirm it, then log in.', 'success');
+      showAlert('alert', 'Account created. Confirm your email, then log in. Business setup will finish securely after confirmation.', 'success');
+      document.getElementById('form').reset();
+    } else if (result.businessSetupPending) {
+      showAlert('alert', 'Your account was created, but business setup could not finish yet. Please log in to retry setup; do not register again.');
       document.getElementById('form').reset();
     } else {
       const { error } = await supabase.auth.getUser();
