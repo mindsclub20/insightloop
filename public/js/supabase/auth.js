@@ -1,6 +1,7 @@
 // Supabase Auth is the source of truth for credentials and sessions.
 import { supabase } from './client.js';
 import { rememberPendingInterests, syncPendingInterests } from './pending-interests.js';
+import { ensureBusinessCreated } from './business-onboarding.js';
 import {
   requestPasswordReset as requestPasswordResetWithClient,
   applyPasswordReset as applyPasswordResetWithClient,
@@ -100,7 +101,14 @@ export async function registerBusiness({
     },
   });
   if (error) throw error;
-  return { ...data, needsEmailConfirmation: !data.session };
+  let businessSetupPending = false;
+  // Email-confirmation projects return no session. Login will finish this
+  // second step after confirmation; when a session exists, try immediately.
+  if (data.session && data.user) {
+    try { await ensureBusinessCreated(supabase, data.user); }
+    catch { businessSetupPending = true; }
+  }
+  return { ...data, needsEmailConfirmation: !data.session, businessSetupPending };
 }
 
 export async function getCurrentUserAndProfile() {
