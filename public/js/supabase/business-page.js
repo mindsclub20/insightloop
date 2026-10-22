@@ -615,7 +615,7 @@ async function loadStudies() {
     document.getElementById('studyList').innerHTML = studies.length ? studies.map((s) => `
       <div class="card">
         <div class="row"><h3 style="flex:1;">${escapeHtml(s.title)}</h3>${badge(s.status)}</div>
-        <p class="muted">${escapeHtml(s.target_city)} · ${s.sample_size} respondents · ${paise(s.reward_per_response_paise)}/response</p>
+        <p class="muted">${escapeHtml(s.target_city)} · ${s.sample_size} respondents · ${Number(s.reward_per_response_tokens ?? 0).toLocaleString('en-IN')} tokens/response</p>
         <div class="row">
           <button class="secondary" onclick="viewStudy('${s.id}')">View details${['ACTIVE', 'COMPLETED', 'REPORT_READY'].includes(s.status) ? ' & report' : ''}</button>
           ${String(s.status).toUpperCase() === 'DRAFT' ? `<button type="button" onclick="startDraftSurvey('${s.id}')">Start Survey</button>` : ''}
@@ -756,7 +756,7 @@ function escapeHtml(str) {
 }
 
 // Attach everything referenced from injected-HTML onclick="..." strings.
-Object.assign(window, { addSuggested, addCustomQuestion, submitForApproval, viewStudy, startDraftSurvey, cancelStudy, viewReport, viewResultsReport });
+Object.assign(window, { addSuggested, addCustomQuestion, saveManualDraft, submitForApproval, viewStudy, startDraftSurvey, cancelStudy, viewReport, viewResultsReport });
 
 init().catch((error) => {
   console.error('Business dashboard initialization failed:', error);
