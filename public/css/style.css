@@ -296,3 +296,72 @@ pre,code{max-width:100%;overflow:auto}
 img,svg,canvas{max-width:100%}
 @media(max-width:700px){.container{padding:18px 14px 42px}.tabs{gap:6px}.tab{padding:9px 11px;font-size:13px;flex:1 1 auto}.grid.cols-2{grid-template-columns:1fr!important}.row{align-items:stretch}.row>button{flex:1 1 100%}.auth-workspace{margin:20px 12px 40px;padding:22px 18px}}
 @media(min-width:1500px){.container{max-width:1320px}.app-workspace{padding-top:36px}}
+
+/* Uploaded Anvesh Platform presentation: slide-specific layout */
+.problem-grid,.feature-list-grid,.comparison-grid,.investment-grid{display:grid;gap:12px;margin-top:20px}
+.problem-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.problem-grid>div,.feature-list-grid>div,.comparison-card,.investment-detail,.investment-cost{min-width:0;padding:16px;border:1px solid #e2e8f0;border-radius:15px;background:rgba(255,255,255,.84)}
+.problem-grid strong,.feature-list-grid strong,.comparison-card strong,.investment-detail>strong{display:block;font-family:'Space Grotesk',sans-serif;font-size:15px;color:#172554}
+.problem-grid p,.feature-list-grid p,.comparison-card p,.investment-detail p,.investment-cost p{margin:7px 0 0;color:#64748b;font-size:13px;line-height:1.55}
+.flavour-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.flavour-row span,.compact-points span{padding:7px 10px;border-radius:10px;background:#eef2ff;color:#3730a3;font-size:12px;font-weight:700}
+.feature-list-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.feature-list-grid>div{position:relative;padding-left:50px}
+.feature-list-grid b{position:absolute;left:14px;top:15px;color:#6366f1;font-size:12px}
+.product-preview{margin-top:16px;border:1px solid #dbeafe;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 8px 25px rgba(30,64,175,.06)}
+.product-preview-top{display:flex;justify-content:space-between;gap:12px;padding:12px 16px;background:#0f172a;color:white;font-size:13px}
+.product-preview-top span{color:#cbd5e1;font-size:11px}
+.product-preview-body{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;padding:16px}
+.product-preview-body small,.live-preview-content small,.investment-cost small{display:block;color:#64748b;font-size:9px;font-weight:800;letter-spacing:1px}
+.product-preview-body strong{display:block;margin:8px 0;font-family:'Space Grotesk',sans-serif}
+.product-preview-body p{color:#64748b;font-size:12px}
+.preview-pill{display:inline-block;padding:7px 10px;border-radius:9px;background:#4f46e5;color:#fff;font-size:11px;font-weight:700}
+.preview-steps{display:grid;align-content:center;gap:8px}
+.preview-steps span{padding:9px;border-radius:9px;background:#f1f5f9;color:#334155;font-size:11px;font-weight:700}
+.six-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:16px}
+.six-steps>div{padding:13px;border:1px solid #e2e8f0;border-radius:14px;background:rgba(255,255,255,.82)}
+.six-steps b{display:grid;place-items:center;width:28px;height:28px;margin-bottom:9px;border-radius:9px;background:#e0e7ff;color:#4338ca}
+.six-steps strong{display:block;font-size:13px;font-family:'Space Grotesk',sans-serif}
+.six-steps p{margin:5px 0 0;color:#64748b;font-size:11px;line-height:1.45}
+.comparison-grid{grid-template-columns:.85fr .85fr 1.3fr}
+.comparison-card{align-self:stretch}
+.comparison-featured{background:linear-gradient(145deg,#eef2ff,#ecfeff);border-color:#a5b4fc}
+.comparison-featured .slide-points{gap:6px;margin-top:12px}
+.comparison-featured .slide-points span{padding:6px 8px;font-size:10px}
+.mini-label{display:block;margin-bottom:8px;color:#4f46e5;font-size:9px;font-weight:800;letter-spacing:1.2px}
+.live-preview{margin:20px 0 16px;border:1px solid #dbeafe;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(15,23,42,.08)}
+.live-preview-bar{display:flex;align-items:center;gap:6px;padding:12px 14px;background:#0f172a;color:#e2e8f0;font-size:11px}
+.live-preview-bar>span{width:7px;height:7px;border-radius:50%;background:#64748b}
+.live-preview-bar strong{margin-left:8px;font-weight:600}
+.live-preview-content{display:grid;grid-template-columns:1.4fr .6fr .6fr;gap:10px;padding:15px}
+.live-preview-content h4{margin:5px 0;font-size:18px}
+.live-preview-content p{margin:0;color:#64748b;font-size:11px}
+.live-stat{padding:12px;border-radius:12px;background:#f8fafc}
+.live-stat strong{display:block;margin-top:8px;color:#4338ca;font:700 25px 'Space Grotesk',sans-serif}
+.live-preview-list{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:2px}
+.live-preview-list span{padding:10px;border:1px solid #e2e8f0;border-radius:10px;color:#475569;font-size:11px}
+.slide-main-link{margin-top:2px}
+.three-benefits{grid-template-columns:repeat(3,minmax(0,1fr))}
+.investment-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
+.investment-cost{background:linear-gradient(145deg,#eef2ff,#f0fdfa);border-color:#c7d2fe}
+.investment-cost>strong{display:block;margin-top:6px;font:700 clamp(24px,3vw,36px) 'Space Grotesk',sans-serif;color:#312e81}
+.investment-cost>span{color:#64748b;font-size:12px}
+.investment-cost hr{border:0;border-top:1px solid #cbd5e1;margin:14px 0}
+.compact-points{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.compact-points span{font-size:10px;background:#f1f5f9;color:#334155}
+.management-flow{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:13px;color:#4f46e5;font-size:10px;font-weight:800}
+.management-flow i{font-style:normal;color:#94a3b8}
+@media(max-width:680px){
+ .problem-grid,.comparison-grid,.investment-grid{grid-template-columns:1fr}
+ .feature-list-grid,.six-steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .three-benefits{grid-template-columns:1fr}
+ .product-preview-body{grid-template-columns:1fr}
+ .preview-steps{grid-template-columns:1fr}
+ .live-preview-content{grid-template-columns:1fr 1fr}
+ .live-preview-content>div:first-child{grid-column:1/-1}
+ .live-preview-list{grid-template-columns:1fr}
+}
+@media(max-width:390px){
+ .feature-list-grid,.six-steps{grid-template-columns:1fr}
+ .problem-grid>div,.feature-list-grid>div,.comparison-card,.investment-detail,.investment-cost{padding:13px}
+}
