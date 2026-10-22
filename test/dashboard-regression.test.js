@@ -85,3 +85,13 @@ test('admin dashboard uses keyboard-operable buttons for every tab and responsiv
   assert.match(html, /<button[^>]*data-tab="businesses"/, 'Businesses tab must be a real button, not a decorative div');
   assert.match(css, /#statsBar\s*\{[^}]*grid-template-columns/i, 'admin stats should have a responsive shared layout rule');
 });
+
+
+test('landing navigation collapses on small screens with an accessible toggle', async () => {
+  const html = await read('../public/index.html');
+  const css = await read('../public/css/style.css');
+  assert.match(html, /id="mobileMenuToggle"[^>]*aria-expanded="false"[^>]*aria-controls="primaryNavigation"/, 'mobile menu button needs accessible expanded state and controlled navigation');
+  assert.match(html, /id="primaryNavigation"/, 'primary navigation must be targetable by the mobile menu');
+  assert.match(html, /mobileMenuToggle.*addEventListener/s, 'mobile menu toggle must have a working event handler');
+  assert.match(css, /#primaryNavigation\.is-open/, 'mobile menu should only expand when requested');
+});
