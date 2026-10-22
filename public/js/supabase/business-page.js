@@ -58,9 +58,6 @@ function switchTab(name) {
 }
 
 async function init() {
-  // Bind the chat immediately so a slow or failing business-profile request
-  // cannot leave the visible Send answer button inert.
-  initSurveyChat();
   CURRENT = await requireRoleSupabase('BUSINESS');
   if (!CURRENT) return;
   document.getElementById('userName').textContent = CURRENT.profile.full_name || CURRENT.user.email;
@@ -264,6 +261,9 @@ function resetSurveyChat() {
   document.getElementById('aiStatus').textContent = '';
   showSurveyChatPrompt();
 }
+
+// Initialize the visible chat independently of authentication/profile loading.
+initSurveyChat();
 
 async function generateAiSurvey() {
   if (AI_REQUEST_BUSY) return;
@@ -740,4 +740,8 @@ function escapeHtml(str) {
 // Attach everything referenced from injected-HTML onclick="..." strings.
 Object.assign(window, { addSuggested, addCustomQuestion, submitForApproval, viewStudy, cancelStudy, viewReport, viewResultsReport });
 
-init();
+init().catch((error) => {
+  console.error('Business dashboard initialization failed:', error);
+  const status = document.getElementById('aiStatus');
+  if (status) status.textContent = 'Sign in to your business account to use survey generation.';
+});
