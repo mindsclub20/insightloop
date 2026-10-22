@@ -618,7 +618,8 @@ async function loadStudies() {
         <p class="muted">${escapeHtml(s.target_city)} · ${s.sample_size} respondents · ${paise(s.reward_per_response_paise)}/response</p>
         <div class="row">
           <button class="secondary" onclick="viewStudy('${s.id}')">View details${['ACTIVE', 'COMPLETED', 'REPORT_READY'].includes(s.status) ? ' & report' : ''}</button>
-          ${['DRAFT', 'SUBMITTED'].includes(s.status) ? `<button class="danger" onclick="cancelStudy('${s.id}')">Cancel</button>` : ''}
+          ${String(s.status).toUpperCase() === 'DRAFT' ? `<button type="button" onclick="startDraftSurvey('${s.id}')">Start Survey</button>` : ''}
+          ${['DRAFT', 'SUBMITTED'].includes(String(s.status).toUpperCase()) ? `<button class="danger" onclick="cancelStudy('${s.id}')">Cancel</button>` : ''}
         </div>
       </div>
     `).join('') : '<p class="muted">No saved drafts or pending surveys yet. Create one from Survey Generation.</p>';
@@ -676,6 +677,23 @@ async function viewResultsReport(id) {
   }
 }
 
+async function startDraftSurvey(id) {
+  clearAlert('alert');
+  try {
+    const { study, questions } = await business.getStudy(id);
+    if (String(study.status).toUpperCase() !== 'DRAFT') throw new Error('Only saved drafts can be started from this action. Refresh the list and try again.');
+    if (!questions.length) throw new Error('Add at least one question before starting this survey. Open View details to check the draft.');
+    const rewardTokens = Number(study.reward_per_response_tokens ?? (Number(study.reward_per_response_paise || 0) / 100));
+    const participantCount = Number(study.sample_size);
+    const budget = calculateTokenBudget(participantCount, rewardTokens);
+    const confirmed = window.confirm('Start this survey now?\n\nParticipants: ' + participantCount + '\nReward per valid completion: ' + rewardTokens + ' tokens\nParticipant reward budget: ' + budget.participantRewardBudget.toLocaleString() + ' tokens\nPlatform fee: ' + budget.platformFee + ' tokens\nTotal required: ' + budget.totalRequired.toLocaleString() + ' tokens\n\nPublishing will attempt to reserve/deduct this budget.');
+    if (!confirmed) return;
+    const result = await business.publishSurvey(id, { reward_per_response_tokens: rewardTokens, target_areas: Array.isArray(study.target_areas) ? study.target_areas : [], target_professions: Array.isArray(study.target_professions) ? study.target_professions : [] });
+    showAlert('alert', 'Survey started successfully: ' + (result.survey?.title || study.title) + '.', 'success');
+    await loadStudies();
+    await loadResults();
+  } catch (err) { showAlert('alert', err.message || 'Could not start this survey.'); }
+}
 async function cancelStudy(id) {
   if (!confirm('Cancel this study? This cannot be undone.')) return;
   try { await business.cancelStudy(id); loadStudies(); }
@@ -738,7 +756,7 @@ function escapeHtml(str) {
 }
 
 // Attach everything referenced from injected-HTML onclick="..." strings.
-Object.assign(window, { addSuggested, addCustomQuestion, submitForApproval, viewStudy, cancelStudy, viewReport, viewResultsReport });
+Object.assign(window, { addSuggested, addCustomQuestion, submitForApproval, viewStudy, startDraftSurvey, cancelStudy, viewReport, viewResultsReport });
 
 init().catch((error) => {
   console.error('Business dashboard initialization failed:', error);
