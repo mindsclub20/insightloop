@@ -30,8 +30,12 @@ export async function adminGrantTokens(userId, amount, note = '') {
     p_note: note.trim().slice(0, 500) || null,
   });
 }
-export async function searchTokenParticipants(query = '') {
-  return (await rpc('business_search_token_participants', { p_query: query.trim().slice(0, 80) })) ?? [];
+export async function listParticipantAreas() {
+  return (await rpc('business_list_participant_areas')) ?? [];
+}
+export async function listAreaParticipants(area) {
+  if (!area) return [];
+  return (await rpc('business_list_area_participants', { p_area: area })) ?? [];
 }
 export async function transferTokens(participantId, amount, note = '') {
   const n = Number(amount);
