@@ -62,13 +62,13 @@ document.getElementById('logoutButton').addEventListener('click', async () => {
 async function load() {
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) { location.href = '/login.html'; return; }
+    if (userError || !user) { location.href = '/supabase-login.html'; return; }
     try { await syncUserInterests(window.localStorage, user, supabase); }
     catch (syncError) {
       console.error('Interest sync failed; pending interests will be retained.', syncError);
     }
     const [{ profile, tags }, wallet, tokenTransactions] = await Promise.all([getProfile(), getMyTokenWallet(), getMyTokenTransactions()]);
-    if (profile.status === 'SUSPENDED') { await logout(); location.href = '/login.html'; return; }
+    if (profile.status === 'SUSPENDED') { await logout(); location.href = '/supabase-login.html'; return; }
     document.getElementById('userName').textContent = profile.full_name || user.email;
     document.getElementById('profile').innerHTML =
       '<p><strong>Name:</strong> ' + escapeHtml(profile.full_name || '—') + '</p>' +
