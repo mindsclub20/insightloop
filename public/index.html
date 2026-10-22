@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<header class="topbar"><a class="brand" href="/">Anvesh</a><nav aria-label="Main navigation"><a href="/">Home</a><a href="#how-it-works">How it works</a><a href="#businesses">For businesses</a><a href="#participants">For participants</a><a href="#ai-research">AI research</a><a href="/supabase-login.html">Sign in</a><a class="btn" href="/supabase-register-business.html">Get started</a></nav></header>
+<header class="topbar"><a class="brand" href="/">Anvesh</a><button id="mobileMenuToggle" class="mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="primaryNavigation">Menu</button><nav id="primaryNavigation" aria-label="Main navigation"><a href="/">Home</a><a href="#how-it-works">How it works</a><a href="#businesses">For businesses</a><a href="#participants">For participants</a><a href="#ai-research">AI research</a><a href="/supabase-login.html">Sign in</a><a class="btn" href="/supabase-register-business.html">Get started</a></nav></header>
 <main>
 <section class="hero">
 <p class="eyebrow">YOUR CUSTOMER-RESEARCH WORKSPACE</p>
@@ -203,6 +203,22 @@
     if (event.key === 'End') { event.preventDefault(); showSlide(slides.length - 1); }
   });
   showSlide(0);
+})();
+</script>
+<script>
+(() => {
+  const toggle = document.getElementById("mobileMenuToggle");
+  const navigation = document.getElementById("primaryNavigation");
+  if (!toggle || !navigation) return;
+  toggle.addEventListener("click", () => {
+    const expanded = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!expanded));
+    navigation.classList.toggle("is-open", !expanded);
+  });
+  navigation.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => {
+    toggle.setAttribute("aria-expanded", "false");
+    navigation.classList.remove("is-open");
+  }));
 })();
 </script>
 </body></html>
