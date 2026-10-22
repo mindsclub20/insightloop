@@ -511,3 +511,6 @@ button:focus-visible, a:focus-visible { outline-offset: 3px; }
   .hero-actions { align-items: stretch; }
   .hero-actions .btn { width: 100%; }
 }
+
+/* Contrast correction verified on the deployed preview */
+.hero h1 { color: #F8FAFC; }
