@@ -71,3 +71,9 @@ test('shared design system uses the Anvesh navy-indigo-teal palette and accessib
   assert.match(css, /:focus-visible/, 'keyboard users need visible focus states');
   assert.match(css, /min-width:\s*44px|min-height:\s*44px/, 'interactive controls should have touch-friendly sizing');
 });
+
+
+test('landing hero heading uses high-contrast text over the navy background', async () => {
+  const css = await read('../public/css/style.css');
+  assert.match(css, /\.hero h1\s*\{[^}]*color:\s*#F8FAFC/i, 'hero heading must be light against the dark hero surface');
+});
