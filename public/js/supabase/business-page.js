@@ -186,8 +186,8 @@ function submitSurveyChatAnswer() {
   }
   if (step.key === 'minAge' || step.key === 'maxAge') {
     const age = Number(value);
-    if (!Number.isInteger(age) || age < 13 || age > 120) {
-      appendSurveyChatMessage('Enter a whole-number age between 13 and 120.', 'assistant');
+    if (!Number.isInteger(age) || age < 18 || age > 120) {
+      appendSurveyChatMessage('Enter a whole-number age between 18 and 120.', 'assistant');
       return;
     }
   }
