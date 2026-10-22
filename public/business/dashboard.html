@@ -9,13 +9,13 @@
 <body>
 <header class="topbar">
   <a class="brand" href="/business/dashboard.html">Anvesh</a>
-  <nav>
+  <nav aria-label="Account navigation">
     <span id="userName" class="muted"></span>
     <a href="#" onclick="logout()">Log out</a>
   </nav>
 </header>
 
-<div class="container">
+<main class="container app-workspace"><div class="workspace-intro"><p class="section-kicker">RESEARCH WORKSPACE</p><h1>Your research workspace</h1><p class="section-lead">Create research, manage studies, and review response progress from one workspace.</p></div>
   <div id="verificationBanner"></div>
 
   <div class="tabs">
@@ -66,7 +66,7 @@
     <div id="studyList"></div>
     <div id="studyDetail"></div>
   </section>
-</div>
+</main>
 
 <script src="/js/api.js"></script>
 <script src="/js/business.js"></script>
