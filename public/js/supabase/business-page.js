@@ -94,12 +94,19 @@ function renderVerificationBanner(biz) {
   }
 }
 
+function csvValues(id, lower = false) {
+  return (document.getElementById(id)?.value || '').split(',').map((value) => value.trim()).filter(Boolean)
+    .map((value) => lower ? value.toLowerCase() : value).slice(0, 30);
+}
+
 function updateBudgetPreview() {
-  const sample = parseInt(document.getElementById('sample_size').value, 10);
-  const reward = Math.round(parseFloat(document.getElementById('reward').value || 0) * 100);
-  const fee = Math.round(sample * reward * 0.3);
-  const budget = sample * reward + fee;
-  document.getElementById('budgetPreview').textContent = `Estimated budget: ${paise(budget)} (${paise(reward)}/response × ${sample} + platform fee)`;
+  const sample = Number(document.getElementById('sample_size').value);
+  const reward = Number(document.getElementById('reward').value);
+  const valid = Number.isInteger(sample) && sample >= 10 && sample <= 500 && Number.isInteger(reward) && reward >= 5;
+  const budget = sample * reward;
+  document.getElementById('budgetPreview').textContent = valid
+    ? `Participant rewards: ${budget.toLocaleString()} tokens (${sample} × ${reward}) + 100-token platform fee = ${(budget + 100).toLocaleString()} tokens total.`
+    : 'Choose 10–500 participants and at least 5 tokens per participant.';
 }
 
 async function generateAiSurvey() {
@@ -126,7 +133,10 @@ async function generateAiSurvey() {
       command,
       target_city: targetCity,
       sample_size: Number(document.getElementById('sample_size').value),
-      reward_per_response_rupees: Number(document.getElementById('reward').value),
+      reward_per_response_rupees: 1,
+      reward_per_response_tokens: Number(document.getElementById('reward').value),
+      target_areas: csvValues('target_areas'),
+      target_professions: csvValues('target_professions', true),
       target_min_age: Number(document.getElementById('min_age').value),
       target_max_age: Number(document.getElementById('max_age').value),
       target_gender: document.getElementById('target_gender').value,
@@ -214,7 +224,7 @@ function renderAiSurveyPreview() {
         <button id="publishAiSurveyBtn" type="button">Publish Survey</button>
         <button class="secondary" id="discardAiSurveyBtn" type="button">Discard draft</button>
       </div>
-      <p class="muted">Saving stores this draft in your account. Publishing makes it active; no admin verification or approval step is required.</p>
+      <p class="muted">Publishing reserves participant rewards and deducts a separate 100-token platform fee. Minimum reward: 5 tokens per valid completion. Your survey activates only after you confirm and funding succeeds.</p>
     </div>`;
   el.classList.remove('hidden');
   document.getElementById('saveAiSurveyBtn').addEventListener('click', () => persistAiSurvey(false));
@@ -270,8 +280,10 @@ async function persistAiSurvey(publish) {
         target_max_age: Number(document.getElementById('max_age').value),
         target_gender: document.getElementById('target_gender').value,
         target_tags: document.getElementById('target_tags').value.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
+        target_areas: csvValues('target_areas'),
+        target_professions: csvValues('target_professions', true),
         sample_size: Number(document.getElementById('sample_size').value),
-        reward_per_response_paise: Math.round(Number(document.getElementById('reward').value) * 100),
+        reward_per_response_tokens: Number(document.getElementById('reward').value),
       };
       const study = await business.createStudy(params);
       savedId = study.id;
@@ -284,7 +296,22 @@ async function persistAiSurvey(publish) {
       await loadStudies();
       return;
     }
-    const result = await business.publishSurvey(savedId);
+    const rewardTokens = Number(document.getElementById('reward').value);
+    const participantCount = Number(document.getElementById('sample_size').value);
+    if (!Number.isInteger(participantCount) || participantCount < 10 || participantCount > 500) throw new Error('Participant count must be between 10 and 500.');
+    if (!Number.isInteger(rewardTokens) || rewardTokens < 5) throw new Error('Reward must be at least 5 tokens per participant.');
+    const rewardBudget = participantCount * rewardTokens;
+    const totalTokens = rewardBudget + 100;
+    const confirmed = window.confirm(`Publish this survey now?\n\nParticipants: ${participantCount}\nReward per valid completion: ${rewardTokens} tokens\nParticipant reward budget: ${rewardBudget.toLocaleString()} tokens\nPlatform fee: 100 tokens\nTOTAL DEDUCTED: ${totalTokens.toLocaleString()} tokens\n\nThe survey will activate immediately if funding succeeds.`);
+    if (!confirmed) {
+      document.getElementById('aiStatus').textContent = 'Publishing cancelled. No tokens were deducted.';
+      return;
+    }
+    const result = await business.publishSurvey(savedId, {
+      reward_per_response_tokens: rewardTokens,
+      target_areas: csvValues('target_areas'),
+      target_professions: csvValues('target_professions', true),
+    });
     AI_SURVEY_DRAFT = null;
     document.getElementById('aiSurveyPreview').innerHTML = `<div class="alert success"><strong>Survey published successfully.</strong><br>${escapeHtml(result.survey?.title || survey.title)} is now active.</div>`;
     document.getElementById('aiStatus').textContent = 'Published.';
@@ -314,7 +341,10 @@ async function createStudy() {
       target_gender: document.getElementById('target_gender').value,
       target_tags: document.getElementById('target_tags').value.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
       sample_size: parseInt(document.getElementById('sample_size').value, 10),
-      reward_per_response_paise: Math.round(parseFloat(document.getElementById('reward').value) * 100),
+      target_areas: csvValues('target_areas'),
+      target_professions: csvValues('target_professions', true),
+      reward_per_response_tokens: Number(document.getElementById('reward').value),
+      reward_per_response_paise: 0,
     });
     DRAFT_STUDY = study;
     renderDraftBuilder();
