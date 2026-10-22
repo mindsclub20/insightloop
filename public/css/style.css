@@ -514,3 +514,16 @@ button:focus-visible, a:focus-visible { outline-offset: 3px; }
 
 /* Contrast correction verified on the deployed preview */
 .hero h1 { color: #F8FAFC; }
+
+/* Admin dashboard layout and tab accessibility */
+#statsBar { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+#statsBar .card { min-width: 0; overflow-wrap: anywhere; }
+#statsBar h3 { font-size: clamp(20px, 2.4vw, 30px); }
+.tabs .tab { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+@media (max-width: 900px) {
+  #statsBar { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 480px) {
+  #statsBar { grid-template-columns: minmax(0, 1fr) !important; }
+  #statsBar .card { padding: 14px; }
+}
