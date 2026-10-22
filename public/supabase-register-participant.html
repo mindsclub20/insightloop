@@ -1,1 +1,106 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Join Anvesh</title><link rel="stylesheet" href="/css/style.css"></head><body><main class="narrow"><h1>Join Anvesh as a participant</h1><p>Participants must be 18 or older.</p><form id="f"><label>Name</label><input id="full_name" required><label>Email</label><input id="email" type="email" required><label>Password</label><input id="password" type="password" minlength="8" required><label>Date of birth</label><input id="date_of_birth" type="date" required><label>City</label><input id="city" required><label>Age range</label><select id="age_range"><option>18-24</option><option>25-34</option><option>35-44</option><option>45-54</option><option>55-120</option></select><button>Create account</button></form><script type="module">import {registerParticipant} from "/js/supabase/auth.js";document.getElementById("f").addEventListener("submit",async e=>{e.preventDefault();try{await registerParticipant({full_name:full_name.value,email:email.value,password:password.value,date_of_birth:date_of_birth.value,city:city.value,age_range:age_range.value});location.href="/supabase-participant/dashboard.html"}catch(e){alert(e.message)}})</script></main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Join Anvesh</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/index.html">Anvesh</a></header>
+  <main class="narrow">
+    <h1>Join Anvesh as a participant</h1>
+    <p class="muted">Participants must be 18 or older. Your date of birth is used to check eligibility and calculate your age range.</p>
+    <div id="alert" class="alert error hidden" role="alert" aria-live="polite"></div>
+    <form id="participantSignup">
+      <label for="full_name">Full name</label>
+      <input id="full_name" name="full_name" autocomplete="name" required>
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="email" required>
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+      <label for="date_of_birth">Date of birth</label>
+      <input id="date_of_birth" name="date_of_birth" type="date" required>
+      <label for="city">City</label>
+      <input id="city" name="city" autocomplete="address-level2" required>
+      <label for="area">Area (optional)</label>
+      <input id="area" name="area" autocomplete="address-level3">
+      <label for="gender">Gender (optional)</label>
+      <select id="gender" name="gender">
+        <option value="">Prefer not to say</option>
+        <option value="female">Female</option>
+        <option value="male">Male</option>
+        <option value="other">Other</option>
+      </select>
+      <label for="occupation_category">Profession (optional)</label>
+      <input id="occupation_category" name="occupation_category" placeholder="e.g. student, teacher, designer">
+      <label for="interests">Interests (optional, comma-separated)</label>
+      <input id="interests" name="interests" maxlength="1200" placeholder="food, technology, books">
+      <button id="signupButton" type="submit" style="margin-top:16px">Create account</button>
+    </form>
+    <p class="muted" style="margin-top:16px">Already registered? <a href="/supabase-login.html">Log in</a></p>
+  </main>
+  <script type="module">
+    import { registerParticipant } from '/js/supabase/auth.js';
+
+    const form = document.getElementById('participantSignup');
+    const button = document.getElementById('signupButton');
+    const alertBox = document.getElementById('alert');
+
+    function showMessage(message, isError = true) {
+      alertBox.textContent = message;
+      alertBox.classList.remove('hidden', 'error', 'success');
+      alertBox.classList.add(isError ? 'error' : 'success');
+    }
+
+    function ageRangeFor(dateOfBirth) {
+      const dob = new Date(dateOfBirth + 'T00:00:00Z');
+      const now = new Date();
+      let age = now.getUTCFullYear() - dob.getUTCFullYear();
+      const beforeBirthday = now.getUTCMonth() < dob.getUTCMonth() ||
+        (now.getUTCMonth() === dob.getUTCMonth() && now.getUTCDate() < dob.getUTCDate());
+      if (beforeBirthday) age -= 1;
+      if (age < 25) return '18-24';
+      if (age < 35) return '25-34';
+      if (age < 45) return '35-44';
+      if (age < 55) return '45-54';
+      return '55-120';
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      alertBox.classList.add('hidden');
+      button.disabled = true;
+      button.textContent = 'Creating account…';
+      const value = (id) => document.getElementById(id).value.trim();
+      try {
+        const dateOfBirth = document.getElementById('date_of_birth').value;
+        const result = await registerParticipant({
+          full_name: value('full_name'),
+          email: value('email'),
+          password: document.getElementById('password').value,
+          date_of_birth: dateOfBirth,
+          city: value('city'),
+          area: value('area') || null,
+          gender: value('gender') || null,
+          occupation_category: value('occupation_category') || null,
+          age_range: ageRangeFor(dateOfBirth),
+          interests: value('interests').split(',').map((tag) => tag.trim()).filter(Boolean),
+        });
+
+        if (result.needsEmailConfirmation) {
+          showMessage('Account created. Check your email and confirm your address, then log in to continue.', false);
+          form.reset();
+          button.textContent = 'Account created';
+          return;
+        }
+        window.location.replace('/supabase-participant/dashboard.html');
+      } catch (error) {
+        showMessage(error.message || 'Could not create your account. Please try again.');
+        button.disabled = false;
+        button.textContent = 'Create account';
+      }
+    });
+  </script>
+</body>
+</html>
