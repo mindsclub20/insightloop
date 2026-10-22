@@ -76,3 +76,22 @@ button:focus-visible,a:focus-visible{outline:3px solid #b49cff;outline-offset:3p
 .survey-chat button{min-height:42px}
 .survey-chat .muted{font-size:12px;margin-bottom:0}
 @media(max-width:600px){.survey-chat{padding:10px}.survey-chat-bubble{max-width:96%}.survey-chat .row{gap:8px}.survey-chat .row button{flex:1}}
+
+
+/* Anvesh dashboard theme alignment */
+:root{--primary:#4f46e5;--primary-dark:#3730a3;--bg:#f8fafc;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;--teal:#14b8a6;--cyan:#22d3ee}
+.business-shell,.dashboard-shell,.dashboard-main{color:#0f172a}
+.business-sidebar,.sidebar,.dashboard-sidebar{background:#0b1020!important;color:#e2e8f0!important}
+.business-sidebar a,.sidebar a,.dashboard-sidebar a{color:#cbd5e1}
+.business-sidebar a.active,.sidebar a.active,.dashboard-sidebar a.active{background:#1e293b!important;color:#fff!important;border-left-color:#14b8a6!important}
+.business-topbar,.dashboard-topbar{background:rgba(255,255,255,.96)!important;border-bottom:1px solid #e2e8f0!important}
+.dashboard-card,.business-card,.card,.metric-card,.stat-card{border-color:#e2e8f0!important;box-shadow:0 8px 24px rgba(15,23,42,.045)!important;border-radius:15px}
+.dashboard-title,.page-title,.business-title{color:#0b1020}
+button,.btn,.button-primary{background:#4f46e5}
+button:hover,.btn:hover,.button-primary:hover{background:#3730a3}
+button.secondary,.btn.secondary,.button-secondary{background:#fff;color:#4f46e5;border:1px solid #c7d2fe}
+input,select,textarea{border-color:#cbd5e1}
+input:focus,select:focus,textarea:focus{border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,.12)}
+:focus-visible{outline:3px solid rgba(34,211,238,.8);outline-offset:2px}
+@media(max-width:600px){.dashboard-main,.business-main{min-width:0;max-width:100%;overflow-x:hidden}.dashboard-table-wrap,.table-wrap{max-width:100%;overflow-x:auto}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
