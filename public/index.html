@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<header class="topbar"><a class="brand" href="/">Anvesh</a><nav><a href="#presentation">My presentation</a><a href="#how-it-works">How it works</a><a href="/login.html">Log in</a></nav></header>
+<header class="topbar"><a class="brand" href="/">Anvesh</a><nav aria-label="Main navigation"><a href="/">Home</a><a href="#how-it-works">How it works</a><a href="#businesses">For businesses</a><a href="#participants">For participants</a><a href="#ai-research">AI research</a><a href="/login.html">Sign in</a><a class="btn" href="/register-business.html">Get started</a></nav></header>
 <main>
 <section class="hero">
 <p class="eyebrow">YOUR CUSTOMER-RESEARCH WORKSPACE</p>
@@ -93,15 +93,53 @@
 </div>
 </section>
 
-<section class="feature-grid" id="how-it-works">
+<section class="site-section" id="how-it-works" aria-labelledby="workflow-heading">
+  <p class="section-kicker">A practical workflow</p><h2 id="workflow-heading">From research question to useful evidence.</h2>
+  <p class="section-lead">A structured process helps teams define what they need to learn, reach a relevant audience, and review the responses they collect.</p>
+  <div class="site-cards">
+    <article class="site-card"><span class="step">01</span><h3>Define the objective</h3><p>Describe the decision you need to make and the question you want research to answer.</p></article>
+    <article class="site-card"><span class="step">02</span><h3>Build and review</h3><p>Prepare survey questions, set audience criteria, and check the draft before publishing.</p></article>
+    <article class="site-card"><span class="step">03</span><h3>Collect and analyse</h3><p>Eligible participants respond; the business reviews the results available for its study.</p></article>
+  </div>
+</section>
+<section class="site-section dark" id="ai-research" aria-labelledby="ai-heading">
+  <p class="section-kicker">Research with structure</p><h2 id="ai-heading">Make better questions the starting point.</h2>
+  <p class="section-lead">AI-assisted research is a product direction, not a promise of automatic truth. Any generated questions should be reviewed before use, and findings should be grounded in actual responses.</p>
+  <div class="site-cards">
+    <article class="site-card"><span class="step">A</span><h3>Clarify the brief</h3><p>Turn a broad research idea into a more focused objective and clear questions.</p></article>
+    <article class="site-card"><span class="step">B</span><h3>Reach the right audience</h3><p>Use supported audience criteria to define who should be invited to participate.</p></article>
+    <article class="site-card"><span class="step">C</span><h3>Keep evidence visible</h3><p>Separate collected responses from recommendations or AI-generated interpretations.</p></article>
+  </div>
+</section>
+<section class="feature-grid" id="businesses">
 <article class="feature-card"><div class="feature-icon">✦</div><h3>For businesses</h3><p>Shape a research brief, define your audience and track your study.</p></article>
 <article class="feature-card"><div class="feature-icon">↗</div><h3>For participants</h3><p>Explore eligible surveys, share your perspective and review rewards.</p></article>
 <article class="feature-card"><div class="feature-icon">◎</div><h3>Trust by design</h3><p>Clear review steps and role-based workspaces keep research organised.</p></article>
 <article class="feature-card"><div class="feature-icon">✧</div><h3>AI-ready foundation</h3><p>A future AI survey builder can be added without exposing API keys in the browser.</p></article>
 </section>
 <div class="status-note"><strong>Development notice:</strong> Payments and payouts are not connected to real money. Verify production authentication and persistent storage before onboarding real users.</div>
+<section class="site-section" id="participants" aria-labelledby="participant-heading">
+  <p class="section-kicker">Two sides, one research process</p><h2 id="participant-heading">Useful for teams. Clear for participants.</h2>
+  <div class="site-cards">
+    <article class="site-card"><span class="step">↗</span><h3>For businesses</h3><p>Organise research, define a target audience, manage drafts, and review responses in one workspace.</p><p style="margin-top:16px"><a href="/register-business.html">Explore business access →</a></p></article>
+    <article class="site-card"><span class="step">◎</span><h3>For participants</h3><p>Review eligible research opportunities, understand each study's terms, and submit responses.</p><p style="margin-top:16px"><a href="/register-participant.html">Join as a participant →</a></p></article>
+    <article class="site-card"><span class="step">✓</span><h3>Trust before claims</h3><p>Reward and payment availability depends on the features and terms actually configured for each study.</p></article>
+  </div>
+</section>
+<section class="site-section" aria-labelledby="faq-heading">
+  <p class="section-kicker">Common questions</p><h2 id="faq-heading">Know what to expect.</h2>
+  <div class="site-faq">
+    <details><summary>Does Anvesh guarantee survey rewards?</summary><p>No. Any reward depends on the published study terms and the reward functionality actually enabled for that study.</p></details>
+    <details><summary>Does AI decide what the results mean?</summary><p>AI can assist with drafting or interpretation where configured, but generated suggestions are not guaranteed to be correct and should be checked against the underlying response data.</p></details>
+    <details><summary>Is every feature available today?</summary><p>Anvesh is actively being developed. Availability can differ by workflow; the interface should identify when a capability is not configured rather than imply it has completed work.</p></details>
+  </div>
+</section>
+<section class="final-cta" aria-labelledby="cta-heading">
+  <div><h2 id="cta-heading">Start with a better question.</h2><p>Bring your research objective into a workspace built to organise the process from brief to response.</p></div>
+  <div class="hero-actions"><a class="btn" href="/register-business.html">Start research</a><a class="btn secondary" href="/register-participant.html">Join as participant</a></div>
+</section>
 </main>
-<footer class="foot">Anvesh · Research with a little more clarity</footer>
+<footer class="site-footer"><span>© Anvesh · Research with a little more clarity</span><nav aria-label="Footer"><a href="#how-it-works">How it works</a><a href="/login.html">Sign in</a><a href="/register-business.html">Business access</a><a href="/register-participant.html">Participant access</a></nav></footer>
 <script>
 (() => {
   const deck = document.querySelector('.presentation-deck');
