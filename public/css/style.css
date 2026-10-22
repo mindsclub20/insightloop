@@ -54,3 +54,99 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;p
 .presentation-hint{font-size:10px;font-weight:500;color:#8b849d}
 @media(max-width:680px){.presentation-wrap{padding:0 16px;margin-top:12px}.presentation-heading{align-items:flex-start;flex-direction:column;gap:10px}.presentation-stage{min-height:410px;padding:28px 22px}.slide-mark{right:20px;top:20px;width:42px;height:42px;border-radius:14px;font-size:20px}.slide-kicker{margin-bottom:25px}.presentation-slide h3{font-size:clamp(29px,8vw,40px);margin-right:0;max-width:100%;letter-spacing:-1.2px}.slide-lead{font-size:16px}.workflow{grid-template-columns:1fr;gap:8px}.workflow>div{padding:12px;display:grid;grid-template-columns:32px 1fr;column-gap:10px;align-items:center}.workflow b{grid-row:span 2;margin:0}.workflow small{margin-top:2px}.workflow>i{display:none}.benefit-grid,.tech-grid{grid-template-columns:1fr}.presentation-controls{padding:12px;gap:8px}.presentation-controls button{min-width:0;padding:10px 12px;font-size:12px}.presentation-hint{display:none}}
 @media(max-width:380px){.presentation-stage{padding:23px 17px}.presentation-controls button{padding:9px}.presentation-status{font-size:12px}.presentation-badge{font-size:11px}}
+
+
+/* ANVESH CROSS-DEVICE COMPATIBILITY LAYER */
+/* Shared baseline: narrow phones through ultra-wide displays and touch panels. */
+html{width:100%;max-width:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-padding-top:84px}
+body{width:100%;min-width:320px;max-width:100%;overflow-wrap:anywhere}
+img,svg,video,canvas,iframe{max-width:100%}
+img,video{height:auto}
+button,input,select,textarea{max-width:100%;font:inherit}
+input,select,textarea{font-size:16px}
+button,.btn{touch-action:manipulation}
+.container,.hero,.presentation-wrap,.feature-grid,.status-note{width:100%;min-width:0}
+.container,.hero,.presentation-wrap,.feature-grid{margin-left:auto;margin-right:auto}
+.card,.feature-card,.presentation-deck,.presentation-stage,.presentation-slide,
+#tab-create,#tab-studies,#tab-results,#studyList,#resultsList,#studyDetail,#resultsDetail,
+#draftBuilder,#aiSurveyPreview,.workflow,.benefit-grid,.tech-grid{min-width:0;max-width:100%}
+.grid>* ,.row>*{min-width:0}
+.grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
+header.topbar{gap:14px;min-width:0}
+header.topbar .brand{flex-shrink:0}
+header.topbar nav{min-width:0;flex-wrap:wrap}
+header.topbar nav a{white-space:normal}
+.tabs{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.tab{flex:0 0 auto;min-height:44px}
+table{max-width:100%;border-collapse:collapse}
+th,td{overflow-wrap:anywhere}
+:focus-visible{scroll-margin-block:90px}
+@media(max-width:900px){
+  .container{padding:clamp(16px,3vw,26px)}
+  .hero{padding:clamp(30px,6vw,54px) clamp(18px,4vw,30px) 28px}
+  header.topbar{align-items:flex-start;flex-wrap:wrap}
+  header.topbar nav{gap:10px 14px}
+  #statsBar{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .presentation-stage{min-height:0}
+}
+@media(max-width:600px){
+  html{scroll-padding-top:68px}
+  header.topbar{padding:12px 16px}
+  header.topbar nav{width:100%;justify-content:flex-start}
+  header.topbar .brand{font-size:20px}
+  .container{padding:14px}
+  .narrow{width:auto;max-width:460px;margin:18px 12px;padding:20px 16px}
+  .hero{padding:34px 18px 18px}
+  .hero-copy{font-size:16px}
+  .feature-grid{padding:12px 16px 30px}
+  .card,.feature-card{padding:17px}
+  .row{align-items:stretch}
+  .row>*{flex:1 1 130px}
+  .tabs{gap:4px}
+  .tab{padding:10px 12px}
+  button,.btn{min-height:44px}
+  table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .presentation-wrap{padding:0 12px}
+  .presentation-controls{flex-wrap:wrap}
+  .presentation-status{order:-1;width:100%}
+}
+@media(max-width:380px){
+  body{font-size:14px}
+  .container{padding:11px}
+  .narrow{margin:14px 8px;padding:18px 13px}
+  header.topbar{padding:10px 12px}
+  header.topbar nav{gap:8px 10px;font-size:13px}
+  .card,.feature-card{padding:14px}
+  .row>*{flex-basis:100%}
+  .presentation-controls button{flex:1}
+}
+@media(min-width:1400px){
+  body{font-size:17px}
+  .container{max-width:1400px}
+  .hero,.presentation-wrap,.feature-grid{max-width:1400px}
+  .card,.feature-card{padding:clamp(22px,1.6vw,32px)}
+  button,.btn{min-height:48px;padding:13px 20px}
+}
+@media(min-width:1800px){
+  body{font-size:19px}
+  .container{max-width:1600px}
+  .hero,.presentation-wrap,.feature-grid{max-width:1600px}
+}
+@media(orientation:landscape) and (max-height:500px){
+  .hero{padding-top:22px;padding-bottom:16px}
+  .presentation-stage{min-height:0;padding-top:24px;padding-bottom:24px}
+  header.topbar{position:relative}
+}
+@media(hover:none),(pointer:coarse){
+  button:hover,.btn:hover{transform:none}
+  a,button,.btn,.tab{ -webkit-tap-highlight-color:transparent }
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+@media(forced-colors:active){
+  button,.btn,.card,.feature-card,.presentation-deck{border:1px solid ButtonText}
+  :focus-visible{outline:2px solid Highlight;outline-offset:3px}
+}
+/* END ANVESH CROSS-DEVICE COMPATIBILITY LAYER */
