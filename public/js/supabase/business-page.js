@@ -301,10 +301,9 @@ async function persistAiSurvey(publish) {
     }
     const rewardTokens = Number(document.getElementById('reward').value);
     const participantCount = Number(document.getElementById('sample_size').value);
-    if (!Number.isInteger(participantCount) || participantCount < 10 || participantCount > 500) throw new Error('Participant count must be between 10 and 500.');
-    if (!Number.isInteger(rewardTokens) || rewardTokens < 5) throw new Error('Reward must be at least 5 tokens per participant.');
-    const rewardBudget = participantCount * rewardTokens;
-    const totalTokens = rewardBudget + 100;
+    const tokenBudget = calculateTokenBudget(participantCount, rewardTokens);
+    const rewardBudget = tokenBudget.participantRewardBudget;
+    const totalTokens = tokenBudget.totalRequired;
     const confirmed = window.confirm(`Publish this survey now?\n\nParticipants: ${participantCount}\nReward per valid completion: ${rewardTokens} tokens\nParticipant reward budget: ${rewardBudget.toLocaleString()} tokens\nPlatform fee: 100 tokens\nTOTAL DEDUCTED: ${totalTokens.toLocaleString()} tokens\n\nThe survey will activate immediately if funding succeeds.`);
     if (!confirmed) {
       document.getElementById('aiStatus').textContent = 'Publishing cancelled. No tokens were deducted.';
@@ -441,9 +440,8 @@ async function submitForApproval() {
     if (!questions.length) throw new Error('Add at least one question before publishing.');
     const reward = Number(document.getElementById('reward').value);
     const sample = Number(document.getElementById('sample_size').value);
-    if (!Number.isInteger(reward) || reward < 5) throw new Error('Reward must be at least 5 tokens per participant.');
-    if (!Number.isInteger(sample) || sample < 10 || sample > 500) throw new Error('Participant count must be between 10 and 500.');
-    const total = sample * reward + 100;
+    const tokenBudget = calculateTokenBudget(sample, reward);
+    const total = tokenBudget.totalRequired;
     if (!window.confirm(`Publish this survey now?\n\nParticipants: ${sample}\nReward per valid completion: ${reward} tokens\nParticipant reward budget: ${(sample * reward).toLocaleString()} tokens\nPlatform fee: 100 tokens\nTOTAL DEDUCTED: ${total.toLocaleString()} tokens\n\nThe survey activates immediately if funding succeeds.`)) return;
     const result = await business.publishSurvey(DRAFT_STUDY.id, {
       reward_per_response_tokens: reward,
