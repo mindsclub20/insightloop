@@ -23,7 +23,7 @@
     <button id="loginButton" style="width:100%; margin-top:16px;">Log in</button>
   </form>
   <p class="muted" style="margin-top:16px;">
-    New business? <a href="/supabase-register-business.html">Register your business</a>
+    New business? <a href="/supabase-register-business.html">Register your business</a><br>New participant? <a href="/supabase-register-participant.html">Create a participant account</a>
   </p>
 </div>
 
@@ -64,7 +64,7 @@ form.addEventListener('submit', async (event) => {
       window.location.replace('/supabase-admin/dashboard.html');
     } else if (role === 'BUSINESS') {
       window.location.replace('/supabase-business/dashboard.html');
-    } else if (role === 'PARTICIPANT') {
+    } else if (role === 'USER') {
       window.location.replace('/supabase-participant/dashboard.html');
     } else {
       throw new Error('Your account role is not recognised. Contact support.');
