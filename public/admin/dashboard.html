@@ -39,5 +39,40 @@
 
 <script src="/js/api.js"></script>
 <script src="/js/admin.js"></script>
+
+<script>
+(() => {
+  const tablist = document.querySelector('.tabs');
+  if (!tablist) return;
+  tablist.setAttribute('role', 'tablist');
+  tablist.setAttribute('aria-label', 'Workspace sections');
+  const tabs = [...tablist.querySelectorAll('.tab')];
+  tabs.forEach((tab, index) => {
+    tab.setAttribute('role', 'tab');
+    tab.setAttribute('tabindex', tab.classList.contains('active') ? '0' : '-1');
+    tab.setAttribute('aria-selected', tab.classList.contains('active') ? 'true' : 'false');
+    tab.addEventListener('click', () => syncTabs());
+    tab.addEventListener('keydown', event => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const current = tabs.indexOf(tab);
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 :
+        (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+      tabs[next].focus();
+      tabs[next].click();
+    });
+  });
+  function syncTabs() {
+    tabs.forEach(tab => {
+      const active = tab.classList.contains('active');
+      tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      tab.setAttribute('tabindex', active ? '0' : '-1');
+    });
+  }
+  const observer = new MutationObserver(syncTabs);
+  tabs.forEach(tab => observer.observe(tab, {attributes:true, attributeFilter:['class']}));
+})();
+</script>
+
 </body>
 </html>
