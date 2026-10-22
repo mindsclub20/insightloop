@@ -39,7 +39,7 @@ async function loadStats() {
       <div class="card"><h3>${s.activeStudies}</h3><span class="muted">Active studies</span></div>
       <div class="card"><h3>${s.pendingApproval}</h3><span class="muted">Pending approval</span></div>
       <div class="card"><h3>${s.flaggedResponses}</h3><span class="muted">Flagged responses</span></div>
-      <div class="card"><h3>${s.totalUsers}</h3><span class="muted">Participants</span></div>
+      <div class="card"><h3>${s.totalBusinesses}</h3><span class="muted">Businesses</span></div>
     `;
   } catch (err) { showAlert('alert', err.message); }
 }
@@ -162,57 +162,6 @@ async function loadBusinesses() {
 async function verifyBusiness(id) { try { await admin.verifyBusiness(id); loadBusinesses(); } catch (e) { showAlert('alert', e.message); } }
 async function rejectBusiness(id) { try { await admin.rejectBusiness(id, prompt('Reason?')); loadBusinesses(); } catch (e) { showAlert('alert', e.message); } }
 
-async function loadUsers() {
-  clearAlert('alert');
-  try {
-    const list = await admin.listUsers();
-    document.getElementById('usersList').innerHTML = `
-      <table><thead><tr><th>Name</th><th>Role</th><th>Status</th><th></th></tr></thead>
-      <tbody>${list.map((u) => `<tr>
-        <td>${escapeHtml(u.full_name || '')}</td><td>${u.role}</td><td>${badge(u.status)}</td>
-        <td>${u.role !== 'SUPER_ADMIN' ? (u.status === 'ACTIVE'
-          ? `<button class="danger" onclick="suspendUser('${u.id}')">Suspend</button>`
-          : `<button class="secondary" onclick="reactivateUser('${u.id}')">Reactivate</button>`) : ''}</td>
-      </tr>`).join('')}</tbody></table>
-      <p class="muted" style="margin-top:8px;">Email not shown here — profiles doesn't store it (it lives in auth.users, a separate schema this admin read doesn't join against). Add it via a small view if you need it in this list.</p>`;
-  } catch (err) { showAlert('alert', err.message); }
-}
-async function suspendUser(id) { try { await admin.suspendUser(id, prompt('Reason?')); loadUsers(); } catch (e) { showAlert('alert', e.message); } }
-async function reactivateUser(id) { try { await admin.reactivateUser(id); loadUsers(); } catch (e) { showAlert('alert', e.message); } }
-
-async function loadWithdrawals() {
-  clearAlert('alert');
-  try {
-    const list = await admin.listWithdrawals();
-    document.getElementById('withdrawalsList').innerHTML = `
-      <table><thead><tr><th>User</th><th>Amount</th><th>UPI</th><th>Status</th><th></th></tr></thead>
-      <tbody>${list.map((w) => `<tr>
-        <td>${escapeHtml(w.profiles?.full_name || 'Unknown')}</td><td>${paise(w.amount_paise)}</td><td>${escapeHtml(w.upi_id)}</td><td>${badge(w.status)}</td>
-        <td>${(w.status === 'REQUESTED' || w.status === 'PROCESSING') ? `
-          <button onclick="markPaid('${w.id}')">Mark paid (manual)</button>
-          <button class="danger" onclick="rejectW('${w.id}')">Reject</button>` : ''}</td>
-      </tr>`).join('')}</tbody></table>
-      <p class="muted" style="margin-top:10px;">"Mark paid" only records that you sent a real UPI payout manually outside this system — it does NOT move real money itself.</p>`;
-  } catch (err) { showAlert('alert', err.message); }
-}
-async function markPaid(id) { try { await admin.markWithdrawalPaid(id); loadWithdrawals(); } catch (e) { showAlert('alert', e.message); } }
-async function rejectW(id) { try { await admin.rejectWithdrawal(id, prompt('Reason?')); loadWithdrawals(); } catch (e) { showAlert('alert', e.message); } }
-
-async function loadLedger() {
-  clearAlert('alert');
-  try {
-    const transactions = await admin.ledgerAudit();
-    // No reconciliationIssues here - see this file's header comment. Said
-    // plainly rather than silently reusing the Node track's "all clear"
-    // banner, which would be an honest-sounding claim this track hasn't
-    // earned.
-    let html = `<div class="alert info">This track does not run an automated balance-reconciliation check (not ported from the Node app — see admin.js's ledgerAudit() comment). Review these transactions manually if something looks wrong.</div>`;
-    html += `<table><thead><tr><th>User</th><th>Type</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
-      <tbody>${transactions.map((t) => `<tr><td>${escapeHtml(t.wallets?.profiles?.full_name || '')}</td><td>${t.type}</td><td>${paise(t.amount_paise)}</td><td>${badge(t.status)}</td><td>${new Date(t.created_at).toLocaleString()}</td></tr>`).join('')}</tbody></table>`;
-    document.getElementById('ledgerArea').innerHTML = html;
-  } catch (err) { showAlert('alert', err.message); }
-}
-
 function escapeHtml(str) {
   if (str === null || str === undefined) return '';
   return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -220,7 +169,7 @@ function escapeHtml(str) {
 
 Object.assign(window, {
   approveStudy, rejectStudy, lifecycleAction, reviewResponse,
-  verifyBusiness, rejectBusiness, suspendUser, reactivateUser, markPaid, rejectW,
+  verifyBusiness, rejectBusiness,
 });
 
 init();
