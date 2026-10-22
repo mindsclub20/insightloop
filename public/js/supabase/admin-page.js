@@ -18,10 +18,10 @@ import * as admin from './admin.js';
 document.querySelectorAll('.tab').forEach((tab) => tab.addEventListener('click', () => switchTab(tab.dataset.tab)));
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
-  ['studies', 'flagged', 'businesses', 'users', 'withdrawals', 'ledger'].forEach((t) =>
+  ['studies', 'responses', 'flagged', 'businesses'].forEach((t) =>
     document.getElementById('tab-' + t).classList.toggle('hidden', t !== name));
-  const loaders = { studies: loadStudies, flagged: loadFlagged, businesses: loadBusinesses, users: loadUsers, withdrawals: loadWithdrawals, ledger: loadLedger };
-  loaders[name]();
+  const loaders = { studies: loadStudies, responses: loadResponses, flagged: loadFlagged, businesses: loadBusinesses };
+  if (loaders[name]) loaders[name]();
 }
 
 async function init() {
@@ -39,7 +39,7 @@ async function loadStats() {
       <div class="card"><h3>${s.activeStudies}</h3><span class="muted">Active studies</span></div>
       <div class="card"><h3>${s.pendingApproval}</h3><span class="muted">Pending approval</span></div>
       <div class="card"><h3>${s.flaggedResponses}</h3><span class="muted">Flagged responses</span></div>
-      <div class="card"><h3>${paise(s.totalRewardsPaidPaise)}</h3><span class="muted">Rewards confirmed</span></div>
+      <div class="card"><h3>${s.totalUsers}</h3><span class="muted">Participants</span></div>
     `;
   } catch (err) { showAlert('alert', err.message); }
 }
@@ -86,6 +86,36 @@ async function lifecycleAction(id, action) {
   const reason = (action === 'pause' || action === 'cancel') ? (prompt('Reason (optional)?') || null) : null;
   try { await admin.studyAction(id, action, reason); loadStudies(); loadStats(); }
   catch (err) { showAlert('alert', err.message); }
+}
+
+async function loadResponses() {
+  const container = document.getElementById('responsesList');
+  container.innerHTML = '<p class="muted">Loading survey responses…</p>';
+  clearAlert('alert');
+  try {
+    const responses = await admin.listSurveyResponses();
+    container.innerHTML = responses.length ? responses.map((response) => {
+      const answers = (response.answers || []).map((answer) => {
+        const question = answer.survey_questions || {};
+        const selectedIds = Array.isArray(answer.selected_option_ids) ? answer.selected_option_ids : [];
+        const selectedOptions = (question.question_options || [])
+          .filter((option) => selectedIds.includes(option.id))
+          .map((option) => option.option_text);
+        const value = selectedOptions.length ? selectedOptions.join(', ')
+          : answer.text_answer || (answer.rating_value !== null && answer.rating_value !== undefined ? String(answer.rating_value) : 'No answer');
+        return '<div class="card" style="padding:12px;margin:10px 0"><strong>' + escapeHtml(question.question_text || 'Question') +
+          '</strong><p>' + escapeHtml(value) + '</p></div>';
+      }).join('');
+      return '<article class="card"><div class="row"><h3 style="flex:1">' + escapeHtml(response.research_projects?.title || 'Survey response') +
+        '</h3>' + badge(response.status) + '</div><p class="muted">Response ref: ' + escapeHtml(String(response.id).slice(0, 8)) +
+        ' · Submitted: ' + escapeHtml(response.completed_at ? new Date(response.completed_at).toLocaleString() : '—') +
+        ' · Duration: ' + Number(response.duration_seconds || 0) + 's</p><details><summary>View answers (' +
+        (response.answers || []).length + ')</summary>' + (answers || '<p class="muted">No answers recorded.</p>') + '</details></article>';
+    }).join('') : '<p class="muted">No survey responses have been submitted yet.</p>';
+  } catch (err) {
+    container.innerHTML = '<div class="alert error">Could not load survey responses.</div>';
+    showAlert('alert', err.message || 'Could not load survey responses.');
+  }
 }
 
 async function loadFlagged() {
