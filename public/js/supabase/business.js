@@ -38,8 +38,8 @@ export async function saveSurveyDraft(researchProjectId, survey) {
   });
 }
 
-export async function publishSurvey(researchProjectId) {
-  return invoke('publish-survey', { research_project_id: researchProjectId });
+export async function publishSurvey(researchProjectId, options = {}) {
+  return invoke('publish-survey', { research_project_id: researchProjectId, ...options });
 }
 
 // Deliberately a DIRECT client write, not an Edge Function - see
