@@ -26,9 +26,9 @@
   <div id="verificationBanner"></div>
 
   <div class="tabs">
-    <button class="tab active" type="button" data-tab="create">1. Survey Generation</button>
+    <button class="tab active" type="button" data-tab="create">1. Draft Survey</button>
     <button class="tab" type="button" data-tab="studies">2. Saved Drafts</button>
-    <button class="tab" type="button" data-tab="results">3. Survey Results</button>
+    <button class="tab" type="button" data-tab="results">3. Survey Responses</button>
   </div>
 
   <div id="alert" class="alert error hidden"></div>
@@ -37,7 +37,7 @@
     <div class="dashboard-workspace">
     <div class="card" id="aiSurveyCard" style="max-width:760px;border-color:#d8c9ff;background:linear-gradient(145deg,#fff 0%,#f8f4ff 100%);">
       <p class="eyebrow">INSIGHTLOOP BUSINESS AI</p>
-      <h2>Describe your research. AI builds the survey.</h2>
+      <h2>Create with AI</h2>
       <p class="muted">Give AI a plain-language command. Review the generated survey, save it as a draft, or publish it when ready.</p>
       <div class="survey-chat" aria-label="AI survey builder conversation">
         <div id="surveyChatMessages" class="survey-chat-messages" role="log" aria-live="polite">
@@ -56,7 +56,7 @@
       <textarea id="aiCommand" class="hidden" aria-hidden="true"></textarea>
       <button id="generateAiSurveyBtn" type="button" class="hidden" aria-hidden="true" tabindex="-1">Generate survey</button>
       <div id="aiSurveyPreview" class="hidden" style="margin-top:20px;"></div>
-      <p class="muted" style="margin-top:14px;">Your drafts are saved to your account. Publishing reserves participant rewards, charges a 100-token platform fee, and activates immediately after funding succeeds.</p>
+      <p class="muted" style="margin-top:14px;">Your drafts are saved to your account. Launching currently requires the participant reward allocation plus a temporary 100-token platform fee. A survey activates after the token reservation succeeds.</p>
     </div>
     </div>
     <div class="card" style="max-width:560px;">
@@ -101,7 +101,7 @@
 
   <section id="tab-studies" class="hidden">
     <h2>Saved Drafts</h2>
-    <p class="muted">Review drafts and track surveys awaiting platform checks.</p>
+    <p class="muted">Review saved drafts, edit them, and start a survey when you are ready.</p>
     <div id="studyList"></div>
     <div id="studyDetail"></div>
   </section>
