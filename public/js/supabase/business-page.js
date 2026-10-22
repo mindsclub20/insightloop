@@ -77,6 +77,7 @@ async function init() {
     prompt.focus();
   }));
   document.getElementById('generateAiSurveyBtn').addEventListener('click', generateAiSurvey);
+  initSurveyChat();
   document.getElementById('aiCommand').addEventListener('keydown', (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') generateAiSurvey();
   });
@@ -110,6 +111,156 @@ function updateBudgetPreview() {
   } catch {
     document.getElementById('budgetPreview').textContent = 'Choose 10–500 participants and at least 5 whole tokens per participant.';
   }
+}
+
+
+const SURVEY_CHAT_STEPS = [
+  { key: 'goal', prompt: 'What do you want to learn? Describe your research goal.', placeholder: 'e.g. Which snacks would students buy, and at what price?', multiline: true },
+  { key: 'city', prompt: 'Which city should the survey target?', placeholder: 'Enter a city' },
+  { key: 'areas', prompt: 'Which local areas should qualify? Optional: enter areas separated by commas, or type “any”.', placeholder: 'e.g. Central area, Market Road; or any', optional: true },
+  { key: 'minAge', prompt: 'What is the minimum participant age?', placeholder: 'e.g. 18', type: 'number' },
+  { key: 'maxAge', prompt: 'What is the maximum participant age?', placeholder: 'e.g. 35', type: 'number' },
+  { key: 'professions', prompt: 'Which professions should qualify? Optional: enter comma-separated professions, or type “any”.', placeholder: 'e.g. students, teachers; or any', optional: true },
+  { key: 'participants', prompt: 'How many participants do you want? Choose 10–500.', placeholder: 'e.g. 100', type: 'number' },
+  { key: 'reward', prompt: 'How many tokens should each valid participant earn? The minimum is 5; you can offer more.', placeholder: 'e.g. 5', type: 'number' },
+];
+let SURVEY_CHAT_INDEX = 0;
+let SURVEY_CHAT_ANSWERS = {};
+
+function initSurveyChat() {
+  const input = document.getElementById('surveyChatInput');
+  const send = document.getElementById('surveyChatSend');
+  const skip = document.getElementById('surveyChatSkip');
+  const reset = document.getElementById('surveyChatReset');
+  if (!input || !send || !skip || !reset) return;
+  showSurveyChatPrompt();
+  send.addEventListener('click', submitSurveyChatAnswer);
+  skip.addEventListener('click', () => {
+    const step = SURVEY_CHAT_STEPS[SURVEY_CHAT_INDEX];
+    if (!step?.optional) return;
+    appendSurveyChatMessage('You can include anyone for this field.', 'user');
+    SURVEY_CHAT_ANSWERS[step.key] = '';
+    advanceSurveyChat();
+  });
+  reset.addEventListener('click', resetSurveyChat);
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey && !input.multiline) {
+      event.preventDefault();
+      submitSurveyChatAnswer();
+    }
+  });
+}
+
+function appendSurveyChatMessage(message, role) {
+  const messages = document.getElementById('surveyChatMessages');
+  const bubble = document.createElement('div');
+  bubble.className = 'survey-chat-bubble ' + (role === 'user' ? 'user' : 'assistant');
+  bubble.textContent = message;
+  messages.appendChild(bubble);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function showSurveyChatPrompt() {
+  const step = SURVEY_CHAT_STEPS[SURVEY_CHAT_INDEX];
+  const input = document.getElementById('surveyChatInput');
+  const prompt = document.getElementById('surveyChatPrompt');
+  const skip = document.getElementById('surveyChatSkip');
+  if (!step) return;
+  prompt.textContent = step.prompt;
+  input.value = '';
+  input.placeholder = step.placeholder;
+  input.type = step.type || 'text';
+  input.rows = step.multiline ? 3 : 1;
+  input.multiline = Boolean(step.multiline);
+  skip.hidden = !step.optional;
+  input.focus();
+}
+
+function submitSurveyChatAnswer() {
+  const step = SURVEY_CHAT_STEPS[SURVEY_CHAT_INDEX];
+  const input = document.getElementById('surveyChatInput');
+  if (!step || !input) return;
+  const value = input.value.trim();
+  if (!value && !step.optional) {
+    appendSurveyChatMessage('Please answer this question to continue.', 'assistant');
+    return;
+  }
+  if (step.key === 'minAge' || step.key === 'maxAge') {
+    const age = Number(value);
+    if (!Number.isInteger(age) || age < 13 || age > 120) {
+      appendSurveyChatMessage('Enter a whole-number age between 13 and 120.', 'assistant');
+      return;
+    }
+  }
+  if (step.key === 'participants') {
+    const count = Number(value);
+    if (!Number.isInteger(count) || count < 10 || count > 500) {
+      appendSurveyChatMessage('Participant count must be a whole number from 10 to 500.', 'assistant');
+      return;
+    }
+  }
+  if (step.key === 'reward') {
+    const reward = Number(value);
+    if (!Number.isInteger(reward) || reward < 5 || reward > 1000000) {
+      appendSurveyChatMessage('Reward must be a whole number of at least 5 tokens per participant.', 'assistant');
+      return;
+    }
+  }
+  if (step.key === 'maxAge' && Number(value) < Number(SURVEY_CHAT_ANSWERS.minAge)) {
+    appendSurveyChatMessage('Maximum age must be greater than or equal to the minimum age.', 'assistant');
+    return;
+  }
+  SURVEY_CHAT_ANSWERS[step.key] = value;
+  appendSurveyChatMessage(value || 'Any / no restriction', 'user');
+  advanceSurveyChat();
+}
+
+function advanceSurveyChat() {
+  SURVEY_CHAT_INDEX += 1;
+  if (SURVEY_CHAT_INDEX < SURVEY_CHAT_STEPS.length) {
+    showSurveyChatPrompt();
+    return;
+  }
+  finishSurveyChat();
+}
+
+async function finishSurveyChat() {
+  const a = SURVEY_CHAT_ANSWERS;
+  const areas = /^(any|none|all)$/i.test(a.areas || '') ? '' : (a.areas || '');
+  const professions = /^(any|none|all)$/i.test(a.professions || '') ? '' : (a.professions || '');
+  document.getElementById('aiCommand').value = a.goal;
+  document.getElementById('aiTargetCity').value = a.city;
+  document.getElementById('target_city').value = a.city;
+  document.getElementById('target_areas').value = areas;
+  document.getElementById('target_professions').value = professions;
+  document.getElementById('min_age').value = a.minAge;
+  document.getElementById('max_age').value = a.maxAge;
+  document.getElementById('sample_size').value = a.participants;
+  document.getElementById('reward').value = a.reward;
+  updateBudgetPreview();
+  const budget = calculateTokenBudget(Number(a.participants), Number(a.reward));
+  appendSurveyChatMessage(
+    `Summary: ${a.city}; ages ${a.minAge}–${a.maxAge}; areas ${areas || 'any'}; professions ${professions || 'any'}; ${a.participants} participants; ${a.reward} tokens each. Participant reserve ${budget.participantRewardBudget.toLocaleString()} + 100 fee = ${budget.totalRequired.toLocaleString()} tokens. I’ll generate the questions now; nothing is published or charged until you confirm.`,
+    'assistant'
+  );
+  document.getElementById('surveyChatInput').disabled = true;
+  document.getElementById('surveyChatSend').disabled = true;
+  document.getElementById('surveyChatSkip').hidden = true;
+  document.getElementById('aiStatus').textContent = 'Generating questions…';
+  await generateAiSurvey();
+  document.getElementById('surveyChatHint').textContent = 'Review and edit the questions below. No tokens are deducted until you confirm publishing.';
+}
+
+function resetSurveyChat() {
+  SURVEY_CHAT_INDEX = 0;
+  SURVEY_CHAT_ANSWERS = {};
+  const messages = document.getElementById('surveyChatMessages');
+  messages.innerHTML = '';
+  appendSurveyChatMessage('I’ll help build your survey. First, what do you want to learn?', 'assistant');
+  document.getElementById('surveyChatInput').disabled = false;
+  document.getElementById('surveyChatSend').disabled = false;
+  document.getElementById('aiStatus').textContent = '';
+  showSurveyChatPrompt();
 }
 
 async function generateAiSurvey() {
