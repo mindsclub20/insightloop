@@ -45,3 +45,18 @@ test('participant dashboard redirects unauthenticated and suspended users to Sup
   assert.doesNotMatch(html, /location\.href = '\/login\.html'/, 'legacy login route must not be used on the Supabase dashboard');
   assert.match(html, /location\.href = '\/supabase-login\.html'/, 'auth failures should route to Supabase login');
 });
+
+test('survey draft backend supports free token-mode drafts for unverified businesses', async () => {
+  const source = await read('../supabase/functions/create-research-project/index.ts');
+  assert.match(source, /reward_per_response_tokens/);
+  assert.match(source, /reward_per_response_tokens: tokenMode \? tokenReward : null/);
+  assert.match(source, /status: 'DRAFT'/);
+  assert.doesNotMatch(source, /verification_status.*VERIFIED|Business must be verified/i, 'draft creation must not require verification or spend tokens');
+  assert.match(source, /reward_per_response_tokens.*tokenReward/);
+  assert.match(source, /tokenReward.*< 5/, 'the minimum participant reward is five tokens');
+});
+
+test('AI survey targeting respects the platform adult-participant requirement', async () => {
+  const source = await read('../public/js/supabase/business-page.js');
+  assert.match(source, /age < 18 \|\| age > 120/);
+});
