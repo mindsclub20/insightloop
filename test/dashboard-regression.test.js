@@ -60,3 +60,14 @@ test('AI survey targeting respects the platform adult-participant requirement', 
   const source = await read('../public/js/supabase/business-page.js');
   assert.match(source, /age < 18 \|\| age > 120/);
 });
+
+
+test('shared design system uses the Anvesh navy-indigo-teal palette and accessible responsive interactions', async () => {
+  const css = await read('../public/css/style.css');
+  assert.match(css, /--anvesh-bg:\s*#0B1020/i, 'shared theme should define the deep navy background token');
+  assert.match(css, /--anvesh-indigo:\s*#4F46E5/i, 'shared theme should define the brand indigo token');
+  assert.match(css, /--anvesh-teal:\s*#14B8A6/i, 'shared theme should define the teal accent token');
+  assert.match(css, /prefers-reduced-motion:\s*reduce/i, 'motion should respect user accessibility preferences');
+  assert.match(css, /:focus-visible/, 'keyboard users need visible focus states');
+  assert.match(css, /min-width:\s*44px|min-height:\s*44px/, 'interactive controls should have touch-friendly sizing');
+});
