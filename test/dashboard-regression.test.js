@@ -36,7 +36,7 @@ test('public entry points route users to persistent Supabase-backed pages', asyn
 test('participant registration handles email confirmation without forcing a dashboard redirect', async () => {
   const html = await read('../public/supabase-register-participant.html');
   assert.match(html, /needsEmailConfirmation/, 'signup must handle accounts that need email confirmation');
-  assert.match(html, /const value = \\(id\\) => document\\.getElementById\\(id\\)\\.value/, 'form fields should be accessed explicitly inside the ES module');
+  assert.match(html, /const value = \(id\) => document\.getElementById\(id\)\.value/, 'form fields should be accessed explicitly inside the ES module');
   assert.match(html, /supabase-login\.html/, 'confirmed accounts should use the Supabase login route');
 });
 
