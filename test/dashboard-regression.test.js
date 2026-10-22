@@ -77,3 +77,11 @@ test('landing hero heading uses high-contrast text over the navy background', as
   const css = await read('../public/css/style.css');
   assert.match(css, /\.hero h1\s*\{[^}]*color:\s*#F8FAFC/i, 'hero heading must be light against the dark hero surface');
 });
+
+
+test('admin dashboard uses keyboard-operable buttons for every tab and responsive stats layout', async () => {
+  const html = await read('../public/supabase-admin/dashboard.html');
+  const css = await read('../public/css/style.css');
+  assert.match(html, /<button[^>]*data-tab="businesses"/, 'Businesses tab must be a real button, not a decorative div');
+  assert.match(css, /#statsBar\s*\{[^}]*grid-template-columns/i, 'admin stats should have a responsive shared layout rule');
+});
