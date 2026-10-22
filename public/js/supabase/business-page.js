@@ -58,6 +58,9 @@ function switchTab(name) {
 }
 
 async function init() {
+  // Bind the chat immediately so a slow or failing business-profile request
+  // cannot leave the visible Send answer button inert.
+  initSurveyChat();
   CURRENT = await requireRoleSupabase('BUSINESS');
   if (!CURRENT) return;
   document.getElementById('userName').textContent = CURRENT.profile.full_name || CURRENT.user.email;
@@ -77,7 +80,6 @@ async function init() {
     prompt.focus();
   }));
   document.getElementById('generateAiSurveyBtn').addEventListener('click', generateAiSurvey);
-  initSurveyChat();
   document.getElementById('aiCommand').addEventListener('keydown', (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') generateAiSurvey();
   });
