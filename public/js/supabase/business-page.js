@@ -11,6 +11,7 @@
 
 import { requireRoleSupabase } from './page-auth.js';
 import * as business from './business.js';
+import { calculateTokenBudget } from './token-budget.js';
 
 let CURRENT = null;
 let DRAFT_STUDY = null;
@@ -102,11 +103,13 @@ function csvValues(id, lower = false) {
 function updateBudgetPreview() {
   const sample = Number(document.getElementById('sample_size').value);
   const reward = Number(document.getElementById('reward').value);
-  const valid = Number.isInteger(sample) && sample >= 10 && sample <= 500 && Number.isInteger(reward) && reward >= 5;
-  const budget = sample * reward;
-  document.getElementById('budgetPreview').textContent = valid
-    ? `Participant rewards: ${budget.toLocaleString()} tokens (${sample} × ${reward}) + 100-token platform fee = ${(budget + 100).toLocaleString()} tokens total.`
-    : 'Choose 10–500 participants and at least 5 tokens per participant.';
+  try {
+    const budget = calculateTokenBudget(sample, reward);
+    document.getElementById('budgetPreview').textContent =
+      `Participant rewards: ${budget.participantRewardBudget.toLocaleString()} tokens (${sample} × ${reward}) + ${budget.platformFee}-token platform fee = ${budget.totalRequired.toLocaleString()} tokens total.`;
+  } catch {
+    document.getElementById('budgetPreview').textContent = 'Choose 10–500 participants and at least 5 whole tokens per participant.';
+  }
 }
 
 async function generateAiSurvey() {
