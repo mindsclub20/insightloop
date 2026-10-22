@@ -64,3 +64,15 @@ button:focus-visible,a:focus-visible{outline:3px solid #b49cff;outline-offset:3p
 #aiStatus{font-weight:600}
 #generateAiSurveyBtn[disabled]{opacity:.75}
 @media(max-width:600px){.ai-start-grid{grid-template-columns:1fr;gap:6px}.ai-prompt-help{margin-top:4px}.ai-prompt-chips{display:grid;grid-template-columns:1fr}.ai-chip{justify-content:flex-start!important;text-align:left}#tab-create #aiSurveyCard{padding:20px 17px}#tab-create #aiSurveyCard:before{width:36px;height:36px;font-size:18px}}
+
+/* Conversational AI survey builder */
+.survey-chat{margin-top:18px;border:1px solid #e4dcf4;border-radius:16px;background:#fff;padding:14px;max-width:100%}
+.survey-chat-messages{display:flex;flex-direction:column;gap:10px;max-height:360px;overflow:auto;padding:4px 2px 14px}
+.survey-chat-bubble{max-width:90%;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.55;overflow-wrap:anywhere}
+.survey-chat-bubble.assistant{align-self:flex-start;background:#f3effc;color:#30254c;border-bottom-left-radius:4px}
+.survey-chat-bubble.user{align-self:flex-end;background:#5b43a6;color:#fff;border-bottom-right-radius:4px}
+.survey-chat label{display:block;font-weight:650;margin:8px 0}
+.survey-chat textarea,.survey-chat input{width:100%;box-sizing:border-box;border:1px solid #d9d3e5;border-radius:10px;padding:12px;font:inherit;background:#fff;color:#211a30}
+.survey-chat button{min-height:42px}
+.survey-chat .muted{font-size:12px;margin-bottom:0}
+@media(max-width:600px){.survey-chat{padding:10px}.survey-chat-bubble{max-width:96%}.survey-chat .row{gap:8px}.survey-chat .row button{flex:1}}
