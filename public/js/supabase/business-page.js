@@ -433,9 +433,20 @@ async function saveManualDraft() {
 async function submitForApproval() {
   clearAlert('alert');
   try {
+    if (!DRAFT_STUDY) throw new Error('Create a draft first.');
     const { questions } = await business.getStudy(DRAFT_STUDY.id);
     if (!questions.length) throw new Error('Add at least one question before publishing.');
-    const result = await business.publishSurvey(DRAFT_STUDY.id);
+    const reward = Number(document.getElementById('reward').value);
+    const sample = Number(document.getElementById('sample_size').value);
+    if (!Number.isInteger(reward) || reward < 5) throw new Error('Reward must be at least 5 tokens per participant.');
+    if (!Number.isInteger(sample) || sample < 10 || sample > 500) throw new Error('Participant count must be between 10 and 500.');
+    const total = sample * reward + 100;
+    if (!window.confirm(`Publish this survey now?\n\nParticipants: ${sample}\nReward per valid completion: ${reward} tokens\nParticipant reward budget: ${(sample * reward).toLocaleString()} tokens\nPlatform fee: 100 tokens\nTOTAL DEDUCTED: ${total.toLocaleString()} tokens\n\nThe survey activates immediately if funding succeeds.`)) return;
+    const result = await business.publishSurvey(DRAFT_STUDY.id, {
+      reward_per_response_tokens: reward,
+      target_areas: csvValues('target_areas'),
+      target_professions: csvValues('target_professions', true),
+    });
     document.getElementById('draftBuilder').innerHTML = `<div class="alert success">Survey published successfully: ${escapeHtml(result.survey?.title || DRAFT_STUDY.title)}.</div>`;
     DRAFT_STUDY = null;
     switchTab('results');
