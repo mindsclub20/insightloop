@@ -627,7 +627,7 @@ async function loadStudies() {
         <p class="muted">${escapeHtml(s.target_city)} · ${s.sample_size} respondents · ${Number(s.reward_per_response_tokens ?? 0).toLocaleString('en-IN')} tokens/response</p>
         <div class="row">
           <button class="secondary" onclick="viewStudy('${s.id}')">View details${['ACTIVE', 'COMPLETED', 'REPORT_READY'].includes(s.status) ? ' & report' : ''}</button>
-          ${String(s.status).toUpperCase() === 'DRAFT' ? `<button type="button" onclick="startDraftSurvey('${s.id}')">Start Survey</button><button class="danger" type="button" onclick="deleteDraftSurvey('${s.id}')">Delete Draft</button>` : ''}
+          ${String(s.status).toUpperCase() === 'DRAFT' ? `<button type="button" data-action="start-draft" data-draft-id="${s.id}">Start Survey</button><button class="danger" type="button" data-action="delete-draft" data-draft-id="${s.id}">Delete Draft</button>` : ''}
           ${String(s.status).toUpperCase() === 'SUBMITTED' ? `<button class="danger" onclick="cancelStudy('${s.id}')">Cancel</button>` : ''}
         </div>
       </div>
@@ -791,6 +791,15 @@ function escapeHtml(str) {
 
 // Attach everything referenced from injected-HTML onclick="..." strings.
 Object.assign(window, { addSuggested, addCustomQuestion, saveManualDraft, submitForApproval, viewStudy, startDraftSurvey, deleteDraftSurvey, cancelStudy, viewReport, viewResultsReport });
+
+// Delegated handlers keep dynamic Saved Drafts buttons wired after every refresh.
+document.getElementById('studyList')?.addEventListener('click', (event) => {
+  const button = event.target.closest('button[data-action][data-draft-id]');
+  if (!button || button.disabled) return;
+  const id = button.dataset.draftId;
+  if (button.dataset.action === 'delete-draft') deleteDraftSurvey(id);
+  if (button.dataset.action === 'start-draft') startDraftSurvey(id);
+});
 
 init().catch((error) => {
   console.error('Business dashboard initialization failed:', error);
