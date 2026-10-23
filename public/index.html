@@ -9,13 +9,12 @@
 <link rel="stylesheet" href="/css/style.css">
 
 <style>
-.pitch-embed-shell{position:relative;width:100%;aspect-ratio:16/9;min-height:280px;max-height:760px;overflow:hidden;border:1px solid rgba(110,95,180,.18);border-radius:22px;background:#f7f6fc;box-shadow:0 24px 70px rgba(38,27,82,.12)}
-.pitch-embed{position:absolute;inset:0;display:block;width:100%;height:100%;border:0}
-.pitch-embed-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:18px}
-.pitch-embed-actions .muted{margin:0}
-.pitch-embed-actions .btn{flex-shrink:0}
-@media(max-width:640px){.pitch-embed-shell{aspect-ratio:4/3;min-height:260px;max-height:none;border-radius:16px}.pitch-embed-actions{align-items:stretch;flex-direction:column;gap:10px}.pitch-embed-actions .btn{width:100%;white-space:normal;text-align:center}}
-@media(prefers-reduced-motion:reduce){.pitch-embed-shell{scroll-behavior:auto}}
+.pitch-slides{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;margin-top:24px;width:100%;min-width:0}
+.pitch-slide{margin:0;min-width:0;overflow:hidden;border:1px solid rgba(110,95,180,.18);border-radius:18px;background:#fff;box-shadow:0 14px 36px rgba(38,27,82,.08)}
+.pitch-slide figcaption{padding:10px 16px;color:var(--muted);font-size:.85rem;border-bottom:1px solid rgba(110,95,180,.12)}
+.pitch-slide img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:contain;background:#f7f6fc}
+@media(min-width:900px){.pitch-slides{gap:28px}.pitch-slide{border-radius:22px}.pitch-slide figcaption{padding:12px 20px}}
+@media(max-width:640px){.pitch-slides{gap:16px;margin-top:18px}.pitch-slide{border-radius:12px}.pitch-slide figcaption{padding:8px 12px}}
 </style>
 </head>
 <body>
@@ -33,22 +32,44 @@
   <div class="presentation-heading">
     <div>
       <p class="eyebrow">THE ANVESH PLATFORM • OFFICIAL PITCH DECK</p>
-      <h2 id="presentation-heading">Meet Anvesh</h2>
-      <p class="presentation-intro">View the original Anvesh startup pitch presentation, including the problem, solution, workflow, technology costs, business model and live website walkthrough.</p>
+      <h2 id="presentation-heading">Anvesh Startup Pitch</h2>
+      <p class="presentation-intro">The complete existing 8-slide presentation, displayed below in order.</p>
     </div>
-    <span class="presentation-badge">Official Canva presentation · 8 slides</span>
+    <span class="presentation-badge">8 slides · Full presentation</span>
   </div>
-  <div class="pitch-fallback-card" role="group" aria-label="Open the existing Anvesh startup pitch presentation">
-    <div class="pitch-fallback-icon" aria-hidden="true">A.</div>
-    <div class="pitch-fallback-copy">
-      <p class="eyebrow">THE ORIGINAL 8-SLIDE DECK</p>
-      <h3>Anvesh Startup Pitch — Complete</h3>
-      <p>The existing presentation is hosted in Canva. Open it to view the full slide deck.</p>
-    </div>
-  </div>
-  <div class="pitch-embed-actions">
-    <p class="muted">Open the original Canva presentation in a new tab. Canva may ask you to sign in if public viewing is not enabled.</p>
-    <a class="btn" href="https://www.canva.com/d/QlCFcSNGxqYW_pk" target="_blank" rel="noopener noreferrer">View Anvesh Pitch Deck ↗</a>
+  <div class="pitch-slides" aria-label="Complete Anvesh startup pitch presentation">
+    <figure class="pitch-slide">
+      <figcaption>Slide 1 of 8</figcaption>
+      <img src="https://media.canva.com/v2/document-image/hash:1375167714/height:335/id:DAHYzrplmdU/type:B/width:595?brand=BAHYt3tWpTo&amp;csig=AAAAAAAAAAAAAAAAAAAAAC1vvT_wgU7pzXORejzfHyPKYG_7DCdOdvjdD408JxaJ&amp;disableexport=T&amp;exp=1792751250&amp;fallback=https%3A%2F%2Fs3.amazonaws.com%2Fdocument-export.canva.com%2FplmdU%2FDAHYzrplmdU%2F3%2Fthumbnail%2F0001.png%3FX-Amz-Algorithm%3DAWS4-HMAC-SHA256%26X-Amz-Credential%3DAKIAQYCGKMUHW27RK5IK%252F20261022%252Fus-east-1%252Fs3%252Faws4_request%26X-Amz-Date%3D20261022T233915Z%26X-Amz-Expires%3D38748%26X-Amz-Signature%3D0f165e6e0f845841cd27e3500825b580e0b34648888c65c5f5c6d6ab0bf3b82f%26X-Amz-SignedHeaders%3Dhost%26response-expires%3DFri%252C%252023%2520Oct%25202026%252010%253A25%253A03%2520GMT&amp;osig=AAAAAAAAAAAAAAAAAAAAAN2vk3mQA1Ql2voOwrxbzOBScsUerPxOp4Y_wy1iYBQL&amp;page=1&amp;signed=brand%2Cdisableexport%2Cfallback%2Cpage%2Cversion&amp;signer=document-rpc&amp;version=3" alt="Anvesh startup pitch presentation, slide 1" loading="eager" decoding="async" width="595" height="335">
+    </figure>
+    <figure class="pitch-slide">
+      <figcaption>Slide 2 of 8</figcaption>
+      <img src="https://media.canva.com/v2/document-image/hash:891982696/height:335/id:DAHYzrplmdU/type:B/width:595?brand=BAHYt3tWpTo&amp;csig=AAAAAAAAAAAAAAAAAAAAAAmdaeaKy4mHfn3yc_cTgQutr_EfbfaUw7mUVl9fqaWO&amp;disableexport=T&amp;exp=1792751250&amp;fallback=https%3A%2F%2Fs3.amazonaws.com%2Fdocument-export.canva.com%2FplmdU%2FDAHYzrplmdU%2F3%2Fthumbnail%2F0002.png%3FX-Amz-Algorithm%3DAWS4-HMAC-SHA256%26X-Amz-Credential%3DAKIAQYCGKMUHW27RK5IK%252F20261023%252Fus-east-1%252Fs3%252Faws4_request%26X-Amz-Date%3D20261023T013752Z%26X-Amz-Expires%3D32469%26X-Amz-Signature%3D06d29cf376cf965229557543ee3d170e5f13000eea3edbee4d9529e3829328b1%26X-Amz-SignedHeaders%3Dhost%26response-expires%3DFri%252C%252023%2520Oct%25202026%252010%253A39%253A01%2520GMT&amp;osig=AAAAAAAAAAAAAAAAAAAAALa6tbS1_3WnILVD5GONKP8rIZQtVUouD4Pa3yWBkxlc&amp;page=2&amp;signed=brand%2Cdisableexport%2Cfallback%2Cpage%2Cversion&amp;signer=document-rpc&amp;version=3" alt="Anvesh startup pitch presentation, slide 2" loading="eager" decoding="async" width="595" height="335">
+    </figure>
+    <figure class="pitch-slide">
+      <figcaption>Slide 3 of 8</figcaption>
+      <img src="https://media.canva.com/v2/document-image/hash:-1966636104/height:335/id:DAHYzrplmdU/type:B/width:595?brand=BAHYt3tWpTo&amp;csig=AAAAAAAAAAAAAAAAAAAAAN-Eg8RzXIz3VD61HazrEe5ZfLlUMEHPk2qpRJXPQqnK&amp;disableexport=T&amp;exp=1792751250&amp;fallback=https%3A%2F%2Fs3.amazonaws.com%2Fdocument-export.canva.com%2FplmdU%2FDAHYzrplmdU%2F3%2Fthumbnail%2F0003.png%3FX-Amz-Algorithm%3DAWS4-HMAC-SHA256%26X-Amz-Credential%3DAKIAQYCGKMUHW27RK5IK%252F20261022%252Fus-east-1%252Fs3%252Faws4_request%26X-Amz-Date%3D20261022T152002Z%26X-Amz-Expires%3D69339%26X-Amz-Signature%3D7809410efbb78e491a2034dfe70a6261dbd349314dabdc62d635e04fd72f87ed%26X-Amz-SignedHeaders%3Dhost%26response-expires%3DFri%252C%252023%2520Oct%25202026%252010%253A35%253A41%2520GMT&amp;osig=AAAAAAAAAAAAAAAAAAAAADFYqPbUzQquhRVSkJwE__XGKO829TyTtbJuE0wofQVU&amp;page=3&amp;signed=brand%2Cdisableexport%2Cfallback%2Cpage%2Cversion&amp;signer=document-rpc&amp;version=3" alt="Anvesh startup pitch presentation, slide 3" loading="lazy" decoding="async" width="595" height="335">
+    </figure>
+    <figure class="pitch-slide">
+      <figcaption>Slide 4 of 8</figcaption>
+      <img src="https://media.canva.com/v2/document-image/hash:-1751831818/height:335/id:DAHYzrplmdU/type:B/width:595?brand=BAHYt3tWpTo&amp;csig=AAAAAAAAAAAAAAAAAAAAACRFA8Df11jMhSSu9289a54u6QAmvex0158ellZTr5bF&amp;disableexport=T&amp;exp=1792751250&amp;fallback=https%3A%2F%2Fs3.amazonaws.com%2Fdocument-export.canva.com%2FplmdU%2FDAHYzrplmdU%2F3%2Fthumbnail%2F0004.png%3FX-Amz-Algorithm%3DAWS4-HMAC-SHA256%26X-Amz-Credential%3DAKIAQYCGKMUHW27RK5IK%252F20261023%252Fus-east-1%252Fs3%252Faws4_request%26X-Amz-Date%3D20261023T042935Z%26X-Amz-Expires%3D19986%26X-Amz-Signature%3Dd61d2f849963ee15017283dd0eb9f87c1ccc9bd2909546534f1a2c02837d583d%26X-Amz-SignedHeaders%3Dhost%26response-expires%3DFri%252C%252023%2520Oct%25202026%252010%253A02%253A41%2520GMT&amp;osig=AAAAAAAAAAAAAAAAAAAAAJX1Y2H9FtjylY0a5G__ds-0mnAijnqG1MeVCfTZEZgl&amp;page=4&amp;signed=brand%2Cdisableexport%2Cfallback%2Cpage%2Cversion&amp;signer=document-rpc&amp;version=3" alt="Anvesh startup pitch presentation, slide 4" loading="lazy" decoding="async" width="595" height="335">
+    </figure>
+    <figure class="pitch-slide">
+      <figcaption>Slide 5 of 8</figcaption>
+      <img src="https://media.canva.com/v2/document-image/hash:-598073930/height:335/id:DAHYzrplmdU/type:B/width:595?brand=BAHYt3tWpTo&amp;csig=AAAAAAAAAAAAAAAAAAAAAORYR8Tk9H8nao2rHc34ih0VrEhlUuUrJmCpf7HBsetz&amp;disableexport=T&amp;exp=1792751250&amp;fallback=https%3A%2F%2Fs3.amazonaws.com%2Fdocument-export.canva.com%2FplmdU%2FDAHYzrplmdU%2F3%2Fthumbnail%2F0005.png%3FX-Amz-Algorithm%3DAWS4-HMAC-SHA256%26X-Amz-Credential%3DAKIAQYCGKMUHW27RK5IK%252F20261023%252Fus-east-1%252Fs3%252Faws4_request%26X-Amz-Date%3D20261023T020356Z%26X-Amz-Expires%3D31200%26X-Amz-Signature%3D3d3fa45e281c11bdfda0ad3fc308544cde9531963829695b9a552d81f6c37409%26X-Amz-SignedHeaders%3Dhost%26response-expires%3DFri%252C%252023%2520Oct%25202026%252010%253A43%253A56%2520GMT&amp;osig=AAAAAAAAAAAAAAAAAAAAABsm-k-OrjEd631qyTFzaWGCrlcQaLM5YgyvTnQPE-Xf&amp;page=5&amp;signed=brand%2Cdisableexport%2Cfallback%2Cpage%2Cversion&amp;signer=document-rpc&amp;version=3" alt="Anvesh startup pitch presentation, slide 5" loading="lazy" decoding="async" width="595" height="335">
+    </figure>
+    <figure class="pitch-slide">
+      <figcaption>Slide 6 of 8</figcaption>
+      <img src="https://media.canva.com/v2/document-image/hash:-1147524729/height:335/id:DAHYzrplmdU/type:B/width:595?brand=BAHYt3tWpTo&amp;csig=AAAAAAAAAAAAAAAAAAAAAI9clPfP4cIwBibVCKPaQoO9PGohOnQsKYo5-GGLn84d&amp;disableexport=T&amp;exp=1792751250&amp;fallback=https%3A%2F%2Fs3.amazonaws.com%2Fdocument-export.canva.com%2FplmdU%2FDAHYzrplmdU%2F3%2Fthumbnail%2F0006.png%3FX-Amz-Algorithm%3DAWS4-HMAC-SHA256%26X-Amz-Credential%3DAKIAQYCGKMUHW27RK5IK%252F20261022%252Fus-east-1%252Fs3%252Faws4_request%26X-Amz-Date%3D20261022T132302Z%26X-Amz-Expires%3D73827%26X-Amz-Signature%3D10c3e7d2469c3f8b6dbc1dd07f3444b3733afded4883fb3d1cdca97d53b58c02%26X-Amz-SignedHeaders%3Dhost%26response-expires%3DFri%252C%252023%2520Oct%25202026%252009%253A53%253A29%2520GMT&amp;osig=AAAAAAAAAAAAAAAAAAAAACQOetjCaoJIljQmBqYcTsNQx5NO-V4n1FuXEo4UsWWt&amp;page=6&amp;signed=brand%2Cdisableexport%2Cfallback%2Cpage%2Cversion&amp;signer=document-rpc&amp;version=3" alt="Anvesh startup pitch presentation, slide 6" loading="lazy" decoding="async" width="595" height="335">
+    </figure>
+    <figure class="pitch-slide">
+      <figcaption>Slide 7 of 8</figcaption>
+      <img src="https://media.canva.com/v2/document-image/hash:-1802963317/height:335/id:DAHYzrplmdU/type:B/width:595?brand=BAHYt3tWpTo&amp;csig=AAAAAAAAAAAAAAAAAAAAAF0bbnk7WdFPkbk6GvYCeWi9ASsj5ixfPXXhJp-h_b_u&amp;disableexport=T&amp;exp=1792751250&amp;fallback=https%3A%2F%2Fs3.amazonaws.com%2Fdocument-export.canva.com%2FplmdU%2FDAHYzrplmdU%2F3%2Fthumbnail%2F0007.png%3FX-Amz-Algorithm%3DAWS4-HMAC-SHA256%26X-Amz-Credential%3DAKIAQYCGKMUHW27RK5IK%252F20261023%252Fus-east-1%252Fs3%252Faws4_request%26X-Amz-Date%3D20261023T052501Z%26X-Amz-Expires%3D19270%26X-Amz-Signature%3D61663cbb284796073c3b1a76bc879adbf3a9d33c79e3e5a3c64fe87230e7c413%26X-Amz-SignedHeaders%3Dhost%26response-expires%3DFri%252C%252023%2520Oct%25202026%252010%253A46%253A11%2520GMT&amp;osig=AAAAAAAAAAAAAAAAAAAAADObivFc1d6pE1mnc2ewiuZCtS8gODy0ssSNIFfx44_9&amp;page=7&amp;signed=brand%2Cdisableexport%2Cfallback%2Cpage%2Cversion&amp;signer=document-rpc&amp;version=3" alt="Anvesh startup pitch presentation, slide 7" loading="lazy" decoding="async" width="595" height="335">
+    </figure>
+    <figure class="pitch-slide">
+      <figcaption>Slide 8 of 8</figcaption>
+      <img src="https://media.canva.com/v2/document-image/hash:1150146666/height:335/id:DAHYzrplmdU/type:B/width:595?brand=BAHYt3tWpTo&amp;csig=AAAAAAAAAAAAAAAAAAAAAGl8Thn7H4FUh0NuxWjJ2BFzv_JJaOkMulaDDwUK3hVq&amp;disableexport=T&amp;exp=1792751250&amp;fallback=https%3A%2F%2Fs3.amazonaws.com%2Fdocument-export.canva.com%2FplmdU%2FDAHYzrplmdU%2F3%2Fthumbnail%2F0008.png%3FX-Amz-Algorithm%3DAWS4-HMAC-SHA256%26X-Amz-Credential%3DAKIAQYCGKMUHW27RK5IK%252F20261022%252Fus-east-1%252Fs3%252Faws4_request%26X-Amz-Date%3D20261022T102437Z%26X-Amz-Expires%3D84308%26X-Amz-Signature%3Da5d87c95b937006314902884278469052911a7f9895119665ff9d4de762d9f21%26X-Amz-SignedHeaders%3Dhost%26response-expires%3DFri%252C%252023%2520Oct%25202026%252009%253A49%253A45%2520GMT&amp;osig=AAAAAAAAAAAAAAAAAAAAAJBDsj7BCtajUPhhrelSCtyc2C0SQDKNqqJrE7knJ5wk&amp;page=8&amp;signed=brand%2Cdisableexport%2Cfallback%2Cpage%2Cversion&amp;signer=document-rpc&amp;version=3" alt="Anvesh startup pitch presentation, slide 8" loading="lazy" decoding="async" width="595" height="335">
+    </figure>
   </div>
 </section>
 
