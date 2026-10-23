@@ -51,22 +51,21 @@ serve(async (req: Request) => {
       return json({ error: 'Only unpublished drafts can be deleted. Submitted or published surveys are protected.' }, 409);
     }
 
-    const { data: questions, error: questionsError } = await admin.from('survey_questions')
-      .select('id').eq('research_project_id', projectId);
-    if (questionsError) throw questionsError;
-    const questionIds = (questions || []).map((q: { id: string }) => q.id);
-    if (questionIds.length) {
-      const { error: optionsError } = await admin.from('question_options').delete().in('question_id', questionIds);
-      if (optionsError) throw optionsError;
-      const { error: deleteQuestionsError } = await admin.from('survey_questions').delete().in('id', questionIds);
-      if (deleteQuestionsError) throw deleteQuestionsError;
+    // Use a single database transaction so the draft and its cascaded question rows
+    // are removed atomically. Financial references are explicitly protected by the RPC.
+    const { data: deletedId, error: deleteError } = await admin.rpc('delete_business_draft', {
+      p_research_project_id: projectId,
+      p_business_id: member.business_id,
+    });
+    if (deleteError) {
+      console.error('delete_business_draft RPC failed:', deleteError);
+      const message = deleteError.message || 'Draft deletion failed';
+      const status = /not found|no longer deletable/i.test(message) ? 404
+        : /financial record/i.test(message) ? 409 : 500;
+      return json({ error: message }, status);
     }
-
-    const { data: deleted, error: deleteProjectError } = await admin.from('research_projects')
-      .delete().eq('id', projectId).eq('business_id', member.business_id).eq('status', 'DRAFT').select('id').maybeSingle();
-    if (deleteProjectError) throw deleteProjectError;
-    if (!deleted) return json({ error: 'Draft was not deleted. Refresh and try again.' }, 409);
-    return json({ success: true, deleted_id: deleted.id });
+    if (!deletedId) return json({ error: 'Draft was not deleted. Refresh and try again.' }, 409);
+    return json({ success: true, deleted_id: deletedId });
   } catch (err) {
     console.error('delete-survey-draft error:', err);
     return json({ error: err instanceof Error ? err.message : 'Internal server error' }, 500);
