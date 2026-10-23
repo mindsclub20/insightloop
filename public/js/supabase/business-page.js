@@ -156,7 +156,18 @@ function initSurveyChat() {
   const reset = document.getElementById('surveyChatReset');
   if (!input || !send || !skip || !reset) return;
   showSurveyChatPrompt();
-  send.addEventListener('click', submitSurveyChatAnswer);
+  // Use a direct DOM handler as well as a named global entry point so the
+  // Send button remains callable on mobile browsers and after UI re-renders.
+  window.submitAnveshSurveyChatAnswer = () => {
+    try {
+      submitSurveyChatAnswer();
+    } catch (error) {
+      console.error('Anvesh survey chat send failed:', error);
+      const status = document.getElementById('aiStatus');
+      if (status) status.textContent = error?.message || 'Could not send answer. Please try again.';
+    }
+  };
+  send.onclick = window.submitAnveshSurveyChatAnswer;
   skip.addEventListener('click', () => {
     const step = SURVEY_CHAT_STEPS[SURVEY_CHAT_INDEX];
     if (!step?.optional) return;
@@ -168,7 +179,7 @@ function initSurveyChat() {
   input.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && !event.shiftKey && !input.multiline) {
       event.preventDefault();
-      submitSurveyChatAnswer();
+      window.submitAnveshSurveyChatAnswer();
     }
   });
 }
