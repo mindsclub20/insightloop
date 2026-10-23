@@ -48,13 +48,13 @@ const TEMPLATE_SUGGESTIONS = {
 };
 
 document.querySelectorAll('.tab').forEach((tab) => tab.addEventListener('click', () => switchTab(tab.dataset.tab)));
-function switchTab(name) {
+function switchTab(name, options = {}) {
   document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
   document.getElementById('tab-create').classList.toggle('hidden', name !== 'create');
   document.getElementById('tab-studies').classList.toggle('hidden', name !== 'studies');
   document.getElementById('tab-results').classList.toggle('hidden', name !== 'results');
-  if (name === 'studies') loadStudies();
-  if (name === 'results') loadResults();
+  if (options.refresh !== false && name === 'studies') loadStudies();
+  if (options.refresh !== false && name === 'results') loadResults();
 }
 
 async function init() {
@@ -452,9 +452,13 @@ async function persistAiSurvey(publish) {
     document.getElementById('aiStatus').textContent = 'Saving questions to your draft…';
     await business.saveSurveyDraft(savedId, survey);
     if (!publish) {
-      document.getElementById('aiStatus').textContent = 'Draft saved to your account.';
-      showAlert('alert', 'Draft saved successfully. You can return to Saved Drafts later.', 'success');
-      await loadStudies();
+      const visibleStudies = await loadStudies();
+      if (!visibleStudies || !visibleStudies.some((item) => item.id === savedId)) {
+        throw new Error('The save request completed, but Anvesh could not verify this draft in Saved Drafts. Refresh the dashboard before retrying; your draft ID is ' + savedId + '.');
+      }
+      switchTab('studies', { refresh: false });
+      document.getElementById('aiStatus').textContent = 'Draft saved and verified in Saved Drafts.';
+      showAlert('alert', 'Draft saved and verified. It is now shown in Saved Drafts.', 'success');
       return;
     }
     const rewardTokens = Number(document.getElementById('reward').value);
@@ -616,7 +620,7 @@ async function loadStudies() {
   clearAlert('alert');
   try {
     const allStudies = await business.listMyStudies();
-    const studies = allStudies.filter((s) => ['DRAFT', 'SUBMITTED', 'PENDING', 'UNDER_REVIEW'].includes(String(s.status).toUpperCase()));
+    const studies = allStudies.filter((s) => ['DRAFT', 'SUBMITTED', 'PENDING', 'UNDER_REVIEW', 'ADMIN_REVIEW', 'APPROVED'].includes(String(s.status).toUpperCase()));
     document.getElementById('studyList').innerHTML = studies.length ? studies.map((s) => `
       <div class="card">
         <div class="row"><h3 style="flex:1;">${escapeHtml(s.title)}</h3>${badge(s.status)}</div>
@@ -628,7 +632,11 @@ async function loadStudies() {
         </div>
       </div>
     `).join('') : '<p class="muted">No saved drafts or pending surveys yet. Create one from Survey Generation.</p>';
-  } catch (err) { showAlert('alert', err.message); }
+    return studies;
+  } catch (err) {
+    showAlert('alert', err.message || 'Could not load Saved Drafts.');
+    return null;
+  }
 }
 
 async function loadResults() {
@@ -694,9 +702,9 @@ async function startDraftSurvey(id) {
     const confirmed = window.confirm('Start this survey now?\n\nParticipants: ' + participantCount + '\nReward per valid completion: ' + rewardTokens + ' tokens\nParticipant reward budget: ' + budget.participantRewardBudget.toLocaleString() + ' tokens\nPlatform fee: ' + budget.platformFee + ' tokens\nTotal required: ' + budget.totalRequired.toLocaleString() + ' tokens\n\nPublishing will attempt to reserve/deduct this budget.');
     if (!confirmed) return;
     const result = await business.publishSurvey(id, { reward_per_response_tokens: rewardTokens, target_areas: Array.isArray(study.target_areas) ? study.target_areas : [], target_professions: Array.isArray(study.target_professions) ? study.target_professions : [] });
-    showAlert('alert', 'Survey started successfully: ' + (result.survey?.title || study.title) + '.', 'success');
     await loadStudies();
     await loadResults();
+    showAlert('alert', 'Survey started successfully: ' + (result.survey?.title || study.title) + '.', 'success');
   } catch (err) { showAlert('alert', err.message || 'Could not start this survey.'); }
 }
 async function deleteDraftSurvey(id) {
@@ -705,9 +713,12 @@ async function deleteDraftSurvey(id) {
   if (button) { button.disabled = true; button.textContent = 'Deleting…'; }
   try {
     await business.deleteDraft(id);
-    showAlert('alert', 'Draft deleted successfully.', 'success');
     document.getElementById('studyDetail').innerHTML = '';
-    await loadStudies();
+    const remaining = await loadStudies();
+    if (remaining && remaining.some((study) => study.id === id)) {
+      throw new Error('The delete request returned, but this draft is still in Saved Drafts. Refresh and retry.');
+    }
+    showAlert('alert', 'Draft deleted successfully.', 'success');
   } catch (err) {
     showAlert('alert', err.message || 'Could not delete this draft.');
     if (button) { button.disabled = false; button.textContent = 'Delete Draft'; }
@@ -716,8 +727,11 @@ async function deleteDraftSurvey(id) {
 
 async function cancelStudy(id) {
   if (!confirm('Cancel this submitted study? This cannot be undone.')) return;
-  try { await business.cancelStudy(id); await loadStudies(); }
-  catch (err) { showAlert('alert', err.message); }
+  try {
+    await business.cancelStudy(id);
+    await loadStudies();
+    showAlert('alert', 'Survey cancelled.', 'success');
+  } catch (err) { showAlert('alert', err.message); }
 }
 
 async function viewStudy(id) {
