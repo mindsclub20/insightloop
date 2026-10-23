@@ -56,7 +56,7 @@
       <textarea id="aiCommand" class="hidden" aria-hidden="true"></textarea>
       <button id="generateAiSurveyBtn" type="button" class="hidden" aria-hidden="true" tabindex="-1">Generate survey</button>
       <div id="aiSurveyPreview" class="hidden" style="margin-top:20px;"></div>
-      <p class="muted" style="margin-top:14px;">Your drafts are saved to your account. Launching currently requires the participant reward allocation plus a temporary 100-token platform fee. A survey activates after the token reservation succeeds.</p>
+      <p class="muted" style="margin-top:14px;">Your drafts are saved to your account. Launching is a separate action. Saving a draft never publishes it or deducts survey funding.</p>
     </div>
     </div>
     <div class="card" style="max-width:560px;">
@@ -116,6 +116,5 @@
 
 <script src="/js/api.js"></script>
 <script type="module" src="/js/supabase/business-page.js"></script>
-<script type="module" src="/js/supabase/business-tokens.js"></script>
 </body>
 </html>
