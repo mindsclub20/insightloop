@@ -46,7 +46,7 @@
         <label for="surveyChatInput" id="surveyChatPrompt">Research goal</label>
         <textarea id="surveyChatInput" maxlength="1200" placeholder="Describe your research goal..." rows="3"></textarea>
         <div class="row" style="margin-top:10px;">
-          <button id="surveyChatSend" type="button">Send answer</button>
+          <button id="surveyChatSend" type="button" onclick="window.submitAnveshSurveyChatAnswer && window.submitAnveshSurveyChatAnswer()">Send answer</button>
           <button id="surveyChatSkip" class="secondary" type="button">Skip optional question</button>
           <button id="surveyChatReset" class="secondary" type="button">Start over</button>
         </div>
@@ -115,7 +115,7 @@
 </div>
 
 <script src="/js/api.js"></script>
-<script type="module" src="/js/supabase/business-page.js?v=ai-survey-v3"></script>
-<script type="module" src="/js/supabase/manual-draft-fix.js?v=chat-fix-1"></script>
+<script type="module" src="/js/supabase/business-page.js?v=ai-survey-v4"></script>
+<script type="module" src="/js/supabase/manual-draft-fix.js?v=chat-fix-2"></script>
 </body>
 </html>
