@@ -626,12 +626,13 @@ async function loadStudies() {
         <div class="row"><h3 style="flex:1;">${escapeHtml(s.title)}</h3>${badge(s.status)}</div>
         <p class="muted">${escapeHtml(s.target_city)} · ${s.sample_size} respondents · ${Number(s.reward_per_response_tokens ?? 0).toLocaleString('en-IN')} tokens/response</p>
         <div class="row">
-          <button class="secondary" onclick="viewStudy('${s.id}')">View details${['ACTIVE', 'COMPLETED', 'REPORT_READY'].includes(s.status) ? ' & report' : ''}</button>
-          ${String(s.status).toUpperCase() === 'DRAFT' ? `<button type="button" data-action="start-draft" data-draft-id="${s.id}">Start Survey</button><button class="danger" type="button" data-action="delete-draft" data-draft-id="${s.id}">Delete Draft</button>` : ''}
+          <button class="secondary" type="button" data-action="view-details" data-study-id="${s.id}">View details${['ACTIVE', 'COMPLETED', 'REPORT_READY'].includes(String(s.status).toUpperCase()) ? ' & report' : ''}</button>
+          ${String(s.status).toUpperCase() === 'DRAFT' ? `<button type="button" data-action="start-draft" data-study-id="${s.id}">Start Survey</button><button class="danger" type="button" data-action="delete-draft" data-study-id="${s.id}">Delete Draft</button>` : ''}
           ${String(s.status).toUpperCase() === 'SUBMITTED' ? `<button class="danger" onclick="cancelStudy('${s.id}')">Cancel</button>` : ''}
         </div>
       </div>
     `).join('') : '<p class="muted">No saved drafts or pending surveys yet. Create one from Survey Generation.</p>';
+    bindStudyActions();
     return studies;
   } catch (err) {
     showAlert('alert', err.message || 'Could not load Saved Drafts.');
@@ -709,7 +710,7 @@ async function startDraftSurvey(id) {
 }
 async function deleteDraftSurvey(id) {
   if (!confirm('Permanently delete this saved draft and its questions? This cannot be undone. Published surveys cannot be deleted here.')) return;
-  const button = document.querySelector(`button[onclick="deleteDraftSurvey('${id}')"]`);
+  const button = document.querySelector(`button[data-action="delete-draft"][data-study-id="${CSS.escape(id)}"]`);
   if (button) { button.disabled = true; button.textContent = 'Deleting…'; }
   try {
     await business.deleteDraft(id);
@@ -792,35 +793,45 @@ function escapeHtml(str) {
 // Attach everything referenced from injected-HTML onclick="..." strings.
 Object.assign(window, { addSuggested, addCustomQuestion, saveManualDraft, submitForApproval, viewStudy, startDraftSurvey, deleteDraftSurvey, cancelStudy, viewReport, viewResultsReport });
 
-// Delegate from document rather than the list node: this remains reliable if
-// another dashboard script replaces the Saved Drafts container or its contents.
-document.addEventListener('click', (event) => {
-  const target = event.target;
-  if (!(target instanceof Element)) return;
-  const button = target.closest('button[data-action][data-draft-id]');
-  if (!button || button.disabled) return;
+// Bind each freshly-rendered study card to module-scoped functions. Avoid
+// inline HTML handlers and global-name lookup, which can silently break for
+// ES-module controllers and dynamically rendered cards.
+function bindStudyActions() {
+  const list = document.getElementById('studyList');
+  if (!list) return;
 
-  const action = button.dataset.action;
-  const id = button.dataset.draftId;
-  if (!id || !['delete-draft', 'start-draft'].includes(action)) return;
+  list.querySelectorAll('button[data-action][data-study-id]').forEach((button) => {
+    button.addEventListener('click', async (event) => {
+      event.preventDefault();
+      if (button.disabled) return;
 
-  event.preventDefault();
-  button.disabled = true;
-  const originalText = button.textContent;
-  button.textContent = action === 'delete-draft' ? 'Deleting…' : 'Opening…';
+      const action = button.dataset.action;
+      const id = button.dataset.studyId;
+      if (!id || !['view-details', 'start-draft', 'delete-draft'].includes(action)) return;
 
-  const run = action === 'delete-draft' ? deleteDraftSurvey(id) : startDraftSurvey(id);
-  Promise.resolve(run).catch((error) => {
-    showAlert('alert', error?.message || 'Could not complete this draft action.');
-  }).finally(() => {
-    // Successful actions refresh the list; if the button remains mounted,
-    // restore it so a recoverable error never leaves the control disabled.
-    if (button.isConnected) {
-      button.disabled = false;
-      button.textContent = originalText;
-    }
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = action === 'delete-draft' ? 'Deleting…'
+        : action === 'start-draft' ? 'Starting…' : 'Loading…';
+      clearAlert('alert');
+
+      try {
+        if (action === 'view-details') await viewStudy(id);
+        else if (action === 'start-draft') await startDraftSurvey(id);
+        else await deleteDraftSurvey(id);
+      } catch (error) {
+        showAlert('alert', error?.message || 'Could not complete this survey action.');
+      } finally {
+        // A successful action may replace the card list; restore only if this
+        // exact button is still mounted.
+        if (button.isConnected) {
+          button.disabled = false;
+          button.textContent = originalText;
+        }
+      }
+    });
   });
-});
+}
 
 init().catch((error) => {
   console.error('Business dashboard initialization failed:', error);
