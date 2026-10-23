@@ -98,6 +98,8 @@ test('landing navigation collapses on small screens with an accessible toggle', 
 
 test('AI survey chat collects question count and answer-type preferences and verifies persisted questions', async () => {
   const source = await read('../public/js/supabase/business-page.js');
+  assert.match(source, /key: 'questionIdeas'/, 'business must be able to provide its own questions or topics');
+  assert.ok(source.includes("question_ideas: SURVEY_CHAT_ANSWERS.questionIdeas"), 'question ideas must reach the AI backend');
   assert.match(source, /key: 'questionCount'.*Choose 1–8/s, 'business must choose the requested number of questions');
   assert.match(source, /key: 'questionTypes'/, 'business must specify preferred answer formats');
   assert.match(source, /preferred_question_types: parseQuestionTypePreferences/, 'answer-type preferences must reach the AI backend');
