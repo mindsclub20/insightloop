@@ -115,6 +115,8 @@ function updateBudgetPreview() {
 
 const SURVEY_CHAT_STEPS = [
   { key: 'goal', prompt: 'What do you want to learn? Describe your research goal.', placeholder: 'e.g. Which snacks would students buy, and at what price?', multiline: true },
+  { key: 'questionCount', prompt: 'How many questions should the survey contain? Choose 1–8.', placeholder: 'e.g. 6', type: 'number' },
+  { key: 'questionTypes', prompt: 'What answer types do you want? You can mix rating scales, multiple choice, yes/no, short answers, and long answers.', placeholder: 'e.g. 2 rating, 2 multiple choice, 1 short answer' },
   { key: 'city', prompt: 'Which city should the survey target?', placeholder: 'Enter a city' },
   { key: 'areas', prompt: 'Which local areas should qualify? Optional: enter areas separated by commas, or type “any”.', placeholder: 'e.g. Central area, Market Road; or any', optional: true },
   { key: 'minAge', prompt: 'What is the minimum participant age?', placeholder: 'e.g. 18', type: 'number' },
@@ -125,6 +127,26 @@ const SURVEY_CHAT_STEPS = [
 ];
 let SURVEY_CHAT_INDEX = 0;
 let SURVEY_CHAT_ANSWERS = {};
+
+
+function parseQuestionTypePreferences(value) {
+  const text = String(value || '').toLowerCase();
+  if (!text.trim() || /\b(mixed|any|all types|no preference)\b/.test(text)) return [];
+  const types = new Set();
+  if (/rating|scale|score|star/.test(text)) { types.add('rating_5'); types.add('rating_10'); }
+  if (/multiple.?choice|choice|select|checkbox|option/.test(text)) { types.add('single_choice'); types.add('multi_choice'); }
+  if (/yes.?no|true.?false|binary/.test(text)) types.add('yes_no');
+  if (/short.?answer|short.?text|brief|one.?line/.test(text)) types.add('short_text');
+  if (/long.?answer|long.?text|open.?ended|paragraph|detailed/.test(text)) types.add('long_text');
+  if (/single_choice/.test(text)) types.add('single_choice');
+  if (/multi_choice/.test(text)) types.add('multi_choice');
+  if (/rating_5/.test(text)) types.add('rating_5');
+  if (/rating_10/.test(text)) types.add('rating_10');
+  if (/short_text/.test(text)) types.add('short_text');
+  if (/long_text/.test(text)) types.add('long_text');
+  if (/yes_no/.test(text)) types.add('yes_no');
+  return [...types];
+}
 
 function initSurveyChat() {
   const input = document.getElementById('surveyChatInput');
@@ -191,6 +213,13 @@ function submitSurveyChatAnswer() {
       return;
     }
   }
+  if (step.key === 'questionCount') {
+    const count = Number(value);
+    if (!Number.isInteger(count) || count < 1 || count > 8) {
+      appendSurveyChatMessage('Choose a whole number from 1 to 8 questions.', 'assistant');
+      return;
+    }
+  }
   if (step.key === 'participants') {
     const count = Number(value);
     if (!Number.isInteger(count) || count < 10 || count > 500) {
@@ -239,7 +268,7 @@ async function finishSurveyChat() {
   updateBudgetPreview();
   const budget = calculateTokenBudget(Number(a.participants), Number(a.reward));
   appendSurveyChatMessage(
-    `Summary: ${a.city}; ages ${a.minAge}–${a.maxAge}; areas ${areas || 'any'}; professions ${professions || 'any'}; ${a.participants} participants; ${a.reward} tokens each. Participant reserve ${budget.participantRewardBudget.toLocaleString()} + 100 fee = ${budget.totalRequired.toLocaleString()} tokens. I’ll generate the questions now; nothing is published or charged until you confirm.`,
+    `Survey plan: ${a.questionCount} questions; preferred answer types: ${a.questionTypes}; target ${a.city}, ages ${a.minAge}–${a.maxAge}, areas ${areas || 'any'}, professions ${professions || 'any'}; ${a.participants} participants; ${a.reward} tokens each. Participant reserve ${budget.participantRewardBudget.toLocaleString()} + 100 fee = ${budget.totalRequired.toLocaleString()} tokens. I’ll generate a reviewable draft. Nothing is published or charged until you confirm.`,
     'assistant'
   );
   document.getElementById('surveyChatInput').disabled = true;
@@ -287,6 +316,8 @@ async function generateAiSurvey() {
   try {
     const result = await business.generateAiSurvey({
       command,
+      question_count: Number(SURVEY_CHAT_ANSWERS.questionCount || 5),
+      preferred_question_types: parseQuestionTypePreferences(SURVEY_CHAT_ANSWERS.questionTypes || ''),
       target_city: targetCity,
       sample_size: Number(document.getElementById('sample_size').value),
       reward_per_response_rupees: 1,
@@ -297,8 +328,9 @@ async function generateAiSurvey() {
       target_max_age: Number(document.getElementById('max_age').value),
       target_gender: document.getElementById('target_gender').value,
     });
-    if (!result?.survey || !Array.isArray(result.survey.questions) || result.survey.questions.length < 1 || result.survey.questions.length > 8) {
-      throw new Error('The AI survey failed validation. Please generate it again.');
+    const requestedCount = Number(SURVEY_CHAT_ANSWERS.questionCount || 5);
+    if (!result?.survey || !Array.isArray(result.survey.questions) || result.survey.questions.length !== requestedCount) {
+      throw new Error(`The AI did not return exactly ${requestedCount} questions. Nothing was marked as saved; please generate again.`);
     }
     AI_SURVEY_DRAFT = result.survey;
     status.textContent = 'AI questions generated. Saving your draft…';
@@ -450,7 +482,16 @@ async function persistAiSurvey(publish) {
       AI_SURVEY_DRAFT = { ...survey, research_project_id: savedId };
     }
     document.getElementById('aiStatus').textContent = 'Saving questions to your draft…';
-    await business.saveSurveyDraft(savedId, survey);
+    const saveResult = await business.saveSurveyDraft(savedId, survey);
+    if (!saveResult?.success || saveResult.research_project_id !== savedId || Number(saveResult.question_count) !== survey.questions.length) {
+      throw new Error('The server did not confirm that all survey questions were saved. The draft is not marked as saved.');
+    }
+    const persisted = await business.getStudy(savedId);
+    if (String(persisted.study?.status).toUpperCase() !== 'DRAFT' ||
+        persisted.questions.length !== survey.questions.length ||
+        persisted.questions.some((question, index) => question.question_text !== survey.questions[index].question_text)) {
+      throw new Error('Draft persistence verification failed: the saved questions do not match your preview. The dashboard will not report success.');
+    }
     if (!publish) {
       const visibleStudies = await loadStudies();
       if (!visibleStudies || !visibleStudies.some((item) => item.id === savedId)) {
