@@ -61,7 +61,6 @@ test('AI survey targeting respects the platform adult-participant requirement', 
   assert.match(source, /age < 18 \|\| age > 120/);
 });
 
-
 test('shared design system uses the Anvesh navy-indigo-teal palette and accessible responsive interactions', async () => {
   const css = await read('../public/css/style.css');
   assert.match(css, /--anvesh-bg:\s*#0B1020/i, 'shared theme should define the deep navy background token');
@@ -72,12 +71,10 @@ test('shared design system uses the Anvesh navy-indigo-teal palette and accessib
   assert.match(css, /min-width:\s*44px|min-height:\s*44px/, 'interactive controls should have touch-friendly sizing');
 });
 
-
 test('landing hero heading uses high-contrast text over the navy background', async () => {
   const css = await read('../public/css/style.css');
   assert.match(css, /\.hero h1\s*\{[^}]*color:\s*#F8FAFC/i, 'hero heading must be light against the dark hero surface');
 });
-
 
 test('admin dashboard uses keyboard-operable buttons for every tab and responsive stats layout', async () => {
   const html = await read('../public/supabase-admin/dashboard.html');
@@ -86,13 +83,12 @@ test('admin dashboard uses keyboard-operable buttons for every tab and responsiv
   assert.match(css, /#statsBar\s*\{[^}]*grid-template-columns/i, 'admin stats should have a responsive shared layout rule');
 });
 
-
 test('landing navigation collapses on small screens with an accessible toggle', async () => {
   const html = await read('../public/index.html');
   const css = await read('../public/css/style.css');
   assert.match(html, /id="mobileMenuToggle"[^>]*aria-expanded="false"[^>]*aria-controls="primaryNavigation"/, 'mobile menu button needs accessible expanded state and controlled navigation');
   assert.match(html, /id="primaryNavigation"/, 'primary navigation must be targetable by the mobile menu');
-  assert.match(html, /mobileMenuToggle.*addEventListener/s, 'mobile menu toggle must have a working event handler');
+  assert.match(html, /mobileMenuToggle.*addEventListener/s, 'mobile menu toggle must have an event handler');
   assert.match(css, /#primaryNavigation\.is-open/, 'mobile menu should only expand when requested');
 });
 
@@ -109,3 +105,9 @@ test('AI survey chat collects question count and answer-type preferences and ver
   assert.match(source, /saveResult\?\.success/, 'UI must require a successful backend save confirmation');
 });
 
+test('manual draft helper does not replace the AI chat with an older incomplete question flow', async () => {
+  const helper = await read('../public/js/supabase/manual-draft-fix.js');
+  const dashboard = await read('../public/supabase-business/dashboard.html');
+  assert.match(dashboard, /manual-draft-fix\.js/, 'manual draft helper is loaded on the dashboard');
+  assert.doesNotMatch(helper, /replaceWith\(input\)|const steps = \[/, 'manual draft helper must not replace the AI chat listeners or define a competing flow');
+});
