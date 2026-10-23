@@ -115,6 +115,7 @@ function updateBudgetPreview() {
 
 const SURVEY_CHAT_STEPS = [
   { key: 'goal', prompt: 'What do you want to learn? Describe your research goal.', placeholder: 'e.g. Which snacks would students buy, and at what price?', multiline: true },
+  { key: 'questionIdeas', prompt: 'Do you have specific questions or topics you want included? List them, or type “AI suggest”.', placeholder: 'e.g. taste, price, packaging; or AI suggest', optional: true },
   { key: 'questionCount', prompt: 'How many questions should the survey contain? Choose 1–8.', placeholder: 'e.g. 6', type: 'number' },
   { key: 'questionTypes', prompt: 'What answer types do you want? You can mix rating scales, multiple choice, yes/no, short answers, and long answers.', placeholder: 'e.g. 2 rating, 2 multiple choice, 1 short answer' },
   { key: 'city', prompt: 'Which city should the survey target?', placeholder: 'Enter a city' },
@@ -268,7 +269,7 @@ async function finishSurveyChat() {
   updateBudgetPreview();
   const budget = calculateTokenBudget(Number(a.participants), Number(a.reward));
   appendSurveyChatMessage(
-    `Survey plan: ${a.questionCount} questions; preferred answer types: ${a.questionTypes}; target ${a.city}, ages ${a.minAge}–${a.maxAge}, areas ${areas || 'any'}, professions ${professions || 'any'}; ${a.participants} participants; ${a.reward} tokens each. Participant reserve ${budget.participantRewardBudget.toLocaleString()} + 100 fee = ${budget.totalRequired.toLocaleString()} tokens. I’ll generate a reviewable draft. Nothing is published or charged until you confirm.`,
+    `Survey plan: ${a.questionCount} questions; preferred answer types: ${a.questionTypes}; requested topics/questions: ${a.questionIdeas || 'AI suggests questions'}; target ${a.city}, ages ${a.minAge}–${a.maxAge}, areas ${areas || 'any'}, professions ${professions || 'any'}; ${a.participants} participants; ${a.reward} tokens each. Participant reserve ${budget.participantRewardBudget.toLocaleString()} + 100 fee = ${budget.totalRequired.toLocaleString()} tokens. I’ll generate a reviewable draft. Nothing is published or charged until you confirm.`,
     'assistant'
   );
   document.getElementById('surveyChatInput').disabled = true;
@@ -318,6 +319,7 @@ async function generateAiSurvey() {
       command,
       question_count: Number(SURVEY_CHAT_ANSWERS.questionCount || 5),
       preferred_question_types: parseQuestionTypePreferences(SURVEY_CHAT_ANSWERS.questionTypes || ''),
+      question_ideas: SURVEY_CHAT_ANSWERS.questionIdeas || '',
       target_city: targetCity,
       sample_size: Number(document.getElementById('sample_size').value),
       reward_per_response_rupees: 1,
