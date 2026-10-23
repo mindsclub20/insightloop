@@ -202,7 +202,7 @@ function showSurveyChatPrompt() {
   prompt.textContent = step.prompt;
   input.value = '';
   input.placeholder = step.placeholder;
-  input.type = step.type || 'text';
+  // surveyChatInput is a <textarea>; its type property is read-only. Validate numeric answers in submitSurveyChatAnswer().
   input.rows = step.multiline ? 3 : 1;
   input.multiline = Boolean(step.multiline);
   skip.hidden = !step.optional;
