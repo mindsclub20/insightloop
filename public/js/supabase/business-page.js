@@ -301,9 +301,11 @@ async function generateAiSurvey() {
       throw new Error('The AI survey failed validation. Please generate it again.');
     }
     AI_SURVEY_DRAFT = result.survey;
-    status.textContent = 'Survey ready — review and edit the questions below.';
+    status.textContent = 'AI questions generated. Saving your draft…';
     renderAiSurveyPreview();
     document.getElementById('aiSurveyPreview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Save immediately after generation; the preview remains editable and can be saved again.
+    await persistAiSurvey(false);
   } catch (err) {
     showAlert('alert', err.message || 'AI could not generate the survey.');
     status.textContent = '';
@@ -426,6 +428,7 @@ async function persistAiSurvey(publish) {
   let savedId = AI_SURVEY_DRAFT?.research_project_id || null;
   try {
     const survey = readEditedAiSurvey();
+    document.getElementById('aiStatus').textContent = savedId ? 'Updating saved draft…' : 'Creating your draft…';
     if (!savedId) {
       const params = {
         template_type: survey.template_type || document.getElementById('template_type').value,
@@ -442,9 +445,11 @@ async function persistAiSurvey(publish) {
         reward_per_response_tokens: Number(document.getElementById('reward').value),
       };
       const study = await business.createStudy(params);
+      if (!study?.id) throw new Error('Anvesh could not confirm the draft record. Check Saved Drafts before retrying.');
       savedId = study.id;
       AI_SURVEY_DRAFT = { ...survey, research_project_id: savedId };
     }
+    document.getElementById('aiStatus').textContent = 'Saving questions to your draft…';
     await business.saveSurveyDraft(savedId, survey);
     if (!publish) {
       document.getElementById('aiStatus').textContent = 'Draft saved to your account.';
@@ -618,8 +623,8 @@ async function loadStudies() {
         <p class="muted">${escapeHtml(s.target_city)} · ${s.sample_size} respondents · ${Number(s.reward_per_response_tokens ?? 0).toLocaleString('en-IN')} tokens/response</p>
         <div class="row">
           <button class="secondary" onclick="viewStudy('${s.id}')">View details${['ACTIVE', 'COMPLETED', 'REPORT_READY'].includes(s.status) ? ' & report' : ''}</button>
-          ${String(s.status).toUpperCase() === 'DRAFT' ? `<button type="button" onclick="startDraftSurvey('${s.id}')">Start Survey</button>` : ''}
-          ${['DRAFT', 'SUBMITTED'].includes(String(s.status).toUpperCase()) ? `<button class="danger" onclick="cancelStudy('${s.id}')">Cancel</button>` : ''}
+          ${String(s.status).toUpperCase() === 'DRAFT' ? `<button type="button" onclick="startDraftSurvey('${s.id}')">Start Survey</button><button class="danger" type="button" onclick="deleteDraftSurvey('${s.id}')">Delete Draft</button>` : ''}
+          ${String(s.status).toUpperCase() === 'SUBMITTED' ? `<button class="danger" onclick="cancelStudy('${s.id}')">Cancel</button>` : ''}
         </div>
       </div>
     `).join('') : '<p class="muted">No saved drafts or pending surveys yet. Create one from Survey Generation.</p>';
@@ -694,9 +699,24 @@ async function startDraftSurvey(id) {
     await loadResults();
   } catch (err) { showAlert('alert', err.message || 'Could not start this survey.'); }
 }
+async function deleteDraftSurvey(id) {
+  if (!confirm('Permanently delete this saved draft and its questions? This cannot be undone. Published surveys cannot be deleted here.')) return;
+  const button = document.querySelector(`button[onclick="deleteDraftSurvey('${id}')"]`);
+  if (button) { button.disabled = true; button.textContent = 'Deleting…'; }
+  try {
+    await business.deleteDraft(id);
+    showAlert('alert', 'Draft deleted successfully.', 'success');
+    document.getElementById('studyDetail').innerHTML = '';
+    await loadStudies();
+  } catch (err) {
+    showAlert('alert', err.message || 'Could not delete this draft.');
+    if (button) { button.disabled = false; button.textContent = 'Delete Draft'; }
+  }
+}
+
 async function cancelStudy(id) {
-  if (!confirm('Cancel this study? This cannot be undone.')) return;
-  try { await business.cancelStudy(id); loadStudies(); }
+  if (!confirm('Cancel this submitted study? This cannot be undone.')) return;
+  try { await business.cancelStudy(id); await loadStudies(); }
   catch (err) { showAlert('alert', err.message); }
 }
 
@@ -756,7 +776,7 @@ function escapeHtml(str) {
 }
 
 // Attach everything referenced from injected-HTML onclick="..." strings.
-Object.assign(window, { addSuggested, addCustomQuestion, saveManualDraft, submitForApproval, viewStudy, startDraftSurvey, cancelStudy, viewReport, viewResultsReport });
+Object.assign(window, { addSuggested, addCustomQuestion, saveManualDraft, submitForApproval, viewStudy, startDraftSurvey, deleteDraftSurvey, cancelStudy, viewReport, viewResultsReport });
 
 init().catch((error) => {
   console.error('Business dashboard initialization failed:', error);
