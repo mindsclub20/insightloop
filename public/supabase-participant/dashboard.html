@@ -16,18 +16,18 @@
 <div id="alert" class="alert error hidden" role="alert"></div>
 <div class="grid cols-2">
 <section class="card"><h2>Your profile</h2><div id="profile">Loading…</div></section>
-<section class="card"><h2>Your wallet</h2><div id="wallet">Loading…</div><p class="muted">Rewards and withdrawals appear here once you participate in eligible research.</p></section>
+<section class="card"><h2>Your token wallet</h2><div id="wallet">Loading…</div><p class="muted">Tokens are internal Anvesh credits, not cash and not currently withdrawable.</p><div id="tokenHistory"></div></section>
 </div>
 <section class="card" style="margin-top:20px"><h2>Your interests</h2><div id="interests">Loading…</div><p class="muted">Interests help match you with relevant surveys. You can add or restore interests below.</p><form id="interestForm"><label for="interestInput">Add interests (comma-separated)</label><input id="interestInput" maxlength="1200" placeholder="food, smartphones, books"><button type="submit" style="margin-top:12px">Save interests</button></form></section>
 </div>
 <script src="/js/api.js"></script>
 <script type="module">
 import { supabase, invoke } from '/js/supabase/client.js';
-import { getProfile, getWallet } from '/js/supabase/participant.js';
+import { getProfile } from '/js/supabase/participant.js';
+import { getMyTokenWallet, getMyTokenTransactions, escapeTokenHtml, tokenDate } from '/js/supabase/tokens.js';
 import { logout } from '/js/supabase/auth.js';
 import { syncUserInterests } from '/js/supabase/pending-interests.js';
 
-const money = (paise) => '₹' + (Number(paise || 0) / 100).toFixed(2);
 document.getElementById('interestForm').addEventListener('submit', async (event) => {
   event.preventDefault();
   const input = document.getElementById('interestInput');
@@ -55,20 +55,20 @@ document.getElementById('interestForm').addEventListener('submit', async (event)
   }
 });
 document.getElementById('logoutButton').addEventListener('click', async () => {
-  try { await logout(); location.href = '/login.html'; }
+  try { await logout(); location.href = '/supabase-login.html'; }
   catch (error) { showAlert('alert', error.message); }
 });
 
 async function load() {
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) { location.href = '/login.html'; return; }
+    if (userError || !user) { location.href = '/supabase-login.html'; return; }
     try { await syncUserInterests(window.localStorage, user, supabase); }
     catch (syncError) {
       console.error('Interest sync failed; pending interests will be retained.', syncError);
     }
-    const [{ profile, tags }, wallet] = await Promise.all([getProfile(), getWallet()]);
-    if (profile.status === 'SUSPENDED') { await logout(); location.href = '/login.html'; return; }
+    const [{ profile, tags }, wallet, tokenTransactions] = await Promise.all([getProfile(), getMyTokenWallet(), getMyTokenTransactions()]);
+    if (profile.status === 'SUSPENDED') { await logout(); location.href = '/supabase-login.html'; return; }
     document.getElementById('userName').textContent = profile.full_name || user.email;
     document.getElementById('profile').innerHTML =
       '<p><strong>Name:</strong> ' + escapeHtml(profile.full_name || '—') + '</p>' +
@@ -76,9 +76,10 @@ async function load() {
       '<p><strong>City:</strong> ' + escapeHtml(profile.city || '—') + '</p>' +
       '<p><strong>Age range:</strong> ' + escapeHtml(profile.age_range || '—') + '</p>' +
       '<p><strong>Account status:</strong> ' + escapeHtml(profile.status || 'ACTIVE') + '</p>';
-    document.getElementById('wallet').innerHTML =
-      '<p><strong>Available balance:</strong> ' + money(wallet.balance_paise) + '</p>' +
-      '<p><strong>Pending balance:</strong> ' + money(wallet.pending_paise) + '</p>';
+    document.getElementById('wallet').innerHTML = '<p style="font-size:28px;font-weight:700;color:var(--green)">' + Number(wallet.balance_tokens || 0).toLocaleString('en-IN') + ' tokens</p>';
+    document.getElementById('tokenHistory').innerHTML = tokenTransactions.length
+      ? '<h3>Recent token activity</h3><div style="overflow-x:auto"><table><thead><tr><th>Date</th><th>Type</th><th>Tokens</th><th>Note</th></tr></thead><tbody>' + tokenTransactions.map(t => '<tr><td>' + escapeTokenHtml(tokenDate(t.created_at)) + '</td><td>' + escapeTokenHtml(t.transaction_type) + '</td><td>' + (t.recipient_user_id === wallet.user_id ? '+' : '−') + Number(t.amount_tokens || 0).toLocaleString('en-IN') + '</td><td>' + escapeTokenHtml(t.note || '—') + '</td></tr>').join('') + '</tbody></table></div>'
+      : '<p class="muted">No token activity yet. Complete an eligible survey to earn tokens.</p>';
     document.getElementById('interests').textContent = tags.length ? tags.join(', ') : 'No interests added yet.';
   } catch (error) {
     showAlert('alert', error.message || 'Could not load your account.');
@@ -89,5 +90,5 @@ function escapeHtml(value) {
 }
 load();
 </script>
-<script type="module" src="/js/supabase/participant-tokens.js"></script>
+
 </body></html>

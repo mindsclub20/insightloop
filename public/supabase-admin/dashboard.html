@@ -21,22 +21,18 @@
   <div id="statsBar" class="grid cols-2" style="grid-template-columns: repeat(4, 1fr);"></div>
 
   <div class="tabs">
-    <div class="tab active" data-tab="studies">Studies</div>
-    <div class="tab" data-tab="flagged">Flagged Responses</div>
-    <div class="tab" data-tab="businesses">Businesses</div>
-    <div class="tab" data-tab="users">Users</div>
-    <div class="tab" data-tab="withdrawals">Withdrawals</div>
-    <div class="tab" data-tab="ledger">Ledger Audit</div>
+    <button class="tab active" type="button" data-tab="studies">Studies</button>
+    <button class="tab" type="button" data-tab="responses">Survey Responses</button>
+    <button class="tab" type="button" data-tab="flagged">Flagged Responses</button>
+    <button class="tab" type="button" data-tab="businesses">Businesses</button>
   </div>
 
   <div id="alert" class="alert error hidden"></div>
 
   <section id="tab-studies"><div id="studiesList"></div></section>
+  <section id="tab-responses" class="hidden"><div id="responsesList"></div></section>
   <section id="tab-flagged" class="hidden"><div id="flaggedList"></div></section>
   <section id="tab-businesses" class="hidden"><div id="businessList"></div></section>
-  <section id="tab-users" class="hidden"><div id="usersList"></div></section>
-  <section id="tab-withdrawals" class="hidden"><div id="withdrawalsList"></div></section>
-  <section id="tab-ledger" class="hidden"><div id="ledgerArea"></div></section>
 </div>
 
 <script src="/js/api.js"></script>

@@ -48,13 +48,13 @@ const TEMPLATE_SUGGESTIONS = {
 };
 
 document.querySelectorAll('.tab').forEach((tab) => tab.addEventListener('click', () => switchTab(tab.dataset.tab)));
-function switchTab(name) {
+function switchTab(name, options = {}) {
   document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
   document.getElementById('tab-create').classList.toggle('hidden', name !== 'create');
   document.getElementById('tab-studies').classList.toggle('hidden', name !== 'studies');
   document.getElementById('tab-results').classList.toggle('hidden', name !== 'results');
-  if (name === 'studies') loadStudies();
-  if (name === 'results') loadResults();
+  if (options.refresh !== false && name === 'studies') loadStudies();
+  if (options.refresh !== false && name === 'results') loadResults();
 }
 
 async function init() {
@@ -115,6 +115,9 @@ function updateBudgetPreview() {
 
 const SURVEY_CHAT_STEPS = [
   { key: 'goal', prompt: 'What do you want to learn? Describe your research goal.', placeholder: 'e.g. Which snacks would students buy, and at what price?', multiline: true },
+  { key: 'questionIdeas', prompt: 'Do you have specific questions or topics you want included? List them, or type “AI suggest”.', placeholder: 'e.g. taste, price, packaging; or AI suggest', optional: true },
+  { key: 'questionCount', prompt: 'How many questions should the survey contain? Choose 1–8.', placeholder: 'e.g. 6', type: 'number' },
+  { key: 'questionTypes', prompt: 'What answer types do you want? You can mix rating scales, multiple choice, yes/no, short answers, and long answers.', placeholder: 'e.g. 2 rating, 2 multiple choice, 1 short answer' },
   { key: 'city', prompt: 'Which city should the survey target?', placeholder: 'Enter a city' },
   { key: 'areas', prompt: 'Which local areas should qualify? Optional: enter areas separated by commas, or type “any”.', placeholder: 'e.g. Central area, Market Road; or any', optional: true },
   { key: 'minAge', prompt: 'What is the minimum participant age?', placeholder: 'e.g. 18', type: 'number' },
@@ -126,6 +129,26 @@ const SURVEY_CHAT_STEPS = [
 let SURVEY_CHAT_INDEX = 0;
 let SURVEY_CHAT_ANSWERS = {};
 
+
+function parseQuestionTypePreferences(value) {
+  const text = String(value || '').toLowerCase();
+  if (!text.trim() || /\b(mixed|any|all types|no preference)\b/.test(text)) return [];
+  const types = new Set();
+  if (/rating|scale|score|star/.test(text)) { types.add('rating_5'); types.add('rating_10'); }
+  if (/multiple.?choice|choice|select|checkbox|option/.test(text)) { types.add('single_choice'); types.add('multi_choice'); }
+  if (/yes.?no|true.?false|binary/.test(text)) types.add('yes_no');
+  if (/short.?answer|short.?text|brief|one.?line/.test(text)) types.add('short_text');
+  if (/long.?answer|long.?text|open.?ended|paragraph|detailed/.test(text)) types.add('long_text');
+  if (/single_choice/.test(text)) types.add('single_choice');
+  if (/multi_choice/.test(text)) types.add('multi_choice');
+  if (/rating_5/.test(text)) types.add('rating_5');
+  if (/rating_10/.test(text)) types.add('rating_10');
+  if (/short_text/.test(text)) types.add('short_text');
+  if (/long_text/.test(text)) types.add('long_text');
+  if (/yes_no/.test(text)) types.add('yes_no');
+  return [...types];
+}
+
 function initSurveyChat() {
   const input = document.getElementById('surveyChatInput');
   const send = document.getElementById('surveyChatSend');
@@ -133,7 +156,18 @@ function initSurveyChat() {
   const reset = document.getElementById('surveyChatReset');
   if (!input || !send || !skip || !reset) return;
   showSurveyChatPrompt();
-  send.addEventListener('click', submitSurveyChatAnswer);
+  // Use a direct DOM handler as well as a named global entry point so the
+  // Send button remains callable on mobile browsers and after UI re-renders.
+  window.submitAnveshSurveyChatAnswer = () => {
+    try {
+      submitSurveyChatAnswer();
+    } catch (error) {
+      console.error('Anvesh survey chat send failed:', error);
+      const status = document.getElementById('aiStatus');
+      if (status) status.textContent = error?.message || 'Could not send answer. Please try again.';
+    }
+  };
+  send.onclick = window.submitAnveshSurveyChatAnswer;
   skip.addEventListener('click', () => {
     const step = SURVEY_CHAT_STEPS[SURVEY_CHAT_INDEX];
     if (!step?.optional) return;
@@ -145,7 +179,7 @@ function initSurveyChat() {
   input.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && !event.shiftKey && !input.multiline) {
       event.preventDefault();
-      submitSurveyChatAnswer();
+      window.submitAnveshSurveyChatAnswer();
     }
   });
 }
@@ -168,7 +202,7 @@ function showSurveyChatPrompt() {
   prompt.textContent = step.prompt;
   input.value = '';
   input.placeholder = step.placeholder;
-  input.type = step.type || 'text';
+  // surveyChatInput is a <textarea>; its type property is read-only. Validate numeric answers in submitSurveyChatAnswer().
   input.rows = step.multiline ? 3 : 1;
   input.multiline = Boolean(step.multiline);
   skip.hidden = !step.optional;
@@ -186,8 +220,15 @@ function submitSurveyChatAnswer() {
   }
   if (step.key === 'minAge' || step.key === 'maxAge') {
     const age = Number(value);
-    if (!Number.isInteger(age) || age < 13 || age > 120) {
-      appendSurveyChatMessage('Enter a whole-number age between 13 and 120.', 'assistant');
+    if (!Number.isInteger(age) || age < 18 || age > 120) {
+      appendSurveyChatMessage('Enter a whole-number age between 18 and 120.', 'assistant');
+      return;
+    }
+  }
+  if (step.key === 'questionCount') {
+    const count = Number(value);
+    if (!Number.isInteger(count) || count < 1 || count > 8) {
+      appendSurveyChatMessage('Choose a whole number from 1 to 8 questions.', 'assistant');
       return;
     }
   }
@@ -239,7 +280,7 @@ async function finishSurveyChat() {
   updateBudgetPreview();
   const budget = calculateTokenBudget(Number(a.participants), Number(a.reward));
   appendSurveyChatMessage(
-    `Summary: ${a.city}; ages ${a.minAge}–${a.maxAge}; areas ${areas || 'any'}; professions ${professions || 'any'}; ${a.participants} participants; ${a.reward} tokens each. Participant reserve ${budget.participantRewardBudget.toLocaleString()} + 100 fee = ${budget.totalRequired.toLocaleString()} tokens. I’ll generate the questions now; nothing is published or charged until you confirm.`,
+    `Survey plan: ${a.questionCount} questions; preferred answer types: ${a.questionTypes}; requested topics/questions: ${a.questionIdeas || 'AI suggests questions'}; target ${a.city}, ages ${a.minAge}–${a.maxAge}, areas ${areas || 'any'}, professions ${professions || 'any'}; ${a.participants} participants; ${a.reward} tokens each. Participant reserve ${budget.participantRewardBudget.toLocaleString()} + 100 fee = ${budget.totalRequired.toLocaleString()} tokens. I’ll generate a reviewable draft. Nothing is published or charged until you confirm.`,
     'assistant'
   );
   document.getElementById('surveyChatInput').disabled = true;
@@ -287,6 +328,9 @@ async function generateAiSurvey() {
   try {
     const result = await business.generateAiSurvey({
       command,
+      question_count: Number(SURVEY_CHAT_ANSWERS.questionCount || 5),
+      preferred_question_types: parseQuestionTypePreferences(SURVEY_CHAT_ANSWERS.questionTypes || ''),
+      question_ideas: SURVEY_CHAT_ANSWERS.questionIdeas || '',
       target_city: targetCity,
       sample_size: Number(document.getElementById('sample_size').value),
       reward_per_response_rupees: 1,
@@ -297,13 +341,16 @@ async function generateAiSurvey() {
       target_max_age: Number(document.getElementById('max_age').value),
       target_gender: document.getElementById('target_gender').value,
     });
-    if (!result?.survey || !Array.isArray(result.survey.questions) || result.survey.questions.length < 1 || result.survey.questions.length > 8) {
-      throw new Error('The AI survey failed validation. Please generate it again.');
+    const requestedCount = Number(SURVEY_CHAT_ANSWERS.questionCount || 5);
+    if (!result?.survey || !Array.isArray(result.survey.questions) || result.survey.questions.length !== requestedCount) {
+      throw new Error(`The AI did not return exactly ${requestedCount} questions. Nothing was marked as saved; please generate again.`);
     }
     AI_SURVEY_DRAFT = result.survey;
-    status.textContent = 'Survey ready — review and edit the questions below.';
+    status.textContent = 'AI questions generated. Saving your draft…';
     renderAiSurveyPreview();
     document.getElementById('aiSurveyPreview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Save immediately after generation; the preview remains editable and can be saved again.
+    await persistAiSurvey(false);
   } catch (err) {
     showAlert('alert', err.message || 'AI could not generate the survey.');
     status.textContent = '';
@@ -426,6 +473,7 @@ async function persistAiSurvey(publish) {
   let savedId = AI_SURVEY_DRAFT?.research_project_id || null;
   try {
     const survey = readEditedAiSurvey();
+    document.getElementById('aiStatus').textContent = savedId ? 'Updating saved draft…' : 'Creating your draft…';
     if (!savedId) {
       const params = {
         template_type: survey.template_type || document.getElementById('template_type').value,
@@ -442,14 +490,29 @@ async function persistAiSurvey(publish) {
         reward_per_response_tokens: Number(document.getElementById('reward').value),
       };
       const study = await business.createStudy(params);
+      if (!study?.id) throw new Error('Anvesh could not confirm the draft record. Check Saved Drafts before retrying.');
       savedId = study.id;
       AI_SURVEY_DRAFT = { ...survey, research_project_id: savedId };
     }
-    await business.saveSurveyDraft(savedId, survey);
+    document.getElementById('aiStatus').textContent = 'Saving questions to your draft…';
+    const saveResult = await business.saveSurveyDraft(savedId, survey);
+    if (!saveResult?.success || saveResult.research_project_id !== savedId || Number(saveResult.question_count) !== survey.questions.length) {
+      throw new Error('The server did not confirm that all survey questions were saved. The draft is not marked as saved.');
+    }
+    const persisted = await business.getStudy(savedId);
+    if (String(persisted.study?.status).toUpperCase() !== 'DRAFT' ||
+        persisted.questions.length !== survey.questions.length ||
+        persisted.questions.some((question, index) => question.question_text !== survey.questions[index].question_text)) {
+      throw new Error('Draft persistence verification failed: the saved questions do not match your preview. The dashboard will not report success.');
+    }
     if (!publish) {
-      document.getElementById('aiStatus').textContent = 'Draft saved to your account.';
-      showAlert('alert', 'Draft saved successfully. You can return to Saved Drafts later.', 'success');
-      await loadStudies();
+      const visibleStudies = await loadStudies();
+      if (!visibleStudies || !visibleStudies.some((item) => item.id === savedId)) {
+        throw new Error('The save request completed, but Anvesh could not verify this draft in Saved Drafts. Refresh the dashboard before retrying; your draft ID is ' + savedId + '.');
+      }
+      switchTab('studies', { refresh: false });
+      document.getElementById('aiStatus').textContent = 'Draft saved and verified in Saved Drafts.';
+      showAlert('alert', 'Draft saved and verified. It is now shown in Saved Drafts.', 'success');
       return;
     }
     const rewardTokens = Number(document.getElementById('reward').value);
@@ -611,19 +674,24 @@ async function loadStudies() {
   clearAlert('alert');
   try {
     const allStudies = await business.listMyStudies();
-    const studies = allStudies.filter((s) => ['DRAFT', 'SUBMITTED', 'PENDING', 'UNDER_REVIEW'].includes(String(s.status).toUpperCase()));
+    const studies = allStudies.filter((s) => ['DRAFT', 'SUBMITTED', 'PENDING', 'UNDER_REVIEW', 'ADMIN_REVIEW', 'APPROVED'].includes(String(s.status).toUpperCase()));
     document.getElementById('studyList').innerHTML = studies.length ? studies.map((s) => `
       <div class="card">
         <div class="row"><h3 style="flex:1;">${escapeHtml(s.title)}</h3>${badge(s.status)}</div>
-        <p class="muted">${escapeHtml(s.target_city)} · ${s.sample_size} respondents · ${paise(s.reward_per_response_paise)}/response</p>
+        <p class="muted">${escapeHtml(s.target_city)} · ${s.sample_size} respondents · ${Number(s.reward_per_response_tokens ?? 0).toLocaleString('en-IN')} tokens/response</p>
         <div class="row">
-          <button class="secondary" onclick="viewStudy('${s.id}')">View details${['ACTIVE', 'COMPLETED', 'REPORT_READY'].includes(s.status) ? ' & report' : ''}</button>
-          ${String(s.status).toUpperCase() === 'DRAFT' ? `<button type="button" onclick="startDraftSurvey('${s.id}')">Start Survey</button>` : ''}
-          ${['DRAFT', 'SUBMITTED'].includes(String(s.status).toUpperCase()) ? `<button class="danger" onclick="cancelStudy('${s.id}')">Cancel</button>` : ''}
+          <button class="secondary" type="button" data-action="view-details" data-study-id="${s.id}">View details${['ACTIVE', 'COMPLETED', 'REPORT_READY'].includes(String(s.status).toUpperCase()) ? ' & report' : ''}</button>
+          ${String(s.status).toUpperCase() === 'DRAFT' ? `<button type="button" data-action="start-draft" data-study-id="${s.id}">Start Survey</button><button class="danger" type="button" data-action="delete-draft" data-study-id="${s.id}">Delete Draft</button>` : ''}
+          ${String(s.status).toUpperCase() === 'SUBMITTED' ? `<button class="danger" onclick="cancelStudy('${s.id}')">Cancel</button>` : ''}
         </div>
       </div>
     `).join('') : '<p class="muted">No saved drafts or pending surveys yet. Create one from Survey Generation.</p>';
-  } catch (err) { showAlert('alert', err.message); }
+    bindStudyActions();
+    return studies;
+  } catch (err) {
+    showAlert('alert', err.message || 'Could not load Saved Drafts.');
+    return null;
+  }
 }
 
 async function loadResults() {
@@ -689,15 +757,36 @@ async function startDraftSurvey(id) {
     const confirmed = window.confirm('Start this survey now?\n\nParticipants: ' + participantCount + '\nReward per valid completion: ' + rewardTokens + ' tokens\nParticipant reward budget: ' + budget.participantRewardBudget.toLocaleString() + ' tokens\nPlatform fee: ' + budget.platformFee + ' tokens\nTotal required: ' + budget.totalRequired.toLocaleString() + ' tokens\n\nPublishing will attempt to reserve/deduct this budget.');
     if (!confirmed) return;
     const result = await business.publishSurvey(id, { reward_per_response_tokens: rewardTokens, target_areas: Array.isArray(study.target_areas) ? study.target_areas : [], target_professions: Array.isArray(study.target_professions) ? study.target_professions : [] });
-    showAlert('alert', 'Survey started successfully: ' + (result.survey?.title || study.title) + '.', 'success');
     await loadStudies();
     await loadResults();
+    showAlert('alert', 'Survey started successfully: ' + (result.survey?.title || study.title) + '.', 'success');
   } catch (err) { showAlert('alert', err.message || 'Could not start this survey.'); }
 }
+async function deleteDraftSurvey(id) {
+  if (!confirm('Permanently delete this saved draft and its questions? This cannot be undone. Published surveys cannot be deleted here.')) return;
+  const button = document.querySelector(`button[data-action="delete-draft"][data-study-id="${CSS.escape(id)}"]`);
+  if (button) { button.disabled = true; button.textContent = 'Deleting…'; }
+  try {
+    await business.deleteDraft(id);
+    document.getElementById('studyDetail').innerHTML = '';
+    const remaining = await loadStudies();
+    if (remaining && remaining.some((study) => study.id === id)) {
+      throw new Error('The delete request returned, but this draft is still in Saved Drafts. Refresh and retry.');
+    }
+    showAlert('alert', 'Draft deleted successfully.', 'success');
+  } catch (err) {
+    showAlert('alert', err.message || 'Could not delete this draft.');
+    if (button) { button.disabled = false; button.textContent = 'Delete Draft'; }
+  }
+}
+
 async function cancelStudy(id) {
-  if (!confirm('Cancel this study? This cannot be undone.')) return;
-  try { await business.cancelStudy(id); loadStudies(); }
-  catch (err) { showAlert('alert', err.message); }
+  if (!confirm('Cancel this submitted study? This cannot be undone.')) return;
+  try {
+    await business.cancelStudy(id);
+    await loadStudies();
+    showAlert('alert', 'Survey cancelled.', 'success');
+  } catch (err) { showAlert('alert', err.message); }
 }
 
 async function viewStudy(id) {
@@ -756,7 +845,47 @@ function escapeHtml(str) {
 }
 
 // Attach everything referenced from injected-HTML onclick="..." strings.
-Object.assign(window, { addSuggested, addCustomQuestion, submitForApproval, viewStudy, startDraftSurvey, cancelStudy, viewReport, viewResultsReport });
+Object.assign(window, { addSuggested, addCustomQuestion, saveManualDraft, submitForApproval, viewStudy, startDraftSurvey, deleteDraftSurvey, cancelStudy, viewReport, viewResultsReport });
+
+// Bind each freshly-rendered study card to module-scoped functions. Avoid
+// inline HTML handlers and global-name lookup, which can silently break for
+// ES-module controllers and dynamically rendered cards.
+function bindStudyActions() {
+  const list = document.getElementById('studyList');
+  if (!list) return;
+
+  list.querySelectorAll('button[data-action][data-study-id]').forEach((button) => {
+    button.addEventListener('click', async (event) => {
+      event.preventDefault();
+      if (button.disabled) return;
+
+      const action = button.dataset.action;
+      const id = button.dataset.studyId;
+      if (!id || !['view-details', 'start-draft', 'delete-draft'].includes(action)) return;
+
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = action === 'delete-draft' ? 'Deleting…'
+        : action === 'start-draft' ? 'Starting…' : 'Loading…';
+      clearAlert('alert');
+
+      try {
+        if (action === 'view-details') await viewStudy(id);
+        else if (action === 'start-draft') await startDraftSurvey(id);
+        else await deleteDraftSurvey(id);
+      } catch (error) {
+        showAlert('alert', error?.message || 'Could not complete this survey action.');
+      } finally {
+        // A successful action may replace the card list; restore only if this
+        // exact button is still mounted.
+        if (button.isConnected) {
+          button.disabled = false;
+          button.textContent = originalText;
+        }
+      }
+    });
+  });
+}
 
 init().catch((error) => {
   console.error('Business dashboard initialization failed:', error);

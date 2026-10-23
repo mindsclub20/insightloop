@@ -5,8 +5,10 @@
 import { supabase, invoke } from './client.js';
 
 export async function getMyBusiness() {
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: membership } = await supabase.from('business_members').select('business_id').eq('user_id', user.id).maybeSingle();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) throw new Error('Your session has expired. Please sign in again.');
+  const { data: membership, error: membershipError } = await supabase.from('business_members').select('business_id').eq('user_id', user.id).maybeSingle();
+  if (membershipError) throw membershipError;
   if (!membership) return null;
   const { data, error } = await supabase.from('businesses').select('*').eq('id', membership.business_id).single();
   if (error) throw error;
@@ -51,6 +53,10 @@ export async function publishSurvey(researchProjectId, options = {}) {
 // (no payment, no reward, nothing else to keep atomic with it) accompanies
 // a cancellation the way approval (payment check) or submission (payment
 // creation) do.
+export async function deleteDraft(researchProjectId) {
+  return invoke('delete-survey-draft', { research_project_id: researchProjectId });
+}
+
 export async function cancelStudy(researchProjectId) {
   const { data, error } = await supabase.from('research_projects').update({ status: 'CANCELLED' }).eq('id', researchProjectId).select().single();
   if (error) throw error; // includes the 003 trigger's "Illegal status transition" message verbatim if the study isn't DRAFT/SUBMITTED
@@ -58,8 +64,10 @@ export async function cancelStudy(researchProjectId) {
 }
 
 export async function listMyStudies() {
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: membership } = await supabase.from('business_members').select('business_id').eq('user_id', user.id).maybeSingle();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) throw new Error('Your session has expired. Please sign in again.');
+  const { data: membership, error: membershipError } = await supabase.from('business_members').select('business_id').eq('user_id', user.id).maybeSingle();
+  if (membershipError) throw membershipError;
   if (!membership) return [];
   const { data, error } = await supabase.from('research_projects').select('*').eq('business_id', membership.business_id).order('created_at', { ascending: false });
   if (error) throw error;

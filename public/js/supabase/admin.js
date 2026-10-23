@@ -8,9 +8,7 @@
 import { supabase, invoke } from './client.js';
 
 export async function listUsers() {
-  const { data, error } = await supabase.from('profiles').select('id, role, full_name, city, status, created_at').order('created_at', { ascending: false });
-  if (error) throw error;
-  return data;
+  throw new Error('Participant personal details are restricted and are not available in the admin dashboard.');
 }
 
 export async function suspendUser(targetUserId, reason) {
@@ -50,7 +48,7 @@ export async function studyAction(researchProjectId, action, reason) {
 
 export async function listFlaggedResponses() {
   const { data, error } = await supabase.from('survey_responses')
-    .select('*, response_quality(flag_reasons, review_decision), research_projects(title)')
+    .select('id,research_project_id,completed_at,duration_seconds,status,quality_score,response_quality(flag_reasons, review_decision),research_projects(title)')
     .eq('status', 'FLAGGED');
   if (error) throw error;
   // Only rows where review_decision is still null are actually pending -
@@ -60,69 +58,47 @@ export async function listFlaggedResponses() {
   return (data ?? []).filter((r) => !r.response_quality || r.response_quality.review_decision === null);
 }
 
+export async function listSurveyResponses() {
+  const { data, error } = await supabase.from('survey_responses')
+    .select('id,research_project_id,completed_at,duration_seconds,status,quality_score,research_projects(title),answers(id,question_id,selected_option_ids,text_answer,rating_value,survey_questions(question_text,question_type,question_options(id,option_text)))')
+    .order('completed_at', { ascending: false })
+    .limit(200);
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function reviewResponse(responseId, decision, notes) {
   return invoke('admin-review-response', { response_id: responseId, decision, notes });
 }
 
-export async function listWithdrawals(status) {
-  let query = supabase.from('withdrawals').select('*, profiles(full_name)').order('created_at', { ascending: false });
-  if (status) query = query.eq('status', status);
-  const { data, error } = await query;
-  if (error) throw error;
-  return data;
+// Cash withdrawals and the legacy cash wallet are disabled in the current token-based product.
+export async function listWithdrawals() {
+  throw new Error('Cash withdrawals are not available in the current token-based version.');
 }
-
-export async function markWithdrawalPaid(withdrawalId) {
-  return invoke('admin-process-withdrawal', { withdrawal_id: withdrawalId, action: 'mark-paid' });
+export async function markWithdrawalPaid() {
+  throw new Error('Cash payouts are disabled. Anvesh currently uses internal tokens.');
 }
-export async function rejectWithdrawal(withdrawalId, reason) {
-  return invoke('admin-process-withdrawal', { withdrawal_id: withdrawalId, action: 'reject', reason });
+export async function rejectWithdrawal() {
+  throw new Error('Cash withdrawals are not available in the current token-based version.');
 }
-
 export async function ledgerAudit() {
-  const { data, error } = await supabase.from('wallet_transactions')
-    .select('*, wallets(profiles(full_name))').order('created_at', { ascending: false }).limit(200);
-  if (error) throw error;
-  return data;
-  // NOTE: the Node app's ledgerAudit() also runs a full reconcileWallet()
-  // pass over every user (src/lib/ledger.js). There is no equivalent
-  // client-side check here - the Postgres migrations rely on 006's atomic
-  // SQL functions to make a mismatch structurally hard to produce, rather
-  // than a periodic reconciliation query. A real production deployment
-  // should still add a scheduled reconciliation job (e.g. a
-  // pg_cron-scheduled function comparing wallets.balance_paise against
-  // SUM(wallet_transactions...)) - not implemented in this pass, flagged
-  // as follow-up work in the final report.
+  return [];
 }
 
 export async function platformStats() {
-  const [users, businesses, verifiedBiz, active, pending, flagged, pendingW, rewards] = await Promise.all([
-    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'USER'),
+  const [businesses, active, pending, flagged] = await Promise.all([
     supabase.from('businesses').select('id', { count: 'exact', head: true }),
-    supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('verification_status', 'VERIFIED'),
     supabase.from('research_projects').select('id', { count: 'exact', head: true }).eq('status', 'ACTIVE'),
     supabase.from('research_projects').select('id', { count: 'exact', head: true }).eq('status', 'SUBMITTED'),
     supabase.from('survey_responses').select('id', { count: 'exact', head: true }).eq('status', 'FLAGGED'),
-    supabase.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'REQUESTED'),
-    // No SUM aggregate in supabase-js's query builder, so this pulls the
-    // raw rows and reduces client-side. Fine at P0/demo scale (hundreds to
-    // low thousands of confirmed rewards); a real production admin
-    // dashboard should replace this with a Postgres view or RPC doing the
-    // SUM server-side once transaction volume makes "download every row"
-    // impractical - not a correctness issue yet, a scaling one, and
-    // explicitly not addressed further in this pass per "do not add
-    // unnecessary features."
-    supabase.from('wallet_transactions').select('amount_paise').eq('type', 'SURVEY_REWARD').eq('status', 'CONFIRMED'),
   ]);
-  const totalRewardsPaidPaise = (rewards.data ?? []).reduce((sum, r) => sum + r.amount_paise, 0);
+  for (const result of [businesses, active, pending, flagged]) {
+    if (result.error) throw result.error;
+  }
   return {
-    totalUsers: users.count ?? 0,
     totalBusinesses: businesses.count ?? 0,
-    verifiedBusinesses: verifiedBiz.count ?? 0,
     activeStudies: active.count ?? 0,
     pendingApproval: pending.count ?? 0,
     flaggedResponses: flagged.count ?? 0,
-    pendingWithdrawals: pendingW.count ?? 0,
-    totalRewardsPaidPaise,
   };
 }

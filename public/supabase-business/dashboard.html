@@ -18,7 +18,7 @@
 
 <div class="container">
   <section class="dashboard-intro" aria-labelledby="dashboardTitle">
-    <p class="eyebrow">INSIGHTLOOP · BUSINESS WORKSPACE</p>
+    <p class="eyebrow">ANVESH · BUSINESS WORKSPACE</p>
     <h1 id="dashboardTitle">Turn questions into clear decisions.</h1>
     <p>Create thoughtful research, keep your drafts organised, and explore results—all in one calm workspace.</p>
     <div class="dashboard-pills"><span class="dashboard-pill">✦ AI-assisted research</span><span class="dashboard-pill">↗ Drafts stay in your account</span><span class="dashboard-pill">◎ Results when ready</span></div>
@@ -26,9 +26,9 @@
   <div id="verificationBanner"></div>
 
   <div class="tabs">
-    <button class="tab active" type="button" data-tab="create">1. Survey Generation</button>
+    <button class="tab active" type="button" data-tab="create">1. Draft Survey</button>
     <button class="tab" type="button" data-tab="studies">2. Saved Drafts</button>
-    <button class="tab" type="button" data-tab="results">3. Survey Results</button>
+    <button class="tab" type="button" data-tab="results">3. Survey Responses</button>
   </div>
 
   <div id="alert" class="alert error hidden"></div>
@@ -36,8 +36,8 @@
   <section id="tab-create">
     <div class="dashboard-workspace">
     <div class="card" id="aiSurveyCard" style="max-width:760px;border-color:#d8c9ff;background:linear-gradient(145deg,#fff 0%,#f8f4ff 100%);">
-      <p class="eyebrow">INSIGHTLOOP BUSINESS AI</p>
-      <h2>Describe your research. AI builds the survey.</h2>
+      <p class="eyebrow">ANVESH AI RESEARCH</p>
+      <h2>Create with AI</h2>
       <p class="muted">Give AI a plain-language command. Review the generated survey, save it as a draft, or publish it when ready.</p>
       <div class="survey-chat" aria-label="AI survey builder conversation">
         <div id="surveyChatMessages" class="survey-chat-messages" role="log" aria-live="polite">
@@ -46,7 +46,7 @@
         <label for="surveyChatInput" id="surveyChatPrompt">Research goal</label>
         <textarea id="surveyChatInput" maxlength="1200" placeholder="Describe your research goal..." rows="3"></textarea>
         <div class="row" style="margin-top:10px;">
-          <button id="surveyChatSend" type="button">Send answer</button>
+          <button id="surveyChatSend" type="button" onclick="window.submitAnveshSurveyChatAnswer && window.submitAnveshSurveyChatAnswer()">Send answer</button>
           <button id="surveyChatSkip" class="secondary" type="button">Skip optional question</button>
           <button id="surveyChatReset" class="secondary" type="button">Start over</button>
         </div>
@@ -56,7 +56,7 @@
       <textarea id="aiCommand" class="hidden" aria-hidden="true"></textarea>
       <button id="generateAiSurveyBtn" type="button" class="hidden" aria-hidden="true" tabindex="-1">Generate survey</button>
       <div id="aiSurveyPreview" class="hidden" style="margin-top:20px;"></div>
-      <p class="muted" style="margin-top:14px;">Your drafts are saved to your account. Publishing reserves participant rewards, charges a 100-token platform fee, and activates immediately after funding succeeds.</p>
+      <p class="muted" style="margin-top:14px;">Your drafts are saved to your account. Launching is a separate action. Saving a draft never publishes it or deducts survey funding.</p>
     </div>
     </div>
     <div class="card" style="max-width:560px;">
@@ -67,7 +67,7 @@
         <option value="feature_preference">Feature / Product Preference</option>
         <option value="purchase_intent">Purchase Intent</option>
         <option value="satisfaction">Customer Satisfaction</option>
-        <option value="timing_location">Timing & Location Preference</option>
+        <option value="timing_location">Timing &amp; Location Preference</option>
         <option value="custom">Custom</option>
       </select>
       <label>Study title</label>
@@ -101,7 +101,7 @@
 
   <section id="tab-studies" class="hidden">
     <h2>Saved Drafts</h2>
-    <p class="muted">Review drafts and track surveys awaiting platform checks.</p>
+    <p class="muted">Review saved drafts, edit them, and start a survey when you are ready.</p>
     <div id="studyList"></div>
     <div id="studyDetail"></div>
   </section>
@@ -115,7 +115,7 @@
 </div>
 
 <script src="/js/api.js"></script>
-<script type="module" src="/js/supabase/business-page.js"></script>
-<script type="module" src="/js/supabase/business-tokens.js"></script>
+<script type="module" src="/js/supabase/business-page.js?v=ai-survey-v4"></script>
+<script type="module" src="/js/supabase/manual-draft-fix.js?v=chat-fix-2"></script>
 </body>
 </html>

@@ -45,14 +45,14 @@ export async function listEligibleStudies() {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError) throw userError;
   if (!user) throw new Error('Please log in to view surveys.');
-  const { data: profile, error: profileError } = await supabase.from('profiles').select('city, age_range').eq('id', user.id).single();
+  const { data: profile, error: profileError } = await supabase.from('profiles').select('city, area, age_range, gender, occupation_category').eq('id', user.id).single();
   if (profileError) throw profileError;
   const { data: tagRows, error: tagsError } = await supabase.from('user_interests').select('tag').eq('user_id', user.id);
   if (tagsError) throw tagsError;
   const tags = (tagRows ?? []).map((t) => String(t.tag).trim().toLowerCase());
 
   const { data: active, error } = await supabase.from('research_projects')
-    .select('id, title, objective, target_city, reward_per_response_paise, target_min_age, target_max_age, target_tags')
+    .select('id, title, objective, target_city, reward_per_response_tokens, token_funding_status, sample_size, target_min_age, target_max_age, target_gender, target_tags, target_areas, target_professions')
     .eq('status', 'ACTIVE');
   if (error) throw error;
 
@@ -62,9 +62,13 @@ export async function listEligibleStudies() {
 
   return (active ?? []).filter((s) => {
     if (respondedIds.has(s.id)) return false;
+    if (s.token_funding_status !== 'FUNDED' || Number(s.reward_per_response_tokens) < 5) return false;
     if (s.target_city && profile?.city && s.target_city.toLowerCase() !== profile.city.toLowerCase()) return false;
     if (!ageOverlaps(profile?.age_range, s.target_min_age, s.target_max_age)) return false;
     if (s.target_tags?.length && !s.target_tags.some((t) => tags.includes(String(t).trim().toLowerCase()))) return false;
+    if (s.target_gender && s.target_gender !== 'any' && String(profile?.gender || '').toLowerCase() !== String(s.target_gender).toLowerCase()) return false;
+    if (s.target_areas?.length && !s.target_areas.some((area) => String(area).trim().toLowerCase() === String(profile?.area || '').trim().toLowerCase())) return false;
+    if (s.target_professions?.length && !s.target_professions.some((profession) => String(profession).trim().toLowerCase() === String(profile?.occupation_category || '').trim().toLowerCase())) return false;
     return true;
   });
 }

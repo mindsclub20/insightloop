@@ -48,8 +48,8 @@ function clearError() {
   alert.textContent = '';
   alert.classList.add('hidden');
 }
-function money(paise) {
-  return '₹' + (Number(paise || 0) / 100).toFixed(2);
+function tokenReward(tokens) {
+  return Number(tokens || 0).toLocaleString('en-IN') + ' tokens';
 }
 function fingerprint() {
   let value = localStorage.getItem('anvesh_device_signature');
@@ -62,13 +62,13 @@ function fingerprint() {
 
 async function requireParticipant() {
   const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) { location.href = '/login.html'; return null; }
+  if (error || !user) { location.href = '/supabase-login.html'; return null; }
   const { data: profile, error: profileError } = await supabase.from('profiles')
     .select('role,status').eq('id', user.id).single();
   if (profileError) throw profileError;
   if (!profile || profile.role !== 'USER' || profile.status === 'SUSPENDED') {
     await logout();
-    location.href = '/login.html';
+    location.href = '/supabase-login.html';
     return null;
   }
   try { await syncUserInterests(localStorage, user, supabase); }
@@ -94,7 +94,7 @@ async function loadSurveys() {
         <h2>${escapeHtml(study.title)}</h2>
         <p>${escapeHtml(study.objective || 'Share your perspective in this research survey.')}</p>
         <div class="row">
-          <span class="badge green">Reward: ${money(study.reward_per_response_paise)}</span>
+          <span class="badge green">Reward: ${tokenReward(study.reward_per_response_tokens)}</span>
           <span class="muted">Target city: ${escapeHtml(study.target_city || 'Any')}</span>
         </div>
         <button type="button" data-study-id="${escapeHtml(study.id)}" style="margin-top:12px">View survey</button>
@@ -163,7 +163,7 @@ function renderSurvey(result) {
     <form id="surveyForm" class="card">
       <h2>${escapeHtml(study.title)}</h2>
       <p class="muted">${escapeHtml(study.objective || '')}</p>
-      <p><span class="badge green">Reward: ${money(study.reward_per_response_paise)}</span></p>
+      <p><span class="badge green">Reward: ${tokenReward(study.reward_per_response_tokens)}</span></p>
       ${fields}
       <div class="row"><button type="submit" id="submitSurveyButton">Submit responses</button><button type="button" id="cancelSurveyButton" class="secondary">Back to surveys</button></div>
       <p class="muted">Submit only once. Your eligibility and response are checked securely by Anvesh.</p>
@@ -232,7 +232,7 @@ async function submitSurvey(event) {
 
 document.getElementById('refreshButton').addEventListener('click', loadSurveys);
 document.getElementById('logoutButton').addEventListener('click', async () => {
-  try { await logout(); location.href = '/login.html'; }
+  try { await logout(); location.href = '/supabase-login.html'; }
   catch (error) { showError(error.message || 'Could not log out.'); }
 });
 loadSurveys();
