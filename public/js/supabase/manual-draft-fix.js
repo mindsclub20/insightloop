@@ -11,7 +11,7 @@ window.saveManualDraft = async function saveManualDraftFixed() {
     if (!objective) throw new Error('Enter a research objective before saving.');
 
     const all = await business.listMyStudies();
-    const originalTitle = (document.querySelector('#draftBuilder h3')?.textContent || '').replace(/^Draft created:\\s*/, '').trim();
+    const originalTitle = (document.querySelector('#draftBuilder h3')?.textContent || '').replace('Draft created:', '').trim();
     const draft = all.find((study) => study.status === 'DRAFT' && (study.title === originalTitle || study.title === title));
     if (!draft) throw new Error('Could not find this draft. Create it again, then save.');
     const { questions } = await business.getStudy(draft.id);
