@@ -95,3 +95,15 @@ test('landing navigation collapses on small screens with an accessible toggle', 
   assert.match(html, /mobileMenuToggle.*addEventListener/s, 'mobile menu toggle must have a working event handler');
   assert.match(css, /#primaryNavigation\.is-open/, 'mobile menu should only expand when requested');
 });
+
+test('AI survey chat collects question count and answer-type preferences and verifies persisted questions', async () => {
+  const source = await read('../public/js/supabase/business-page.js');
+  assert.match(source, /key: 'questionCount'.*Choose 1–8/s, 'business must choose the requested number of questions');
+  assert.match(source, /key: 'questionTypes'/, 'business must specify preferred answer formats');
+  assert.match(source, /preferred_question_types: parseQuestionTypePreferences/, 'answer-type preferences must reach the AI backend');
+  assert.match(source, /question_count: Number\(SURVEY_CHAT_ANSWERS\.questionCount \|\| 5\)/, 'requested question count must reach the AI backend');
+  assert.match(source, /business\.getStudy\(savedId\)/, 'saved draft must be read back from the database');
+  assert.match(source, /Draft persistence verification failed/, 'UI must not claim success when saved questions differ');
+  assert.match(source, /saveResult\?\.success/, 'UI must require a successful backend save confirmation');
+});
+
