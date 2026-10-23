@@ -25,6 +25,8 @@ serve(async (req) => {
     const body = await req.json();
     const command = typeof body.command === 'string' ? body.command.trim() : '';
     const targetCity = typeof body.target_city === 'string' ? body.target_city.trim() : '';
+    const targetAreas = Array.isArray(body.target_areas) ? body.target_areas.map((v: unknown) => String(v).trim()).filter(Boolean).slice(0, 30) : [];
+    const targetProfessions = Array.isArray(body.target_professions) ? body.target_professions.map((v: unknown) => String(v).trim()).filter(Boolean).slice(0, 30) : [];
     if (command.length < 8 || command.length > MAX_COMMAND_LENGTH) {
       throw new HttpError(400, 'Describe the survey in 8–1,200 characters.');
     }
