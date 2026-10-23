@@ -792,13 +792,34 @@ function escapeHtml(str) {
 // Attach everything referenced from injected-HTML onclick="..." strings.
 Object.assign(window, { addSuggested, addCustomQuestion, saveManualDraft, submitForApproval, viewStudy, startDraftSurvey, deleteDraftSurvey, cancelStudy, viewReport, viewResultsReport });
 
-// Delegated handlers keep dynamic Saved Drafts buttons wired after every refresh.
-document.getElementById('studyList')?.addEventListener('click', (event) => {
-  const button = event.target.closest('button[data-action][data-draft-id]');
+// Delegate from document rather than the list node: this remains reliable if
+// another dashboard script replaces the Saved Drafts container or its contents.
+document.addEventListener('click', (event) => {
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  const button = target.closest('button[data-action][data-draft-id]');
   if (!button || button.disabled) return;
+
+  const action = button.dataset.action;
   const id = button.dataset.draftId;
-  if (button.dataset.action === 'delete-draft') deleteDraftSurvey(id);
-  if (button.dataset.action === 'start-draft') startDraftSurvey(id);
+  if (!id || !['delete-draft', 'start-draft'].includes(action)) return;
+
+  event.preventDefault();
+  button.disabled = true;
+  const originalText = button.textContent;
+  button.textContent = action === 'delete-draft' ? 'Deleting…' : 'Opening…';
+
+  const run = action === 'delete-draft' ? deleteDraftSurvey(id) : startDraftSurvey(id);
+  Promise.resolve(run).catch((error) => {
+    showAlert('alert', error?.message || 'Could not complete this draft action.');
+  }).finally(() => {
+    // Successful actions refresh the list; if the button remains mounted,
+    // restore it so a recoverable error never leaves the control disabled.
+    if (button.isConnected) {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  });
 });
 
 init().catch((error) => {
