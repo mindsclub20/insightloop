@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Research Planner — Anvesh</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+:root{color-scheme:light}body{background:#f6f8fc;color:#172033}.planner{max-width:1080px;margin:28px auto;padding:0 18px 48px}.hero{padding:28px;border-radius:20px;background:linear-gradient(125deg,#111c3d,#253e73);color:#fff;box-shadow:0 12px 32px #1424491a}.hero .eyebrow{letter-spacing:.12em;font-size:.75rem;font-weight:700;color:#9ce9e2}.hero h1{margin:.35rem 0;font-size:clamp(1.8rem,4vw,2.6rem)}.hero p{max-width:700px;color:#e0e8fa}.panel{margin-top:18px;background:#fff;border:1px solid #e2e8f2;border-radius:16px;padding:22px;box-shadow:0 5px 20px #15254a08}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}.field label{font-weight:600;font-size:.9rem}.field input,.field textarea,.field select{width:100%;box-sizing:border-box;border:1px solid #cfd8e6;border-radius:9px;padding:11px 12px;background:#fff;color:#172033;font:inherit}.field textarea{min-height:94px;resize:vertical}.muted{color:#64748b}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.actions button{border:0;border-radius:9px;padding:11px 15px;font:inherit;font-weight:650;cursor:pointer;background:#176c78;color:#fff}.actions .secondary{background:#edf2f8;color:#26354d}.checklist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.check{display:flex;gap:9px;align-items:flex-start;padding:12px;border:1px solid #e2e8f2;border-radius:10px}.check input{margin-top:4px}.preview{white-space:pre-wrap;overflow-wrap:anywhere;background:#f7f9fc;border:1px solid #e1e7f0;border-radius:10px;padding:16px;font: .9rem/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}.status{min-height:1.4em;color:#16706c;font-size:.9rem}.topbar nav a{margin-left:12px}@media(max-width:680px){.grid,.checklist{grid-template-columns:1fr}.field.full{grid-column:auto}.hero,.panel{padding:18px}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/supabase-business/dashboard.html">Anvesh</a>
+  <nav><a href="/supabase-business/dashboard.html">Business dashboard</a></nav>
+</header>
+<main class="planner">
+  <section class="hero">
+    <p class="eyebrow">ANVESH · RESEARCH WORKSPACE</p>
+    <h1>Turn a business question into a research plan.</h1>
+    <p>Organise the objective, audience, method, and success criteria before creating a survey. This planner does not publish surveys or change your token balance.</p>
+  </section>
+  <form id="plannerForm" class="panel">
+    <h2>Research brief</h2>
+    <p class="muted">Keep the question focused. Avoid collecting personal details unless they are genuinely required.</p>
+    <div class="grid">
+      <div class="field full"><label for="title">Working title</label><input id="title" name="title" maxlength="120" placeholder="e.g. Student lunch preferences near campus" required></div>
+      <div class="field full"><label for="problem">Business problem / decision</label><textarea id="problem" name="problem" maxlength="1200" placeholder="What decision will the research help you make?" required></textarea></div>
+      <div class="field"><label for="city">Target city or area</label><input id="city" name="city" maxlength="120" placeholder="e.g. Kurnool"></div>
+      <div class="field"><label for="audience">Target audience</label><input id="audience" name="audience" maxlength="200" placeholder="e.g. college students aged 18–24"></div>
+      <div class="field"><label for="method">Research method</label><select id="method" name="method"><option>Short survey</option><option>Customer interviews</option><option>Survey + interviews</option><option>Existing-data analysis</option></select></div>
+      <div class="field"><label for="sample">Target responses</label><input id="sample" name="sample" type="number" min="1" max="100000" value="100"></div>
+      <div class="field full"><label for="questions">Questions you need answered</label><textarea id="questions" name="questions" maxlength="1800" placeholder="One question per line. Example: Which lunch options would you buy most often?"></textarea></div>
+      <div class="field full"><label for="decision">How will you use the findings?</label><textarea id="decision" name="decision" maxlength="1000" placeholder="What action will you take depending on the results?"></textarea></div>
+      <div class="field full"><label for="success">What would a useful result look like?</label><textarea id="success" name="success" maxlength="1000" placeholder="Define a decision threshold or evidence you need."></textarea></div>
+    </div>
+    <div class="actions"><button type="submit">Generate research brief</button><button class="secondary" type="button" id="saveBtn">Save on this device</button><button class="secondary" type="button" id="loadBtn">Load saved brief</button><button class="secondary" type="button" id="clearBtn">Clear</button></div>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+  </form>
+  <section class="panel">
+    <h2>Research quality check</h2>
+    <p class="muted">Use this checklist before moving the brief into survey creation.</p>
+    <div class="checklist">
+      <label class="check"><input type="checkbox"> The research supports one clear decision.</label>
+      <label class="check"><input type="checkbox"> The audience matches the decision.</label>
+      <label class="check"><input type="checkbox"> Each question measures something actionable.</label>
+      <label class="check"><input type="checkbox"> Questions are neutral and not leading.</label>
+      <label class="check"><input type="checkbox"> The sample target is realistic for the budget.</label>
+      <label class="check"><input type="checkbox"> Unnecessary personal information is excluded.</label>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Brief preview</h2>
+    <p class="muted">Generate a brief to preview it, then download it as a Markdown file or copy it into your Anvesh survey workflow.</p>
+    <pre id="preview" class="preview">Your research brief will appear here.</pre>
+    <div class="actions"><button type="button" id="downloadBtn" class="secondary">Download Markdown</button><button type="button" id="copyBtn" class="secondary">Copy brief</button></div>
+  </section>
+</main>
+<script>
+(function(){
+ const form=document.getElementById('plannerForm'), preview=document.getElementById('preview'), status=document.getElementById('status');
+ const ids=['title','problem','city','audience','method','sample','questions','decision','success'];
+ const getData=()=>Object.fromEntries(ids.map(id=>[id,document.getElementById(id).value.trim()]));
+ const build=()=>{const d=getData();return '# Research brief: '+(d.title||'Untitled')+'\n\n## Business problem / decision\n'+(d.problem||'Not specified')+'\n\n## Target market\n- **Location:** '+(d.city||'Not specified')+'\n- **Audience:** '+(d.audience||'Not specified')+'\n- **Method:** '+d.method+'\n- **Target responses:** '+(d.sample||'Not specified')+'\n\n## Questions to answer\n'+(d.questions||'Not specified').split('\n').map(x=>x.trim()).filter(Boolean).map(x=>'- '+x.replace(/^[-•]\s*/, '')).join('\n')+'\n\n## Decision informed by research\n'+(d.decision||'Not specified')+'\n\n## Success criteria\n'+(d.success||'Not specified')+'\n\n## Quality checks\n- Confirm questions are neutral and actionable.\n- Confirm sample size and budget are realistic.\n- Avoid collecting unnecessary personal information.\n';};
+ form.addEventListener('submit',e=>{e.preventDefault();preview.textContent=build();status.textContent='Brief generated. Review it before using it in survey creation.';});
+ document.getElementById('saveBtn').addEventListener('click',()=>{try{localStorage.setItem('anvesh-research-brief-v1',JSON.stringify(getData()));status.textContent='Saved in this browser on this device only.';}catch(e){status.textContent='Browser storage is unavailable. Download the brief instead.';}});
+ document.getElementById('loadBtn').addEventListener('click',()=>{try{const d=JSON.parse(localStorage.getItem('anvesh-research-brief-v1')||'null');if(!d){status.textContent='No saved brief found in this browser.';return;}ids.forEach(id=>{document.getElementById(id).value=d[id]||'';});preview.textContent=build();status.textContent='Saved brief loaded.';}catch(e){status.textContent='Could not load saved brief.';}});
+ document.getElementById('clearBtn').addEventListener('click',()=>{form.reset();preview.textContent='Your research brief will appear here.';status.textContent='Form cleared. The previously saved local copy is unchanged.';});
+ document.getElementById('downloadBtn').addEventListener('click',()=>{const text=preview.textContent;if(text==='Your research brief will appear here.'){status.textContent='Generate a brief first.';return;}const blob=new Blob([text],{type:'text/markdown;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='anvesh-research-brief.md';a.click();URL.revokeObjectURL(url);});
+ document.getElementById('copyBtn').addEventListener('click',async()=>{if(preview.textContent==='Your research brief will appear here.'){status.textContent='Generate a brief first.';return;}try{await navigator.clipboard.writeText(preview.textContent);status.textContent='Brief copied.';}catch(e){status.textContent='Clipboard access was blocked. Select and copy the preview manually.';}});
+})();
+</script>
+</body>
+</html>
