@@ -1,7 +1,7 @@
 // Persist and retrieve research planner briefs for an authenticated business.
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
-import { adminClient, requireRole, HttpError } from '../_shared/supabase.ts';
-import { handleOptions, json } from '../_shared/cors.ts';
+import { adminClient, requireRole, HttpError } from './supabase.ts';
+import { handleOptions, json } from './cors.ts';
 
 function requiredText(value: unknown, field: string, max: number): string {
   if (typeof value !== 'string' || !value.trim() || value.trim().length > max) {
