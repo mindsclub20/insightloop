@@ -71,7 +71,7 @@ with check (
     select 1 from public.research_projects rp
     join public.business_members bm on bm.business_id = rp.business_id
     where rp.id = research_sources.research_project_id and bm.user_id = auth.uid()
-  )
+  ) and created_by = auth.uid()
 );
 
 drop policy if exists "Business members manage research findings" on public.research_findings;
@@ -89,7 +89,7 @@ with check (
     select 1 from public.research_projects rp
     join public.business_members bm on bm.business_id = rp.business_id
     where rp.id = research_findings.research_project_id and bm.user_id = auth.uid()
-  )
+  ) and created_by = auth.uid()
 );
 
 drop policy if exists "Business members manage research reports" on public.research_reports;
@@ -107,5 +107,10 @@ with check (
     select 1 from public.research_projects rp
     join public.business_members bm on bm.business_id = rp.business_id
     where rp.id = research_reports.research_project_id and bm.user_id = auth.uid()
-  )
+  ) and created_by = auth.uid()
 );
+
+-- RLS is necessary but does not grant SQL privileges by itself.
+grant select, insert, update, delete on public.research_sources to authenticated;
+grant select, insert, update, delete on public.research_findings to authenticated;
+grant select, insert, update, delete on public.research_reports to authenticated;
