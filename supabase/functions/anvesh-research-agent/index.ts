@@ -27,7 +27,7 @@ async function authenticateBusiness(req) {
   if (!memberResponse.ok) throw new HttpError(500, 'Unable to verify business membership.');
   const memberships = await memberResponse.json();
   if (!memberships?.length) throw new HttpError(403, 'No business is associated with this account.');
-  return { userId: user.id, businessId: memberships[0].business_id };
+  return { userId: user.id, businessId: memberships[0].business_id, supabaseUrl, serviceKey };
 }
 import { handleOptions, json } from '../_shared/cors.ts';
 import { calculateResearchBudget, getApiKeyCandidates, getMissingGeminiSecrets, normalizeGroundingSources, parseJsonObject } from '../_shared/research-agent-utils.js';
@@ -42,6 +42,81 @@ function readText(candidate) {
     .filter(Boolean)
     .join('\n')
     .trim();
+}
+
+
+async function reserveResearchUsage(auth, inputChars) {
+  const headers = { apikey: auth.serviceKey, Authorization: 'Bearer ' + auth.serviceKey, Accept: 'application/json' };
+  const limitsUrl = new URL(auth.supabaseUrl + '/rest/v1/business_ai_limits');
+  limitsUrl.search = new URLSearchParams({
+    business_id: 'eq.' + auth.businessId,
+    select: 'enabled,monthly_request_limit',
+    limit: '1',
+  }).toString();
+  const limitsResponse = await fetch(limitsUrl, { headers });
+  if (!limitsResponse.ok) throw new HttpError(503, 'Unable to verify the business AI usage limit.');
+  const limitRows = await limitsResponse.json();
+  const limit = limitRows?.[0] || { enabled: true, monthly_request_limit: 300 };
+  if (limit.enabled === false) throw new HttpError(429, 'AI research is disabled for this business. Contact the administrator.');
+
+  const now = new Date();
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+  const countUrl = new URL(auth.supabaseUrl + '/rest/v1/ai_usage_events');
+  countUrl.search = new URLSearchParams({
+    business_id: 'eq.' + auth.businessId,
+    created_at: 'gte.' + monthStart,
+    select: 'id',
+  }).toString();
+  const countResponse = await fetch(countUrl, { headers: { ...headers, Prefer: 'count=exact', Range: '0-0' } });
+  if (!countResponse.ok) throw new HttpError(503, 'Unable to verify monthly AI usage.');
+  const countMatch = (countResponse.headers.get('content-range') || '').match(/\/(\d+)$/);
+  const used = countMatch ? Number(countMatch[1]) : 0;
+  // One complete research plan calls each of the six agents once.
+  if (used + 6 > Number(limit.monthly_request_limit || 300)) {
+    throw new HttpError(429, 'This research run would exceed the business monthly AI request limit.');
+  }
+
+  const requestId = crypto.randomUUID();
+  const rows = ['web_research', 'research_planning', 'survey_design', 'evidence_analysis', 'report_generation', 'quality_review'].map((role) => ({
+    business_id: auth.businessId,
+    user_id: auth.userId,
+    provider: 'gemini',
+    purpose: 'market_research',
+    model: MODEL,
+    request_id: requestId + ':' + role,
+    input_chars: inputChars,
+    status: 'started',
+    estimated_cost_microusd: 0,
+  }));
+  const insertResponse = await fetch(auth.supabaseUrl + '/rest/v1/ai_usage_events', {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+    body: JSON.stringify(rows),
+  });
+  if (!insertResponse.ok) throw new HttpError(503, 'Unable to reserve AI usage records. No research calls were started.');
+  const created = await insertResponse.json();
+  if (!Array.isArray(created) || created.length !== 6 || created.some((row) => !row.id)) {
+    throw new HttpError(503, 'AI usage reservation was incomplete. No research calls were started.');
+  }
+  return { auth, ids: created.map((row) => row.id), requestId };
+}
+
+async function finishResearchUsage(reservation, status, outputChars = 0) {
+  if (!reservation?.ids?.length) return;
+  const headers = {
+    apikey: reservation.auth.serviceKey,
+    Authorization: 'Bearer ' + reservation.auth.serviceKey,
+    'Content-Type': 'application/json',
+    Prefer: 'return=minimal',
+  };
+  const url = new URL(reservation.auth.supabaseUrl + '/rest/v1/ai_usage_events');
+  url.searchParams.set('id', 'in.(' + reservation.ids.join(',') + ')');
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ status, output_chars: Math.max(0, Math.trunc(outputChars)) }),
+  });
+  if (!response.ok) throw new HttpError(503, 'Unable to finalize AI usage records.');
 }
 
 async function callGemini({ env, workload, prompt, useGoogleSearch = false }) {
@@ -99,13 +174,15 @@ async function callGemini({ env, workload, prompt, useGoogleSearch = false }) {
   throw new HttpError(503, 'All configured Gemini keys failed for this request. Check the saved secrets and model configuration.');
 }
 
+let activeReservation = null;
+
 serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
 
   try {
     if (req.method !== 'POST') throw new HttpError(405, 'Use POST to run Anvesh research.');
-    await authenticateBusiness(req);
+    const auth = await authenticateBusiness(req);
 
     const body = await req.json();
     if (body.action && body.action !== 'plan') throw new HttpError(400, 'Only the plan action is currently supported.');
@@ -130,6 +207,7 @@ serve(async (req) => {
     const env = Deno.env.toObject();
     const availableKeys = getApiKeyCandidates(env, 'web_research');
     if (!availableKeys.length) throw new HttpError(503, 'Gemini is not configured. Add GEMINI_API_KEY to Supabase Edge Function secrets.');
+    activeReservation = await reserveResearchUsage(auth, problem.length + title.length + city.length + audience.length);
 
     const webResult = await callGemini({
       env,
@@ -219,6 +297,9 @@ serve(async (req) => {
     });
 
     const budget = calculateResearchBudget(sampleSize, rewardPerResponse);
+    const outputChars = JSON.stringify({ webResult: webResult.data, planResult: planResult.data, surveyResult: surveyResult.data, analysisResult: analysisResult.data, reportResult: reportResult.data, qualityResult: qualityResult.data }).length;
+    await finishResearchUsage(activeReservation, 'succeeded', outputChars);
+    activeReservation = null;
     const sources = webResult.sources.length ? webResult.sources : (Array.isArray(webResult.data.existing_evidence)
       ? webResult.data.existing_evidence.filter((item) => typeof item?.source_url === 'string' && /^https?:\/\//i.test(item.source_url))
         .map((item) => ({ title: String(item.source_title || item.claim || item.source_url).slice(0, 240), url: item.source_url }))
@@ -252,6 +333,10 @@ serve(async (req) => {
       ],
     });
   } catch (error) {
+    if (activeReservation) {
+      try { await finishResearchUsage(activeReservation, 'failed'); } catch { /* Preserve the original error. */ }
+      activeReservation = null;
+    }
     if (error instanceof HttpError) return json({ error: error.message }, error.status);
     return json({ error: 'Research planning failed unexpectedly. Please retry or check the Edge Function logs.' }, 500);
   }
