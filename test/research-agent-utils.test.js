@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateResearchBudget, getApiKeyCandidates, normalizeGroundingSources, parseJsonObject } from '../supabase/functions/_shared/research-agent-utils.js';
+import { calculateResearchBudget, getApiKeyCandidates, getMissingGeminiSecrets, normalizeGroundingSources, parseJsonObject } from '../supabase/functions/_shared/research-agent-utils.js';
 
 test('routes each workload to its assigned key first and falls back only to configured keys', () => {
   const env = { GEMINI_API_KEY: 'k1', GEMINI_API_KEY_4: 'k4', GEMINI_API_KEY_6: 'k6' };
@@ -45,5 +45,11 @@ test('normalizes grounded sources, removes duplicates, and ignores non-web URIs'
   ] }), [
     { title: 'Example', url: 'https://example.com/a' },
     { title: 'https://example.org', url: 'https://example.org' },
+  ]);
+});
+
+test('reports which numbered Gemini secrets are not configured without exposing values', () => {
+  assert.deepEqual(getMissingGeminiSecrets({ GEMINI_API_KEY: 'secret', GEMINI_API_KEY_4: 'secret4' }), [
+    'GEMINI_API_KEY_2', 'GEMINI_API_KEY_3', 'GEMINI_API_KEY_5', 'GEMINI_API_KEY_6',
   ]);
 });
