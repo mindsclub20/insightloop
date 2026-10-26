@@ -30,7 +30,7 @@ async function authenticateBusiness(req) {
   return { userId: user.id, businessId: memberships[0].business_id };
 }
 import { handleOptions, json } from '../_shared/cors.ts';
-import { calculateResearchBudget, getApiKeyCandidates, normalizeGroundingSources, parseJsonObject } from '../_shared/research-agent-utils.js';
+import { calculateResearchBudget, getApiKeyCandidates, getMissingGeminiSecrets, normalizeGroundingSources, parseJsonObject } from '../_shared/research-agent-utils.js';
 
 const MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-3.8-flash';
 const MAX_PROBLEM_LENGTH = 1200;
@@ -178,6 +178,46 @@ serve(async (req) => {
       ].join('\n'),
     });
 
+    const analysisResult = await callGemini({
+      env,
+      workload: 'evidence_analysis',
+      prompt: [
+        'You are Anvesh Evidence Analyst. Compare the grounded web evidence with the proposed research plan and survey draft.',
+        'No respondent answers have been collected yet. Do not invent survey results or present hypotheses as measured opinions.',
+        'Return JSON with keys: key_observations (array of strings), hypotheses_to_test (array of strings), evidence_conflicts (array of strings), unanswered_questions (array of strings).',
+        'Web evidence: ' + JSON.stringify(webResult.data).slice(0, 10000),
+        'Research plan: ' + JSON.stringify(planResult.data).slice(0, 8000),
+        'Survey draft: ' + JSON.stringify(surveyResult.data).slice(0, 8000),
+      ].join('\n'),
+    });
+
+    const reportResult = await callGemini({
+      env,
+      workload: 'report_generation',
+      prompt: [
+        'You are the Anvesh Report Writer. Create a preliminary decision-support report based only on the supplied web evidence and proposed survey.',
+        'Explicitly state that primary survey responses have not yet been collected. Do not fabricate response counts, percentages, or participant opinions.',
+        'Return JSON with keys: executive_summary (string), findings (array of objects with finding, evidence_type, source_urls, confidence), recommendations (array of strings), risks_and_limitations (array of strings), next_steps (array of strings).',
+        'Business problem: ' + problem,
+        'Web evidence: ' + JSON.stringify(webResult.data).slice(0, 10000),
+        'Research plan: ' + JSON.stringify(planResult.data).slice(0, 8000),
+        'Evidence analysis: ' + JSON.stringify(analysisResult.data).slice(0, 8000),
+      ].join('\n'),
+    });
+
+    const qualityResult = await callGemini({
+      env,
+      workload: 'quality_review',
+      prompt: [
+        'You are Anvesh Quality Reviewer. Audit the proposed report for unsupported factual claims, missing source links, overconfident language, biased questions, privacy risks, and any claim that survey responses exist.',
+        'Return JSON with keys: ready_for_business_review (boolean), issues (array of strings), unsupported_claims (array of strings), survey_quality_notes (array of strings), required_disclaimers (array of strings).',
+        'Do not rewrite or invent evidence. If primary survey data is absent, require a clear pre-survey disclaimer.',
+        'Report: ' + JSON.stringify(reportResult.data).slice(0, 10000),
+        'Survey: ' + JSON.stringify(surveyResult.data).slice(0, 8000),
+        'Grounded sources: ' + JSON.stringify(webResult.sources).slice(0, 5000),
+      ].join('\n'),
+    });
+
     const budget = calculateResearchBudget(sampleSize, rewardPerResponse);
     const sources = webResult.sources.length ? webResult.sources : (Array.isArray(webResult.data.existing_evidence)
       ? webResult.data.existing_evidence.filter((item) => typeof item?.source_url === 'string' && /^https?:\/\//i.test(item.source_url))
@@ -189,19 +229,25 @@ serve(async (req) => {
       ok: true,
       title: title || surveyResult.data.title || 'Anvesh Research Plan',
       research: {
+        stage: 'pre-survey',
         web_evidence: webResult.data,
         plan: planResult.data,
         survey: surveyResult.data,
+        evidence_analysis: analysisResult.data,
+        preliminary_report: reportResult.data,
+        quality_review: qualityResult.data,
         sources,
       },
       budget,
       key_rotation: {
         configured_keys_detected: availableKeys.length,
-        note: 'Each workload prefers its assigned numbered Gemini secret and falls back to other configured Gemini secrets on transient, authorization, or quota errors. Missing numbered secrets are skipped.',
+        missing_secrets: getMissingGeminiSecrets(env),
+        note: 'Each workload prefers its assigned Gemini secret. Missing secrets are skipped; quota-limit responses are not bypassed by switching keys.',
       },
       warnings: [
         ...(sources.length ? [] : ['No grounded source links were returned. Verify sources manually before relying on web findings.']),
         'This is a draft estimate. AI/search provider charges are separate from participant reward tokens and the platform fee.',
+        'No respondent answers have been analysed yet; the report is preliminary until survey responses are collected.',
         'Nothing is published and no tokens are deducted by this planning request.',
       ],
     });
