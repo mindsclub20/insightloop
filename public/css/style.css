@@ -150,31 +150,3 @@ th,td{overflow-wrap:anywhere}
   :focus-visible{outline:2px solid Highlight;outline-offset:3px}
 }
 /* END ANVESH CROSS-DEVICE COMPATIBILITY LAYER */
-
-
-/* Preview-only production-aligned color palette */
-:root{--primary:#4f46e5;--primary-dark:#3730a3;--bg:#f7f9fc;--card:#fff;--text:#101a31;--muted:#64748b;--border:#dce4ef;--lavender:#e8f1ff;--shadow:0 12px 35px rgba(10,25,55,.08)}
-body{background:#f7f9fc;color:#101a31}
-a{color:#4f46e5}
-a:hover{color:#3730a3}
-header.topbar{background:#111827;border-bottom-color:#273449}
-header.topbar .brand{color:#f8fafc}
-header.topbar .brand:after{color:#22d3ee}
-header.topbar nav a{color:#e2e8f0}
-header.topbar nav a:hover{color:#22d3ee}
-.hero{background:linear-gradient(115deg,#0b1220 0%,#17264a 58%,#202b63 100%);color:#f8fafc}
-.hero .eyebrow{color:#22d3ee}
-.hero h1{color:#f8fafc}
-.gradient{background:linear-gradient(110deg,#22d3ee,#14b8a6);-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero-copy{color:#e2e8f0}
-.hero .muted{color:#cbd5e1}
-button,.btn{background:linear-gradient(135deg,#4f46e5,#4338ca);color:#fff;box-shadow:0 5px 14px rgba(67,56,202,.18)}
-button:hover,.btn:hover{color:#fff}
-button.secondary,.btn.secondary{background:transparent;color:#f8fafc;border-color:#64748b}
-.feature-card,.card{background:#fff;border-color:#dce4ef}
-.eyebrow{color:#0f9ca8}
-.tabs .tab.active{color:#4f46e5;border-bottom-color:#4f46e5}
-input:focus,select:focus,textarea:focus{border-color:#22b8c7;box-shadow:0 0 0 4px rgba(34,184,199,.14)}
-.progress-bar-fill{background:#14b8a6}
-.alert.info{background:#e0f2fe;color:#075985}
-.pitch-embed-shell{border-color:#dce4ef;background:#fff;box-shadow:0 24px 70px rgba(10,25,55,.12)}
