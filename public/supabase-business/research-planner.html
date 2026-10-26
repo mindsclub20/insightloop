@@ -34,7 +34,7 @@
       <div class="field full"><label for="decision">How will you use the findings?</label><textarea id="decision" name="decision" maxlength="1000" placeholder="What action will you take depending on the results?"></textarea></div>
       <div class="field full"><label for="success">What would a useful result look like?</label><textarea id="success" name="success" maxlength="1000" placeholder="Define a decision threshold or evidence you need."></textarea></div>
     </div>
-    <div class="actions"><button type="submit">Generate research brief</button><button class="secondary" type="button" id="saveBtn">Save on this device</button><button class="secondary" type="button" id="saveAccountBtn">Save to Anvesh account</button><button class="secondary" type="button" id="loadAccountBtn">Load account briefs</button><button class="secondary" type="button" id="loadBtn">Load saved brief</button><button class="secondary" type="button" id="clearBtn">Clear</button></div>
+    <div class="actions"><button type="submit">Generate research brief</button><button type="button" id="runAiResearchBtn">Run AI web research</button><button class="secondary" type="button" id="saveBtn">Save on this device</button><button class="secondary" type="button" id="saveAccountBtn">Save to Anvesh account</button><button class="secondary" type="button" id="loadAccountBtn">Load account briefs</button><button class="secondary" type="button" id="loadBtn">Load saved brief</button><button class="secondary" type="button" id="clearBtn">Clear</button></div>
     <p class="status" id="status" role="status" aria-live="polite"></p>
   </form>
   <section class="panel">
@@ -153,6 +153,111 @@ function buildAccountMarkdown(d) {
     '\n\n## Questions to answer\n' + (d.questions || 'Not specified').split('\n').map(x => x.trim()).filter(Boolean).map(x => '- ' + x.replace(/^[-•]\s*/, '')).join('\n') +
     '\n\n## Decision informed by research\n' + (d.decision || 'Not specified') + '\n\n## Success criteria\n' + (d.success || 'Not specified') + '\n';
 }
+</script>
+
+
+<script type="module">
+import { supabase, invoke } from '/js/supabase/client.js';
+import { requireRoleSupabase } from '/js/supabase/page-auth.js';
+
+const aiButton = document.getElementById('runAiResearchBtn');
+const aiStatus = document.getElementById('status');
+const aiPreview = document.getElementById('preview');
+const readField = (id) => document.getElementById(id)?.value?.trim() || '';
+const listMarkdown = (items) => Array.isArray(items) && items.length
+  ? items.map((item) => '- ' + String(item)).join('\n')
+  : '- Not identified';
+
+function renderResearchResult(result) {
+  const r = result.research || {};
+  const plan = r.plan || {};
+  const survey = r.survey || {};
+  const web = r.web_evidence || {};
+  const questions = Array.isArray(survey.questions) ? survey.questions : [];
+  const sources = Array.isArray(r.sources) ? r.sources : [];
+  return [
+    '# ' + (result.title || readField('title') || 'Anvesh Research Plan'),
+    '',
+    '## Web research summary',
+    web.summary || 'No summary returned.',
+    '',
+    '## Existing evidence and competitor patterns',
+    listMarkdown([...(web.competitor_patterns || []), ...(web.existing_evidence || []).map((item) =>
+      (item.claim || 'Evidence') + (item.source_title ? ' — ' + item.source_title : '') +
+      (item.limitations ? ' (limitation: ' + item.limitations + ')' : ''))]),
+    '',
+    '## Research plan',
+    '### Objectives',
+    listMarkdown(plan.research_objectives),
+    '',
+    '**Recommended method:** ' + (plan.recommended_method || readField('method') || 'Not specified'),
+    plan.method_rationale || '',
+    '',
+    '### Questions to answer',
+    listMarkdown(plan.research_questions),
+    '',
+    '### Evidence gaps',
+    listMarkdown(plan.evidence_gaps || web.evidence_gaps),
+    '',
+    '### Limitations',
+    listMarkdown(plan.limitations),
+    '',
+    '## Draft survey',
+    '**' + (survey.title || 'Survey draft') + '**',
+    survey.objective || '',
+    ...questions.flatMap((q, i) => [
+      (i + 1) + '. ' + (q.question_text || 'Question'),
+      '   Type: ' + (q.question_type || 'not specified') + (q.is_required ? ' · Required' : ''),
+      ...(Array.isArray(q.options) && q.options.length ? ['   Options: ' + q.options.join(', ')] : []),
+    ]),
+    '',
+    '## Estimated token budget',
+    '- Participant rewards: ' + result.budget.participantRewards + ' tokens (' + result.budget.sampleSize + ' × ' + result.budget.rewardPerResponse + ')',
+    '- Platform fee: ' + result.budget.platformFee + ' tokens',
+    '- **Total planned reservation: ' + result.budget.totalTokensRequired + ' tokens**',
+    '- AI/search provider charges are separate and are not included in this token total.',
+    '',
+    '## Web sources',
+    ...(sources.length ? sources.map((source) => '- ' + (source.title || source.url) + ' — ' + source.url) : ['- No grounded source links were returned; verify web evidence manually.']),
+    '',
+    '## Before publishing',
+    '- Review every source and claim.',
+    '- Edit the generated questions and approve the target audience.',
+    '- Confirm the budget; this planning action does not publish or deduct tokens.',
+    '',
+    '## Warnings',
+    ...((result.warnings || []).map((warning) => '- ' + warning)),
+  ].join('\n');
+}
+
+aiButton?.addEventListener('click', async () => {
+  aiButton.disabled = true;
+  const originalLabel = aiButton.textContent;
+  aiButton.textContent = 'Researching the web…';
+  try {
+    const session = await supabase.auth.getSession();
+    if (!session.data.session) throw new Error('Sign in with your Anvesh business account first.');
+    const auth = await requireRoleSupabase('BUSINESS');
+    if (!auth) throw new Error('A business account is required to run research.');
+    const result = await invoke('anvesh-research-agent', {
+      action: 'plan',
+      title: readField('title'),
+      problem: readField('problem'),
+      city: readField('city'),
+      audience: readField('audience'),
+      method: readField('method'),
+      sample_size: Number(readField('sample') || 100),
+      reward_per_response_tokens: 5,
+    });
+    aiPreview.textContent = renderResearchResult(result);
+    aiStatus.textContent = 'AI web research, planning, survey questions, and token estimate generated. Review the sources before relying on the findings.';
+  } catch (error) {
+    aiStatus.textContent = 'AI research could not run: ' + (error?.message || 'unknown error');
+  } finally {
+    aiButton.disabled = false;
+    aiButton.textContent = originalLabel;
+  }
+});
 </script>
 
 </body>
