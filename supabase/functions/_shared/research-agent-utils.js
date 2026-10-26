@@ -68,3 +68,7 @@ export function normalizeGroundingSources(metadata) {
     return [{ title: typeof web.title === 'string' && web.title.trim() ? web.title.trim().slice(0, 240) : url, url }];
   }).slice(0, 12);
 }
+
+export function getMissingGeminiSecrets(env) {
+  return GEMINI_SECRET_NAMES.filter((name) => !(typeof env?.[name] === 'string' && env[name].trim()));
+}
