@@ -32,7 +32,7 @@ async function authenticateBusiness(req) {
 import { handleOptions, json } from '../_shared/cors.ts';
 import { calculateResearchBudget, getApiKeyCandidates, normalizeGroundingSources, parseJsonObject } from '../_shared/research-agent-utils.js';
 
-const MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-2.5-flash';
+const MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-3.8-flash';
 const MAX_PROBLEM_LENGTH = 1200;
 const METHODS = ['web research', 'short survey', 'customer interviews', 'survey + interviews', 'existing-data analysis'];
 
@@ -86,7 +86,8 @@ async function callGemini({ env, workload, prompt, useGoogleSearch = false }) {
     }
 
     lastStatus = response.status;
-    if (![401, 403, 408, 429, 500, 502, 503, 504].includes(response.status)) {
+    if (response.status === 429) throw new HttpError(429, 'Gemini rate limits were reached. Wait for the quota window to reset; adding more keys does not necessarily increase project quota.');
+    if (![401, 403, 408, 500, 502, 503, 504].includes(response.status)) {
       if (response.status === 400) {
         throw new HttpError(502, 'Gemini rejected the request. Check the configured GEMINI_MODEL and retry.');
       }
@@ -107,6 +108,7 @@ serve(async (req) => {
     await authenticateBusiness(req);
 
     const body = await req.json();
+    if (body.action && body.action !== 'plan') throw new HttpError(400, 'Only the plan action is currently supported.');
     const title = typeof body.title === 'string' ? body.title.trim().slice(0, 120) : '';
     const problem = typeof body.problem === 'string' ? body.problem.trim() : '';
     const city = typeof body.city === 'string' ? body.city.trim().slice(0, 100) : '';
