@@ -70,7 +70,8 @@ async function reserveResearchUsage(auth, inputChars) {
   const countResponse = await fetch(countUrl, { headers: { ...headers, Prefer: 'count=exact', Range: '0-0' } });
   if (!countResponse.ok) throw new HttpError(503, 'Unable to verify monthly AI usage.');
   const countMatch = (countResponse.headers.get('content-range') || '').match(/\/(\d+)$/);
-  const used = countMatch ? Number(countMatch[1]) : 0;
+  if (!countMatch) throw new HttpError(503, 'Unable to read monthly AI usage count.');
+  const used = Number(countMatch[1]);
   // One complete research plan calls each of the six agents once.
   if (used + 6 > Number(limit.monthly_request_limit || 300)) {
     throw new HttpError(429, 'This research run would exceed the business monthly AI request limit.');
@@ -174,11 +175,10 @@ async function callGemini({ env, workload, prompt, useGoogleSearch = false }) {
   throw new HttpError(503, 'All configured Gemini keys failed for this request. Check the saved secrets and model configuration.');
 }
 
-let activeReservation = null;
-
 serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
+  let activeReservation = null;
 
   try {
     if (req.method !== 'POST') throw new HttpError(405, 'Use POST to run Anvesh research.');
