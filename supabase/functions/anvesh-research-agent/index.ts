@@ -1,5 +1,34 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
-import { adminClient, requireRole, HttpError } from '../_shared/supabase.ts';
+class HttpError extends Error { constructor(status, message) { super(message); this.status = status; } }
+
+async function authenticateBusiness(req) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  const authHeader = req.headers.get('Authorization') || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (!supabaseUrl || !serviceKey) throw new HttpError(500, 'Server authentication is not configured.');
+  if (!token) throw new HttpError(401, 'Sign in to run research.');
+  const authResponse = await fetch(supabaseUrl + '/auth/v1/user', { headers: { apikey: serviceKey, Authorization: 'Bearer ' + token } });
+  if (!authResponse.ok) throw new HttpError(401, 'Your session is invalid or expired. Please sign in again.');
+  const user = await authResponse.json();
+  if (!user?.id) throw new HttpError(401, 'Your session is invalid or expired. Please sign in again.');
+  const headers = { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey, Accept: 'application/json' };
+  const profileUrl = new URL(supabaseUrl + '/rest/v1/profiles');
+  profileUrl.search = new URLSearchParams({ id: 'eq.' + user.id, select: 'id,role,status', limit: '1' }).toString();
+  const profileResponse = await fetch(profileUrl, { headers });
+  if (!profileResponse.ok) throw new HttpError(500, 'Unable to verify the business account.');
+  const profiles = await profileResponse.json();
+  const profile = profiles?.[0];
+  if (!profile || profile.status === 'SUSPENDED') throw new HttpError(403, 'This account cannot run research.');
+  if (profile.role !== 'BUSINESS') throw new HttpError(403, 'A business account is required to run research.');
+  const memberUrl = new URL(supabaseUrl + '/rest/v1/business_members');
+  memberUrl.search = new URLSearchParams({ user_id: 'eq.' + user.id, select: 'business_id', limit: '1' }).toString();
+  const memberResponse = await fetch(memberUrl, { headers });
+  if (!memberResponse.ok) throw new HttpError(500, 'Unable to verify business membership.');
+  const memberships = await memberResponse.json();
+  if (!memberships?.length) throw new HttpError(403, 'No business is associated with this account.');
+  return { userId: user.id, businessId: memberships[0].business_id };
+}
 import { handleOptions, json } from '../_shared/cors.ts';
 import { calculateResearchBudget, getApiKeyCandidates, normalizeGroundingSources, parseJsonObject } from '../_shared/research-agent-utils.js';
 
@@ -75,12 +104,7 @@ serve(async (req) => {
 
   try {
     if (req.method !== 'POST') throw new HttpError(405, 'Use POST to run Anvesh research.');
-    const admin = adminClient();
-    const { userId } = await requireRole(req, admin, 'BUSINESS');
-
-    const { data: membership, error: membershipError } = await admin
-      .from('business_members').select('business_id').eq('user_id', userId).limit(1).maybeSingle();
-    if (membershipError || !membership) throw new HttpError(403, 'No business is associated with this account.');
+    await authenticateBusiness(req);
 
     const body = await req.json();
     const title = typeof body.title === 'string' ? body.title.trim().slice(0, 120) : '';
