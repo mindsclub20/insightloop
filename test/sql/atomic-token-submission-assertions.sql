@@ -116,4 +116,23 @@ begin
   end if;
 end $$;
 
+do $
+declare t text;
+begin
+  foreach t in array array['research_sources','research_findings','research_reports'] loop
+    if not exists (
+      select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
+      where n.nspname='public' and c.relname=t and c.relrowsecurity
+    ) then
+      raise exception 'Research workspace table % is missing or RLS is disabled', t;
+    end if;
+  end loop;
+  if not exists (
+    select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
+    where n.nspname='public' and c.relname='research_briefs' and c.relrowsecurity
+  ) then
+    raise exception 'Research briefs table is missing or RLS is disabled';
+  end if;
+end $;
+
 select 'atomic token submission integration checks passed' as result;
