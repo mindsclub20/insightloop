@@ -122,3 +122,24 @@ export function getMissingAIProviders(env = {}) {
     .map((id) => AI_PROVIDER_SECRET_NAMES[id])
     .filter((name) => typeof env[name] !== 'string' || !env[name].trim());
 }
+
+export function normalizeFirecrawlResults(payload) {
+  const results = Array.isArray(payload?.data?.web) ? payload.data.web : [];
+  const seen = new Set();
+  const normalized = results.flatMap((item) => {
+    if (typeof item?.url !== 'string' || !/^https?:\/\//i.test(item.url.trim())) return [];
+    const url = item.url.trim();
+    if (seen.has(url)) return [];
+    seen.add(url);
+    const title = typeof item.title === 'string' && item.title.trim()
+      ? item.title.trim().slice(0, 240)
+      : url;
+    const description = typeof item.description === 'string' ? item.description.trim().slice(0, 1600) : '';
+    const markdown = typeof item.markdown === 'string' ? item.markdown.trim().slice(0, 5000) : '';
+    return [{ title, url, description, content: markdown }];
+  }).slice(0, 8);
+  const sources = normalized.map(({ title, url }) => ({ title, url }));
+  const evidenceText = normalized.length ? JSON.stringify(normalized) : '[]';
+  return { sources, evidenceText };
+}
+
