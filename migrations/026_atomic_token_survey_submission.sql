@@ -53,6 +53,16 @@ begin
     raise exception 'Survey token funding is not active';
   end if;
 
+  -- Validate budget while holding the project lock, before any response is inserted.
+  v_reward := v_project.reward_per_response_tokens;
+  if v_reward is null or v_reward < 5 then
+    raise exception 'Invalid configured token reward';
+  end if;
+  if v_project.token_rewards_paid >= v_project.sample_size
+     or v_project.tokens_reserved < v_reward then
+    raise exception 'Survey reward budget is exhausted';
+  end if;
+
   select count(*) into v_answer_count
   from jsonb_array_elements(p_answers) as submitted(value)
   join public.survey_questions q
@@ -116,13 +126,6 @@ begin
       'success', true, 'responseId', v_response.id,
       'status', p_status, 'paid', false, 'reward_tokens', 0
     );
-  end if;
-
-  v_reward := v_project.reward_per_response_tokens;
-  if v_reward is null or v_reward < 5 then raise exception 'Invalid configured token reward'; end if;
-  if v_project.token_rewards_paid >= v_project.sample_size
-     or v_project.tokens_reserved < v_reward then
-    raise exception 'Survey reward budget is exhausted';
   end if;
 
   select b.owner_user_id into v_business_user_id
