@@ -38,3 +38,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--an-teal)!important;bo
 .anvesh-ai-results li{margin:6px 0;line-height:1.5}
 .anvesh-ai-results a{color:#4338ca;overflow-wrap:anywhere}
 @media(max-width:760px){.anvesh-feature-grid{grid-template-columns:1fr}.topbar nav{gap:8px}.anvesh-hero{border-radius:17px}}
+
+#statsBar{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px}
+@media(max-width:760px){#statsBar{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:420px){#statsBar{grid-template-columns:1fr!important}}
