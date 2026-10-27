@@ -2,7 +2,7 @@
 -- Executed only in the ephemeral GitHub Actions PostgreSQL service.
 create extension if not exists pgcrypto;
 create schema auth;
-create function auth.uid() returns uuid language sql stable as $ select null::uuid $;
+create function auth.uid() returns uuid language sql stable as $auth$ select null::uuid $auth$;
 do $$ begin create role anon nologin; exception when duplicate_object then null; end $$;
 do $$ begin create role authenticated nologin; exception when duplicate_object then null; end $$;
 do $$ begin create role service_role nologin; exception when duplicate_object then null; end $$;
