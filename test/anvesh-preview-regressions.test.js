@@ -36,3 +36,10 @@ test('research preview keeps draft saving local and exposes the local plan actio
   assert.match(html, /No backend changes were made/);
   assert.doesNotMatch(html, /Lo\$\('generateLocalPlan'\)/);
 });
+
+test('admin user list masks participant names and labels USER as Participant', () => {
+  const page = read('public/js/supabase/admin-page.js');
+  assert.match(page, /const isParticipant = u\.role === 'USER'/);
+  assert.match(page, /const accountLabel = isParticipant \? 'Participant' : \(u\.full_name \|\| ''\)/);
+  assert.match(page, /const roleLabel = isParticipant \? 'Participant' : u\.role/);
+});
