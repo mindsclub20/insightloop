@@ -17,7 +17,7 @@
 <div id="alert" class="alert error hidden" role="alert"></div>
 <div class="grid cols-2">
 <section class="card"><h2>Your profile</h2><div id="profile">Loading…</div></section>
-<section class="card"><h2>Your wallet</h2><div id="wallet">Loading…</div><p class="muted">Rewards and withdrawals appear here once you participate in eligible research.</p></section>
+<section class="card"><h2>Legacy cash wallet</h2><div id="wallet">Loading…</div><p class="muted">This separate legacy cash balance is not used for internal-token survey rewards. Check “Your token wallet” below for Anvesh token credits.</p></section>
 </div>
 <section class="card" style="margin-top:20px"><h2>Your interests</h2><div id="interests">Loading…</div><p class="muted">Interests help match you with relevant surveys. You can add or restore interests below.</p><form id="interestForm"><label for="interestInput">Add interests (comma-separated)</label><input id="interestInput" maxlength="1200" placeholder="food, smartphones, books"><button type="submit" style="margin-top:12px">Save interests</button></form></section>
 </div>
@@ -78,8 +78,8 @@ async function load() {
       '<p><strong>Age range:</strong> ' + escapeHtml(profile.age_range || '—') + '</p>' +
       '<p><strong>Account status:</strong> ' + escapeHtml(profile.status || 'ACTIVE') + '</p>';
     document.getElementById('wallet').innerHTML =
-      '<p><strong>Available balance:</strong> ' + money(wallet.balance_paise) + '</p>' +
-      '<p><strong>Pending balance:</strong> ' + money(wallet.pending_paise) + '</p>';
+      '<p><strong>Available cash balance:</strong> ' + money(wallet.balance_paise) + '</p>' +
+      '<p><strong>Pending cash balance:</strong> ' + money(wallet.pending_paise) + '</p>';
     document.getElementById('interests').textContent = tags.length ? tags.join(', ') : 'No interests added yet.';
   } catch (error) {
     showAlert('alert', error.message || 'Could not load your account.');
