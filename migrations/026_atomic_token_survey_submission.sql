@@ -29,10 +29,10 @@ begin
   if p_duration_seconds is null or p_duration_seconds < 0 then
     raise exception 'A valid response duration is required';
   end if;
-  if p_status not in ('VALID', 'FLAGGED') then
+  if p_status is null or p_status not in ('VALID', 'FLAGGED') then
     raise exception 'Invalid response quality status';
   end if;
-  if jsonb_typeof(p_answers) <> 'array' or jsonb_array_length(p_answers) = 0 then
+  if p_answers is null or jsonb_typeof(p_answers) <> 'array' or jsonb_array_length(p_answers) = 0 then
     raise exception 'Answers are required';
   end if;
 
@@ -61,6 +61,12 @@ begin
   if v_answer_count <> jsonb_array_length(p_answers) then
     raise exception 'One or more answers do not belong to this survey';
   end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_answers) as submitted(value)
+    group by submitted.value->>'question_id' having count(*) > 1
+  ) then
+    raise exception 'Only one answer per question is allowed';
+  end if;
 
   if exists (
     select 1
@@ -71,7 +77,7 @@ begin
         select 1 from jsonb_array_elements(p_answers) as submitted(value)
         where submitted.value->>'question_id' = q.id::text
           and (
-            (submitted.value ? 'selected_option_ids' and submitted.value->'selected_option_ids' <> 'null'::jsonb)
+            (jsonb_typeof(submitted.value->'selected_option_ids') = 'array' and jsonb_array_length(submitted.value->'selected_option_ids') > 0)
             or nullif(trim(submitted.value->>'text_answer'), '') is not null
             or nullif(submitted.value->>'rating_value', '') is not null
           )
