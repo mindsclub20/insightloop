@@ -52,7 +52,7 @@ export async function listEligibleStudies() {
   const tags = (tagRows ?? []).map((t) => String(t.tag).trim().toLowerCase());
 
   const { data: active, error } = await supabase.from('research_projects')
-    .select('id, title, objective, target_city, reward_per_response_paise, target_min_age, target_max_age, target_tags')
+    .select('id, title, objective, target_city, reward_per_response_paise, reward_per_response_tokens, target_min_age, target_max_age, target_tags')
     .eq('status', 'ACTIVE');
   if (error) throw error;
 

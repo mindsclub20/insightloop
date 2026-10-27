@@ -51,6 +51,13 @@ function clearError() {
 function money(paise) {
   return '₹' + (Number(paise || 0) / 100).toFixed(2);
 }
+function rewardLabel(study) {
+  const tokens = Number(study?.reward_per_response_tokens || 0);
+  if (Number.isSafeInteger(tokens) && tokens > 0) return tokens.toLocaleString('en-IN') + ' internal tokens';
+  const paise = Number(study?.reward_per_response_paise || 0);
+  if (paise > 0) return money(paise);
+  return 'Not configured';
+}
 function fingerprint() {
   let value = localStorage.getItem('anvesh_device_signature');
   if (!value) {
@@ -94,7 +101,7 @@ async function loadSurveys() {
         <h2>${escapeHtml(study.title)}</h2>
         <p>${escapeHtml(study.objective || 'Share your perspective in this research survey.')}</p>
         <div class="row">
-          <span class="badge green">Reward: ${money(study.reward_per_response_paise)}</span>
+          <span class="badge green">Reward: ${escapeHtml(rewardLabel(study))}</span>
           <span class="muted">Target city: ${escapeHtml(study.target_city || 'Any')}</span>
         </div>
         <button type="button" data-study-id="${escapeHtml(study.id)}" style="margin-top:12px">View survey</button>
@@ -163,7 +170,7 @@ function renderSurvey(result) {
     <form id="surveyForm" class="card">
       <h2>${escapeHtml(study.title)}</h2>
       <p class="muted">${escapeHtml(study.objective || '')}</p>
-      <p><span class="badge green">Reward: ${money(study.reward_per_response_paise)}</span></p>
+      <p><span class="badge green">Reward: ${escapeHtml(rewardLabel(study))}</span></p>
       ${fields}
       <div class="row"><button type="submit" id="submitSurveyButton">Submit responses</button><button type="button" id="cancelSurveyButton" class="secondary">Back to surveys</button></div>
       <p class="muted">Submit only once. Your eligibility and response are checked securely by Anvesh.</p>

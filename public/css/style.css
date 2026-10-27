@@ -150,3 +150,12 @@ th,td{overflow-wrap:anywhere}
   :focus-visible{outline:2px solid Highlight;outline-offset:3px}
 }
 /* END ANVESH CROSS-DEVICE COMPATIBILITY LAYER */
+
+
+/* Shared Anvesh business-workspace navigation */
+.anvesh-workspace-nav{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px 10px;min-width:0}
+.anvesh-workspace-nav a{display:inline-flex;align-items:center;min-height:40px;padding:8px 12px;margin:0!important;border:1px solid #dce5ee;border-radius:10px;background:rgba(255,255,255,.88);color:#26354d;text-decoration:none;font-size:13px;font-weight:700;white-space:normal;transition:background .15s,border-color .15s,color .15s}
+.anvesh-workspace-nav a:hover{background:#edf9f8;border-color:#a8deda;color:#086b76}
+.anvesh-workspace-nav a[aria-current=page]{background:#e6f7f6;border-color:#b7e6e2;color:#075e68}
+.anvesh-workspace-nav a:focus-visible{outline:3px solid #63d3cf;outline-offset:3px}
+@media(max-width:600px){.anvesh-workspace-nav{width:100%;justify-content:flex-start}.anvesh-workspace-nav a{flex:0 1 auto;min-height:44px}}
