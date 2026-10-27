@@ -67,7 +67,7 @@ test('business results buttons use delegated events and avoid textarea type assi
   assert.match(page, /document\.addEventListener\('click', \(event\) =>/);
   assert.match(page, /data-view-results/);
   assert.match(page, /if \(input\.tagName === 'INPUT'\) input\.type = step\.type \|\| 'text'/);
-  assert.doesNotMatch(page, /input\.type = step\.type \|\| 'text';/);
+  assert.doesNotMatch(page, /^\s*input\.type = step\.type \|\| 'text';$/m);
 });
 
 test('token admin masks participant names in balances and transaction labels', () => {
