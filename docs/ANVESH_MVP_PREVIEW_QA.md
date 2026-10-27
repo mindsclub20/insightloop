@@ -24,10 +24,11 @@ Production: **not deployed, not merged, and not modified by this QA pass.**
 
 ## Open blockers — do not mark MVP-ready until closed
 
-- [ ] Confirm GitHub Actions passes on the latest commit after the participant token-reward display changes. Run #227 is green for an earlier commit, not the latest commit.
+- [x] Confirmed GitHub Actions passes on the latest commit, including `npm test` and the isolated PostgreSQL integration job. Run #242: https://github.com/mindsclub20/insightloop/actions/runs/40486429835.
 - [ ] Browser-test role-boundary redirects for every role. Source-level `requireRoleSupabase` guards exist; interactive cross-role testing was blocked when Browser Use credits ran out.
-- [ ] Apply and integration-test the new atomic token submission migration `026_atomic_token_survey_submission.sql` on a free isolated PostgreSQL test database. The function and Edge Function routing are committed on the preview branch but have not been applied to the connected Supabase project.
-- [ ] Verify duplicate submission, rollback-on-error, and retry behavior against the isolated database. The live Edge Function currently has a token reward path, but response/answers and token reward writes are not all inside one database transaction; do not treat the workflow as production-ready until the atomic RPC is deployed and tested.
+- [x] Added `026_atomic_token_survey_submission.sql` and ran it against a free, ephemeral PostgreSQL 17 database in GitHub Actions using a schema fixture.
+- [x] PostgreSQL integration tests passed for successful token award, duplicate-response rejection, rollback after reward-budget failure, and flagged responses not receiving automatic rewards. Run #242: https://github.com/mindsclub20/insightloop/actions/runs/40486429835
+- [ ] Verify the migration against the complete connected Supabase schema and validate the deployed Edge Function end to end. The isolated fixture is deliberately minimal and does not prove full-project compatibility; no production database writes have been made.
 - [ ] Verify unused token refunds when a survey finishes or is cancelled, and reconcile reserved, paid, and refunded token balances.
 - [ ] Implement and test a token-ledger reconciliation check/job. The admin UI currently has no full reconciliation sweep.
 - [ ] Safely verify the business results report payload. The Results handler invokes the connected Supabase `generate-report` Edge Function; it was not invoked during this read-only pass.
@@ -45,7 +46,7 @@ Creating a Supabase development branch was not completed because Supabase requir
 - Website and backend-source changes were pushed to `feature/anvesh-frontend-integration-preview`.
 - Added `migrations/026_atomic_token_survey_submission.sql`, which groups token-funded response insertion, answer insertion, reward wallet/ledger changes, and reserved-budget decrement in one database transaction.
 - Updated `supabase/functions/submit-survey-response/index.ts` on the branch to route token-funded submissions through the atomic RPC; legacy cash-funded submissions keep their existing path.
-- Added static regression checks for the new RPC wiring and transaction contents. These checks are not a substitute for executing the migration against PostgreSQL.
+- Added static regression checks and a PostgreSQL 17 integration job for the atomic RPC. The ephemeral database tests the transaction behavior without using live project data.
 - Vercel deployments used `target: null` (preview), not production.
 - No production deployment, merge, Edge Function deployment/invocation, database migration, survey submission, token grant, account suspension, purchase, or destructive data action was performed.
 - The latest read-only browser checks were completed against the preview host only.
