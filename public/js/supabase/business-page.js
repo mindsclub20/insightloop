@@ -48,6 +48,14 @@ const TEMPLATE_SUGGESTIONS = {
 };
 
 document.querySelectorAll('.tab').forEach((tab) => tab.addEventListener('click', () => switchTab(tab.dataset.tab)));
+
+// Bind the Results action through a delegated listener instead of inline HTML
+// handlers. This keeps the action reliable for dynamically rendered studies.
+document.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-view-results]');
+  if (!button) return;
+  viewResultsReport(button.dataset.viewResults);
+});
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
   document.getElementById('tab-create').classList.toggle('hidden', name !== 'create');
@@ -168,7 +176,7 @@ function showSurveyChatPrompt() {
   prompt.textContent = step.prompt;
   input.value = '';
   input.placeholder = step.placeholder;
-  input.type = step.type || 'text';
+  if (input.tagName === 'INPUT') input.type = step.type || 'text';
   input.rows = step.multiline ? 3 : 1;
   input.multiline = Boolean(step.multiline);
   skip.hidden = !step.optional;
@@ -637,7 +645,7 @@ async function loadResults() {
       <div class="card">
         <div class="row"><h3 style="flex:1;">${escapeHtml(s.title)}</h3>${badge(s.status)}</div>
         <p class="muted">${escapeHtml(s.target_city)} · ${s.sample_size} target respondents</p>
-        <button type="button" onclick="viewResultsReport('${s.id}')">View results</button>
+        <button type="button" data-view-results="${escapeHtml(s.id)}">View results</button>
       </div>
     `).join('') : '<p class="muted">No published surveys with results yet. Once a survey is active or completed, its results will appear here.</p>';
   } catch (err) {
