@@ -10,26 +10,27 @@
 <body>
 <header class="topbar">
   <a class="brand" href="/supabase-business/dashboard.html">Anvesh</a>
-  <nav>
+  <nav class="anvesh-workspace-nav" aria-label="Business workspace">
     <span id="userName" class="muted"></span>
-    <a href="/supabase-business/research-planner.html">Research planner</a>
+    <a href="/supabase-business/dashboard.html" aria-current="page">Research workspace</a>
+    <a href="/supabase-business/research-planner.html">Research Planner</a>
     <a href="#" onclick="logoutSupabase()">Log out</a>
   </nav>
 </header>
 
 <div class="container">
   <section class="dashboard-intro" aria-labelledby="dashboardTitle">
-    <p class="eyebrow">INSIGHTLOOP · BUSINESS WORKSPACE</p>
-    <h1 id="dashboardTitle">Turn questions into clear decisions.</h1>
-    <p>Create thoughtful research, keep your drafts organised, and explore results—all in one calm workspace.</p>
-    <div class="dashboard-pills"><span class="dashboard-pill">✦ AI-assisted research</span><span class="dashboard-pill">↗ Drafts stay in your account</span><span class="dashboard-pill">◎ Results when ready</span></div>
+    <p class="eyebrow">ANVESH · BUSINESS RESEARCH WORKSPACE</p>
+    <h1 id="dashboardTitle">Move from a business question to a research decision.</h1>
+    <p>Plan a study, organise research drafts, and review findings from one workspace. Start with the decision you need evidence to make.</p>
+    <div class="dashboard-pills"><span class="dashboard-pill">✦ AI-assisted research</span><span class="dashboard-pill">↗ Research briefs and drafts</span><span class="dashboard-pill">◎ Findings when ready</span></div>
   </section>
   <div id="verificationBanner"></div>
 
   <div class="tabs">
-    <button class="tab active" type="button" data-tab="create">1. Survey Generation</button>
-    <button class="tab" type="button" data-tab="studies">2. Saved Drafts</button>
-    <button class="tab" type="button" data-tab="results">3. Survey Results</button>
+    <button class="tab active" type="button" data-tab="create">1. Research Workspace</button>
+    <button class="tab" type="button" data-tab="studies">2. Saved Studies</button>
+    <button class="tab" type="button" data-tab="results">3. Research Results</button>
   </div>
 
   <div id="alert" class="alert error hidden"></div>
@@ -37,9 +38,9 @@
   <section id="tab-create">
     <div class="dashboard-workspace">
     <div class="card" id="aiSurveyCard" style="max-width:760px;border-color:#d8c9ff;background:linear-gradient(145deg,#fff 0%,#f8f4ff 100%);">
-      <p class="eyebrow">INSIGHTLOOP BUSINESS AI</p>
-      <h2>Describe your research. AI builds the survey.</h2>
-      <p class="muted">Give AI a plain-language command. Review the generated survey, save it as a draft, or publish it when ready.</p>
+      <p class="eyebrow">ANVESH RESEARCH ASSISTANT</p>
+      <h2>Start with the decision you need to make.</h2>
+      <p class="muted">Describe the problem in plain language. Review the proposed research questions, then edit and save the study draft before deciding what to publish.</p>
       <div class="survey-chat" aria-label="AI survey builder conversation">
         <div id="surveyChatMessages" class="survey-chat-messages" role="log" aria-live="polite">
           <div class="survey-chat-bubble assistant">I’ll help build your survey. First, what do you want to learn?</div>
@@ -101,15 +102,15 @@
   </section>
 
   <section id="tab-studies" class="hidden">
-    <h2>Saved Drafts</h2>
-    <p class="muted">Review drafts and track surveys awaiting platform checks.</p>
+    <h2>Saved Research</h2>
+    <p class="muted">Review your saved study drafts and their current workflow status.</p>
     <div id="studyList"></div>
     <div id="studyDetail"></div>
   </section>
 
   <section id="tab-results" class="hidden">
-    <h2>Survey Results</h2>
-    <p class="muted">Open results for surveys that have been published or completed.</p>
+    <h2>Research Results</h2>
+    <p class="muted">Review response summaries for studies that have been published or completed.</p>
     <div id="resultsList"></div>
     <div id="resultsDetail"></div>
   </section>
