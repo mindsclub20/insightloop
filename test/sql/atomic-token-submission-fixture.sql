@@ -1,6 +1,8 @@
 -- Minimal isolated PostgreSQL fixture aligned to the live Supabase column types and constraints.
 -- Executed only in the ephemeral GitHub Actions PostgreSQL service.
 create extension if not exists pgcrypto;
+create schema auth;
+create function auth.uid() returns uuid language sql stable as $ select null::uuid $;
 do $$ begin create role anon nologin; exception when duplicate_object then null; end $$;
 do $$ begin create role authenticated nologin; exception when duplicate_object then null; end $$;
 do $$ begin create role service_role nologin; exception when duplicate_object then null; end $$;
@@ -18,6 +20,11 @@ create table public.profiles (
 create table public.businesses (
   id uuid primary key default gen_random_uuid(),
   owner_user_id uuid not null references public.profiles(id)
+);
+create table public.business_members (
+  business_id uuid not null references public.businesses(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  primary key (business_id, user_id)
 );
 create table public.research_projects (
   id uuid primary key,
