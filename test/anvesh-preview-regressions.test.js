@@ -43,3 +43,21 @@ test('admin user list masks participant names and labels USER as Participant', (
   assert.match(page, /const accountLabel = isParticipant \? 'Participant' : \(u\.full_name \|\| ''\)/);
   assert.match(page, /const roleLabel = isParticipant \? 'Participant' : u\.role/);
 });
+
+test('changed dashboard modules parse as valid JavaScript', () => {
+  for (const path of [
+    'public/js/supabase/admin-page.js',
+    'public/js/supabase/business-page.js',
+    'public/js/supabase/token-admin-page.js'
+  ]) {
+    const dir = mkdtempSync(join(tmpdir(), 'anvesh-module-'));
+    const file = join(dir, 'module.mjs');
+    try {
+      writeFileSync(file, read(path));
+      const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+      assert.equal(result.status, 0, path + ': ' + (result.stderr || result.stdout));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+});
