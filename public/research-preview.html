@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#172554">
+<meta name="description" content="Anvesh research workspace preview — from questions to evidence.">
+<title>Research workspace preview · Anvesh</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+:root{color-scheme:light;--navy:#172554;--navy2:#233b71;--indigo:#4f46e5;--teal:#0f766e;--cyan:#0891b2;--bg:#f5f7fb;--surface:#fff;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--soft:#eef2ff;--green:#166534;--amber:#92400e;--red:#b91c1c;--radius:16px;--shadow:0 10px 30px rgba(15,23,42,.055}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.55 'DM Sans',system-ui,sans-serif}button,input,textarea,select{font:inherit}button,a{touch-action:manipulation}a{color:inherit;text-decoration:none}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #67e8f9;outline-offset:2px}.app{min-height:100vh;display:grid;grid-template-columns:248px minmax(0,1fr)}.sidebar{background:#111d3e;color:#dbeafe;padding:24px 16px;display:flex;flex-direction:column;gap:28px}.brand{display:flex;align-items:center;gap:10px;padding:0 10px;color:white;font:800 21px Manrope,sans-serif;letter-spacing:-.7px}.brand-mark{width:34px;height:34px;border-radius:11px;background:linear-gradient(145deg,#5eead4,#22d3ee);color:#10234b;display:grid;place-items:center;font-weight:900}.workspace-label{padding:0 12px;color:#91a4c9;text-transform:uppercase;letter-spacing:1.4px;font-size:10px;font-weight:800}.nav{display:grid;gap:5px}.nav a,.nav button{display:flex;align-items:center;gap:12px;border:0;background:transparent;color:#c5d2ec;text-align:left;padding:11px 12px;border-radius:10px;font-weight:600}.nav a:hover,.nav button:hover{background:#1e2e56;color:white}.nav a.active{background:#283d6b;color:#fff;box-shadow:inset 3px 0 #5eead4}.nav-icon{width:20px;text-align:center;font-size:17px}.sidebar-bottom{margin-top:auto;border-top:1px solid #2b3b60;padding:18px 8px 0;color:#a7b6d4;font-size:12px}.sidebar-bottom strong{color:#fff;display:block;font-size:13px;margin-bottom:4px}.main{min-width:0}.topbar{height:72px;background:rgba(255,255,255,.92);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,3vw,38px);gap:16px;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}.crumb{color:var(--muted);font-size:13px}.crumb strong{color:var(--text)}.top-actions{display:flex;align-items:center;gap:10px}.user-pill{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:99px;padding:6px 12px 6px 7px;background:white;max-width:260px}.avatar{width:30px;height:30px;border-radius:50%;background:#dbeafe;color:#1e3a8a;display:grid;place-items:center;font-weight:800}.user-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}.mobile-menu{display:none}.content{max-width:1440px;margin:auto;padding:30px clamp(18px,3vw,38px) 56px}.preview-banner{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;padding:11px 14px;background:#ecfeff;border:1px solid #a5f3fc;border-radius:12px;color:#155e75;font-size:12px;margin-bottom:24px}.preview-banner strong{font-size:12px;letter-spacing:.08em;text-transform:uppercase}.preview-banner span{color:#164e63}.hero-row{display:flex;justify-content:space-between;align-items:flex-start;gap:22px;margin-bottom:25px}.eyebrow{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;font-weight:800;color:var(--teal);margin:0 0 9px}.page-title{font:800 clamp(27px,3vw,36px)/1.15 Manrope,sans-serif;letter-spacing:-1.3px;margin:0 0 10px}.subhead{margin:0;color:var(--muted);font-size:15px;max-width:680px}.btn{border:1px solid transparent;border-radius:10px;padding:11px 15px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;min-height:42px;transition:transform .15s,background .15s}.btn:hover{transform:translateY(-1px)}.btn-primary{background:var(--indigo);color:white;box-shadow:0 5px 12px #4f46e522}.btn-primary:hover{background:#4338ca}.btn-secondary{background:white;border-color:#cbd5e1;color:#334155}.btn-soft{background:#ecfeff;color:#155e75;border-color:#a5f3fc}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:25px 0}.metric,.panel,.project-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.metric{padding:18px}.metric-head{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px;font-weight:600}.metric-icon{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#eef2ff;color:#4338ca;font-size:16px}.metric-value{font:800 28px Manrope,sans-serif;letter-spacing:-.8px;margin:12px 0 2px}.metric-note{font-size:11px;color:var(--muted)}.workspace-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(290px,.85fr);gap:18px;align-items:start}.panel{padding:21px;margin-bottom:18px;min-width:0}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}.panel h2{font:800 17px Manrope,sans-serif;letter-spacing:-.4px;margin:0}.panel-sub{color:var(--muted);font-size:12px;margin:5px 0 0}.text-link{color:var(--indigo);font-size:12px;font-weight:800}.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.chip{border:1px solid var(--line);border-radius:999px;padding:7px 11px;background:white;color:#475569;font-size:12px;font-weight:700}.chip.active{background:#eef2ff;color:#3730a3;border-color:#c7d2fe}.project-list{display:grid;gap:12px}.project-card{padding:16px;box-shadow:none;transition:border-color .15s,transform .15s;cursor:pointer}.project-card:hover{border-color:#a5b4fc;transform:translateY(-1px)}.project-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.project-title{font-weight:800;font-size:14px;margin:0 0 5px}.project-meta{color:var(--muted);font-size:11px}.status{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:99px;font-size:10px;font-weight:800;white-space:nowrap}.status:before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}.status.planning{background:#eef2ff;color:#4338ca}.status.evidence{background:#ecfeff;color:#0e7490}.status.review{background:#fff7ed;color:#9a3412}.status.ready{background:#f0fdf4;color:#166534}.progress-label{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin:14px 0 6px}.progress{height:6px;border-radius:99px;background:#eef2f7;overflow:hidden}.progress span{display:block;height:100%;background:linear-gradient(90deg,#4f46e5,#14b8a6);border-radius:99px}.project-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;color:var(--muted);font-size:11px}.stage-dots{display:flex;gap:5px}.stage-dots span{width:18px;height:4px;border-radius:9px;background:#e2e8f0}.stage-dots span.done{background:#0f766e}.stage-dots span.current{background:#4f46e5}.empty{padding:28px 18px;text-align:center;color:var(--muted);border:1px dashed #cbd5e1;border-radius:12px}.empty strong{display:block;color:var(--text);margin-bottom:5px}.pipeline{display:grid;gap:0}.pipeline-step{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:11px;align-items:start;position:relative;padding-bottom:18px}.pipeline-step:not(:last-child):before{content:'';position:absolute;left:16px;top:32px;bottom:0;width:1px;background:#dbe4f0}.step-icon{width:33px;height:33px;border-radius:11px;background:#f1f5f9;color:#64748b;display:grid;place-items:center;font-size:14px;z-index:1}.step-icon.done{background:#ccfbf1;color:#115e59}.step-icon.current{background:#e0e7ff;color:#3730a3}.step-name{font-weight:800;font-size:12px;margin:2px 0 3px}.step-desc{font-size:11px;color:var(--muted);line-height:1.5}.step-state{font-size:10px;color:var(--muted);padding-top:6px;white-space:nowrap}.step-state.current{color:#4338ca;font-weight:800}.source-list{display:grid;gap:10px}.source-item{display:flex;gap:10px;align-items:flex-start;padding:11px;border:1px solid var(--line);border-radius:11px}.source-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#f1f5f9;color:#334155;flex-shrink:0}.source-title{font-weight:800;font-size:12px;margin:0 0 3px}.source-meta{font-size:10px;color:var(--muted)}.source-tag{margin-left:auto;font-size:9px;font-weight:800;border-radius:6px;background:#f0fdf4;color:#166534;padding:4px 6px;white-space:nowrap}.report-preview{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:16px}.report-preview h3{font:800 14px Manrope,sans-serif;margin:0 0 9px}.report-preview p{color:#475569;font-size:12px;margin:0 0 10px}.report-line{height:6px;border-radius:5px;background:#e2e8f0;margin:8px 0}.report-line.short{width:64%}.report-line.mid{width:82%}.report-footer{font-size:10px;color:var(--muted);margin-top:12px}.toast{position:fixed;bottom:20px;right:20px;z-index:20;background:#0f172a;color:white;padding:12px 16px;border-radius:12px;box-shadow:0 12px 35px #0f172a33;max-width:min(400px,calc(100vw - 40px));display:none}.toast.show{display:block;animation:pop .2s ease-out}@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.modal-backdrop{position:fixed;inset:0;z-index:30;background:#0f172a88;display:none;align-items:center;justify-content:center;padding:18px}.modal-backdrop.open{display:flex}.modal{background:white;border-radius:20px;width:min(720px,100%);max-height:90vh;overflow:auto;box-shadow:0 24px 70px #02061744}.modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;padding:22px 24px;border-bottom:1px solid var(--line)}.modal-head h2{font:800 20px Manrope,sans-serif;margin:0}.modal-head p{margin:6px 0 0;color:var(--muted);font-size:12px}.icon-button{width:36px;height:36px;border:1px solid var(--line);background:white;border-radius:10px;font-size:20px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:22px 24px}.field{min-width:0}.field.full{grid-column:1/-1}.field label{display:block;font-size:12px;font-weight:800;margin-bottom:6px}.field input,.field textarea,.field select{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px 12px;background:white;color:var(--text)}.field textarea{min-height:86px;resize:vertical}.field small{display:block;color:var(--muted);font-size:10px;margin-top:5px}.modal-actions{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:16px 24px 22px;border-top:1px solid var(--line)}.modal-actions .right{display:flex;gap:8px}.detail-drawer{position:fixed;inset:0 0 0 auto;width:min(440px,100%);background:white;z-index:25;box-shadow:-15px 0 40px #0f172a18;transform:translateX(105%);transition:transform .22s ease;padding:24px;overflow:auto}.detail-drawer.open{transform:translateX(0)}.drawer-backdrop{position:fixed;inset:0;background:#0f172a66;z-index:24;display:none}.drawer-backdrop.open{display:block}.drawer-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.drawer-head h2{font:800 22px Manrope,sans-serif;margin:0 0 8px}.drawer-section{border-top:1px solid var(--line);padding:18px 0}.drawer-section h3{font:800 13px Manrope,sans-serif;margin:0 0 10px}.drawer-section p{font-size:12px;color:#475569}.mobile-nav{display:none}
+@media(max-width:1100px){.app{grid-template-columns:218px minmax(0,1fr)}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.workspace-grid{grid-template-columns:minmax(0,1fr)}.side-column{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.side-column .panel{margin-bottom:0}}
+@media(max-width:760px){.app{display:block}.sidebar{display:none}.topbar{height:62px;padding:0 16px}.mobile-menu{display:inline-flex;border:1px solid var(--line);background:white;border-radius:9px;width:36px;height:36px;align-items:center;justify-content:center}.crumb{display:none}.top-actions{margin-left:auto}.user-label{max-width:105px}.content{padding:22px 15px 44px}.hero-row{display:block}.hero-row .btn{margin-top:18px}.metrics{gap:9px;margin:20px 0}.metric{padding:13px}.metric-value{font-size:24px}.metric-note{font-size:10px}.panel{padding:16px}.side-column{display:block}.side-column .panel{margin-bottom:16px}.project-top{display:block}.project-top .status{margin-top:9px}.project-bottom{align-items:flex-start;flex-direction:column}.form-grid{grid-template-columns:1fr;padding:18px}.field.full{grid-column:auto}.modal-head,.modal-actions{padding-left:18px;padding-right:18px}.preview-banner{align-items:flex-start;flex-direction:column}.mobile-nav{position:fixed;inset:0;z-index:40;background:#111d3e;color:white;padding:22px;display:none;flex-direction:column;gap:22px}.mobile-nav.open{display:flex}.mobile-nav .nav{max-width:340px}.mobile-nav .brand{padding:0}.mobile-nav .close-row{display:flex;justify-content:space-between;align-items:center}.mobile-nav .close-row button{background:#24365f;color:white;border:1px solid #40547d;border-radius:9px;padding:8px 12px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <a class="brand" href="/"><span class="brand-mark">A</span><span>Anvesh</span></a>
+  <div><div class="workspace-label">Workspace</div><nav class="nav" aria-label="Main navigation">
+    <a class="active" href="#overview"><span class="nav-icon">▦</span>Overview</a>
+    <a href="#projects"><span class="nav-icon">◫</span>Research projects</a>
+    <button type="button" id="newResearchNav"><span class="nav-icon">＋</span>New research</button>
+    <a href="/supabase-business/research-planner.html"><span class="nav-icon">☷</span>Research planner</a>
+    <a href="#sources"><span class="nav-icon">⌕</span>Sources &amp; evidence</a>
+    <a href="#reports"><span class="nav-icon">▤</span>Reports</a>
+    <a href="/supabase-business/dashboard.html"><span class="nav-icon">◉</span>Business workspace</a>
+  </nav></div>
+  <div><div class="workspace-label">Account</div><nav class="nav"><a href="/supabase-login.html"><span class="nav-icon">↗</span>Sign in / account</a><a href="/"><span class="nav-icon">⌂</span>Public website</a></nav></div>
+  <div class="sidebar-bottom"><strong>From questions to evidence.</strong>Research planning, sources and reporting in one workspace.<br><br>Preview branch · No production changes</div>
+</aside>
+<main class="main" id="overview">
+<header class="topbar">
+  <button class="mobile-menu" id="openMobileNav" aria-label="Open navigation">☰</button>
+  <div class="crumb">Workspace <span aria-hidden="true">/</span> <strong>Research overview</strong></div>
+  <div class="top-actions"><a class="btn btn-secondary" href="/supabase-business/research-planner.html">Open planner ↗</a><div class="user-pill"><span class="avatar" id="avatar">A</span><span class="user-label" id="userStatus">Checking Supabase session…</span></div></div>
+</header>
+<div class="content">
+  <div class="preview-banner"><div><strong>Interactive preview · Sample data</strong><br><span>Project cards and reports below are illustrative. New drafts stay in this browser; no backend records, token balances or payments are changed.</span></div><span id="connectionStatus">Checking account connection…</span></div>
+  <section class="hero-row">
+    <div><p class="eyebrow">Research workspace</p><h1 class="page-title">From a business question<br>to evidence you can use.</h1><p class="subhead">Organise a research brief, plan your method, track evidence, and review findings in one focused workspace.</p></div>
+    <button class="btn btn-primary" id="newResearchHero">＋ Start new research</button>
+  </section>
+  <section class="metrics" aria-label="Sample workspace metrics">
+    <article class="metric"><div class="metric-head"><span>Research projects</span><span class="metric-icon">◫</span></div><div class="metric-value" id="metricProjects">04</div><div class="metric-note">Sample data · not your account</div></article>
+    <article class="metric"><div class="metric-head"><span>In planning</span><span class="metric-icon">☷</span></div><div class="metric-value" id="metricPlanning">02</div><div class="metric-note">Illustrative project states</div></article>
+    <article class="metric"><div class="metric-head"><span>Evidence items</span><span class="metric-icon">⌕</span></div><div class="metric-value">18</div><div class="metric-note">Sample sources and notes</div></article>
+    <article class="metric"><div class="metric-head"><span>Reports ready</span><span class="metric-icon">▤</span></div><div class="metric-value" id="metricReports">01</div><div class="metric-note">Sample report preview</div></article>
+  </section>
+  <div class="workspace-grid">
+    <section class="panel" id="projects">
+      <div class="panel-head"><div><h2>Research projects</h2><p class="panel-sub">Continue a project or start a new research brief.</p></div><a class="text-link" href="#projects" id="viewAll">View all →</a></div>
+      <div class="filter-row" role="group" aria-label="Filter research projects"><button class="chip active" data-filter="all">All projects</button><button class="chip" data-filter="planning">Planning</button><button class="chip" data-filter="evidence">Collecting evidence</button><button class="chip" data-filter="ready">Report ready</button></div>
+      <div class="project-list" id="projectList"></div>
+    </section>
+    <div class="side-column">
+      <section class="panel" id="pipeline">
+        <div class="panel-head"><div><h2>Research pipeline</h2><p class="panel-sub">A clear view of the work stages.</p></div></div>
+        <div class="pipeline">
+          <div class="pipeline-step"><span class="step-icon done">✓</span><div><div class="step-name">Define the problem</div><div class="step-desc">Objective, context and decision.</div></div><span class="step-state">Brief</span></div>
+          <div class="pipeline-step"><span class="step-icon current">2</span><div><div class="step-name">Plan the research</div><div class="step-desc">Questions, method and source strategy.</div></div><span class="step-state current">Plan</span></div>
+          <div class="pipeline-step"><span class="step-icon">3</span><div><div class="step-name">Discover evidence</div><div class="step-desc">Collect and organise relevant sources.</div></div><span class="step-state">Next</span></div>
+          <div class="pipeline-step"><span class="step-icon">4</span><div><div class="step-name">Analyse findings</div><div class="step-desc">Compare evidence and gaps.</div></div><span class="step-state">Later</span></div>
+          <div class="pipeline-step"><span class="step-icon">5</span><div><div class="step-name">Review the report</div><div class="step-desc">Citations, limitations and decisions.</div></div><span class="step-state">Later</span></div>
+        </div>
+        <a class="btn btn-secondary" style="width:100%" href="/supabase-business/research-planner.html">Open research planner</a>
+      </section>
+      <section class="panel" id="sources">
+        <div class="panel-head"><div><h2>Evidence library</h2><p class="panel-sub">Example source cards · sample data.</p></div><a class="text-link" href="#sources" id="showSources">Browse</a></div>
+        <div class="source-list">
+          <article class="source-item"><span class="source-icon">↗</span><div><p class="source-title">Market overview and category trends</p><div class="source-meta">Example source · market context</div></div><span class="source-tag">Sample</span></article>
+          <article class="source-item"><span class="source-icon">▤</span><div><p class="source-title">Audience needs and decision factors</p><div class="source-meta">Example research note</div></div><span class="source-tag">Sample</span></article>
+          <article class="source-item"><span class="source-icon">◎</span><div><p class="source-title">Evidence gaps to investigate</p><div class="source-meta">Example analyst note</div></div><span class="source-tag">Sample</span></article>
+        </div>
+        <p class="panel-sub" style="margin-top:12px">No external sources were fetched for this preview.</p>
+      </section>
+      <section class="panel" id="reports">
+        <div class="panel-head"><div><h2>Report preview</h2><p class="panel-sub">Example layout · not a real finding.</p></div><span class="status ready">Sample</span></div>
+        <div class="report-preview"><h3>Market research summary</h3><p>Executive summary and findings will appear here when a report is available from the connected research workflow.</p><div class="report-line"></div><div class="report-line mid"></div><div class="report-line short"></div><div class="report-footer">Illustrative content · no verified findings</div></div>
+        <button class="btn btn-secondary" id="reportDetails" style="width:100%;margin-top:12px">View report layout</button>
+      </section>
+    </div>
+  </div>
+</div>
+</main>
+</div>
+<div class="mobile-nav" id="mobileNav" aria-label="Mobile navigation"><div class="close-row"><a class="brand" href="/"><span class="brand-mark">A</span><span>Anvesh</span></a><button id="closeMobileNav">Close ×</button></div><nav class="nav"><a class="active" href="#overview">▦ Overview</a><a href="#projects">◫ Research projects</a><button id="newResearchMobile">＋ New research</button><a href="/supabase-business/research-planner.html">☷ Research planner</a><a href="#sources">⌕ Sources &amp; evidence</a><a href="#reports">▤ Reports</a><a href="/supabase-login.html">↗ Sign in / account</a></nav></div>
+<div class="modal-backdrop" id="researchModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <div class="modal-head"><div><h2 id="modalTitle">Start new research</h2><p>Describe the decision first. This preview creates a local draft only.</p></div><button class="icon-button" id="closeModal" aria-label="Close dialog">×</button></div>
+    <form id="researchForm">
+      <div class="form-grid">
+        <div class="field full"><label for="researchTitle">Research title *</label><input id="researchTitle" name="title" maxlength="120" required placeholder="e.g. Understand customer choices for a new service"></div>
+        <div class="field full"><label for="researchObjective">Problem or decision *</label><textarea id="researchObjective" name="objective" maxlength="1200" required placeholder="What do you need to understand or decide?"></textarea><small>Focus on one clear decision; avoid adding personal data.</small></div>
+        <div class="field"><label for="researchAudience">Audience</label><input id="researchAudience" name="audience" maxlength="180" placeholder="e.g. potential customers"></div>
+        <div class="field"><label for="researchLocation">Geography</label><input id="researchLocation" name="location" maxlength="120" placeholder="e.g. India or a specific city"></div>
+        <div class="field"><label for="researchMethod">Preferred method</label><select id="researchMethod" name="method"><option value="mixed">Open to suggestions</option><option value="web">Web and existing sources</option><option value="survey">Survey / questionnaire</option><option value="interview">Interviews</option><option value="mixed-primary">Web research + primary research</option></select></div>
+        <div class="field"><label for="researchDeliverable">Desired deliverable</label><select id="researchDeliverable" name="deliverable"><option value="report">Evidence-based report</option><option value="opportunities">Opportunity analysis</option><option value="competitors">Competitor landscape</option><option value="survey-plan">Research and survey plan</option></select></div>
+      </div>
+      <div class="modal-actions"><button type="button" class="btn btn-secondary" id="cancelModal">Cancel</button><div class="right"><button type="button" class="btn btn-soft" id="generateLocalPlan">Suggest a plan</button><button type="submit" class="btn btn-primary">Save local draft</button></div></div>
+    </form>
+  </div>
+</div>
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<aside class="detail-drawer" id="detailDrawer" aria-label="Research project details" aria-live="polite"><div class="drawer-head"><div><p class="eyebrow">Project details</p><h2 id="drawerTitle">Select a project</h2><p class="panel-sub" id="drawerMeta">Sample data</p></div><button class="icon-button" id="closeDrawer" aria-label="Close details">×</button></div><div class="drawer-section"><h3>Research objective</h3><p id="drawerObjective">Choose a sample project to see its illustrative details.</p></div><div class="drawer-section"><h3>Recommended next step</h3><p id="drawerNext">Review the research plan and identify evidence gaps.</p></div><div class="drawer-section"><h3>Research pipeline</h3><div class="progress"><span id="drawerProgress" style="width:35%"></span></div><p id="drawerProgressText">Planning · sample status</p></div><div class="drawer-section"><h3>Actions</h3><a class="btn btn-primary" href="/supabase-business/research-planner.html" style="width:100%">Open research planner</a><p class="panel-sub">This link opens the existing planner. This preview does not start an AI job or write to the backend.</p></div></aside>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="module">
+const sampleProjects = [
+ {id:'p1',title:'Customer needs for a new service',meta:'Sample project · Created for preview',status:'planning',statusLabel:'In planning',progress:28,objective:'Understand which customer problem should be prioritised before building a new service.',next:'Narrow the research questions and choose the first evidence sources.',stages:1,updated:'Illustrative update'},
+ {id:'p2',title:'Local market opportunity scan',meta:'Sample project · Created for preview',status:'evidence',statusLabel:'Collecting evidence',progress:56,objective:'Map the main customer segments, existing options, and unresolved needs in a local market.',next:'Compare source quality and document evidence gaps.',stages:2,updated:'Illustrative update'},
+ {id:'p3',title:'Competitor positioning review',meta:'Sample project · Created for preview',status:'review',statusLabel:'In review',progress:82,objective:'Compare competitor positioning and identify claims that need supporting evidence.',next:'Review source citations, limitations, and contradictory evidence.',stages:3,updated:'Illustrative update'},
+ {id:'p4',title:'Product concept feedback',meta:'Sample project · Created for preview',status:'ready',statusLabel:'Report ready',progress:100,objective:'Explore user reactions to a hypothetical product concept.',next:'Review the sample report structure. No real findings are included.',stages:4,updated:'Illustrative update'}
+];
+let projects = [...sampleProjects];
+let activeFilter = 'all';
+const $ = id => document.getElementById(id);
+const toast = message => { $('toast').textContent=message; $('toast').classList.add('show'); window.clearTimeout(toast.timer); toast.timer=window.setTimeout(()=> $('toast').classList.remove('show'),3200); };
+const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+function renderProjects(){
+ const filtered=projects.filter(p=>activeFilter==='all'||p.status===activeFilter);
+ $('projectList').innerHTML=filtered.length?filtered.map(p=>'<article class="project-card" tabindex="0" role="button" data-project="'+escapeHtml(p.id)+'" aria-label="Open project '+escapeHtml(p.title)+'"><div class="project-top"><div><p class="project-title">'+escapeHtml(p.title)+'</p><div class="project-meta">'+escapeHtml(p.meta)+'</div></div><span class="status '+escapeHtml(p.status)+'">'+escapeHtml(p.statusLabel)+'</span></div><div class="progress-label"><span>Research progress</span><strong>'+p.progress+'%</strong></div><div class="progress"><span style="width:'+p.progress+'%"></span></div><div class="project-bottom"><span>'+escapeHtml(p.updated)+'</span><span class="stage-dots" aria-label="'+p.stages+' stages represented">'+[0,1,2,3,4].map(i=>'<span class="'+(i<p.stages?'done':i===p.stages?'current':'')+'"></span>').join('')+'</span></div></article>').join(''):'<div class="empty"><strong>No projects in this filter</strong>Try another status or start a new research draft.</div>';
+ $('metricProjects').textContent=String(projects.length).padStart(2,'0');
+ $('metricPlanning').textContent=String(projects.filter(p=>p.status==='planning').length).padStart(2,'0');
+ $('metricReports').textContent=String(projects.filter(p=>p.status==='ready').length).padStart(2,'0');
+}
+function openProject(id){
+ const p=projects.find(x=>x.id===id);if(!p)return;
+ $('drawerTitle').textContent=p.title;$('drawerMeta').textContent=p.meta+' · '+p.statusLabel;
+ $('drawerObjective').textContent=p.objective;$('drawerNext').textContent=p.next;
+ $('drawerProgress').style.width=p.progress+'%';$('drawerProgressText').textContent=p.statusLabel+' · '+p.progress+'% · sample status';
+ $('detailDrawer').classList.add('open');$('drawerBackdrop').classList.add('open');
+}
+function closeProject(){ $('detailDrawer').classList.remove('open');$('drawerBackdrop').classList.remove('open'); }
+function openModal(){ $('researchModal').classList.add('open');setTimeout(()=> $('researchTitle').focus(),50); }
+function closeModal(){ $('researchModal').classList.remove('open'); }
+function draftStore(){try{return JSON.parse(localStorage.getItem('anvesh-research-preview-drafts')||'[]')}catch{return []}}
+function persistDrafts(drafts){try{localStorage.setItem('anvesh-research-preview-drafts',JSON.stringify(drafts));return true}catch{return false}}
+function restoreDrafts(){
+ const drafts=draftStore();
+ drafts.forEach((d,i)=>projects.unshift({id:d.id||'local-'+i,title:d.title,meta:'Local draft · saved in this browser',status:'planning',statusLabel:'Local draft',progress:8,objective:d.objective,next:'Review the brief and use the existing Research Planner for the next step.',stages:0,updated:'Saved locally'}));
+ renderProjects();
+}
+document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{
+ activeFilter=button.dataset.filter;document.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('active',b===button));renderProjects();
+}));
+$('projectList').addEventListener('click',e=>{const card=e.target.closest('[data-project]');if(card)openProject(card.dataset.project)});
+$('projectList').addEventListener('keydown',e=>{const card=e.target.closest('[data-project]');if(card&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openProject(card.dataset.project)}});
+['newResearchNav','newResearchHero','newResearchMobile'].forEach(id=>$(id).addEventListener('click',()=>{ $('mobileNav').classList.remove('open');openModal();}));
+$('closeModal').addEventListener('click',closeModal);$('cancelModal').addEventListener('click',closeModal);
+$('researchModal').addEventListener('click',e=>{if(e.target===$('researchModal'))closeModal()});
+$('closeDrawer').addEventListener('click',closeProject);$('drawerBackdrop').addEventListener('click',closeProject);
+$('researchForm').addEventListener('submit',e=>{
+ e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget).entries());
+ const draft={id:'local-'+Date.now(),title:data.title.trim(),objective:data.objective.trim(),audience:data.audience.trim(),location:data.location.trim(),method:data.method,deliverable:data.deliverable,savedAt:new Date().toISOString()};
+ if(!draft.title||!draft.objective){toast('Add a title and objective before saving.');return}
+ const drafts=draftStore();drafts.unshift(draft);
+ if(!persistDrafts(drafts)){toast('Browser storage is unavailable. Copy your brief before closing this tab.');return}
+ projects.unshift({id:draft.id,title:draft.title,meta:'Local draft · saved in this browser',status:'planning',statusLabel:'Local draft',progress:8,objective:draft.objective,next:'Review the research brief. No AI job has been started.',stages:0,updated:'Saved locally'});
+ renderProjects();closeModal();e.currentTarget.reset();toast('Draft saved in this browser only. No backend records or tokens changed.');
+});
+$('generateLocalPlan').addEventListener('click',()=>{
+ const objective=$('researchObjective').value.trim(),title=$('researchTitle').value.trim();
+ if(!objective){toast('Enter the research problem first.');$('researchObjective').focus();return}
+ const method=$('researchMethod').value;
+ const methodText=method==='web'?'Start with existing web sources, record URLs, then compare evidence.':method==='survey'?'Draft neutral questions, define an eligible audience, and review the survey before publishing.':method==='interview'?'Draft open-ended interview questions and define a consistent note-taking method.':method==='mixed-primary'?'Start with web sources, then use a survey or interviews to investigate remaining gaps.':'Compare desk research with primary research; choose the method after identifying evidence gaps.';
+ toast('Local suggestion only: '+methodText+' No AI provider was called.');
+});
+$('viewAll').addEventListener('click',()=>{activeFilter='all';document.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('active',b.dataset.filter==='all'));renderProjects()});
+$('showSources').addEventListener('click',()=>toast('Source cards are illustrative. Live Firecrawl discovery is not invoked in this UI preview.'));
+$('reportDetails').addEventListener('click',()=>toast('Report viewer layout is a sample. No real research report is connected here.'));
+$('openMobileNav').addEventListener('click',()=> $('mobileNav').classList.add('open'));
+$('closeMobileNav').addEventListener('click',()=> $('mobileNav').classList.remove('open'));
+$('mobileNav').querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',()=> $('mobileNav').classList.remove('open')));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeProject();$('mobileNav').classList.remove('open')}});
+renderProjects();restoreDrafts();
+try{
+ const {supabase}=await import('/js/supabase/client.js');
+ const {data,error}=await supabase.auth.getSession();
+ if(error)throw error;
+ const user=data.session?.user;
+ if(user){$('userStatus').textContent=user.email||'Signed in';$('avatar').textContent=(user.email||'A').slice(0,1).toUpperCase();$('connectionStatus').textContent='Supabase Auth connected · signed in';}
+ else{$('userStatus').textContent='Preview mode · signed out';$('avatar').textContent='A';$('connectionStatus').textContent='Supabase Auth reachable · sign in to test session';}
+}catch(error){$('userStatus').textContent='Preview mode';$('connectionStatus').textContent='Auth status unavailable · UI preview remains usable';}
+</script>
+</body>
+</html>
