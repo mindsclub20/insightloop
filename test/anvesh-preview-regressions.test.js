@@ -69,3 +69,11 @@ test('business results buttons use delegated events and avoid textarea type assi
   assert.match(page, /if \(input\.tagName === 'INPUT'\) input\.type = step\.type \|\| 'text'/);
   assert.doesNotMatch(page, /input\.type = step\.type \|\| 'text';/);
 });
+
+test('token admin masks participant names in balances and transaction labels', () => {
+  const page = read('public/js/supabase/token-admin-page.js');
+  assert.match(page, /if \(account\.role === 'USER'\) return 'Participant'/);
+  assert.match(page, /account\.role !== 'USER' \? \(account\.full_name \|\| ''\)/);
+  assert.match(page, /accountLabel\(byId\.get\(t\.recipient_user_id\)\)/);
+  assert.match(page, /accountLabel\(byId\.get\(t\.sender_user_id\)\)/);
+});
