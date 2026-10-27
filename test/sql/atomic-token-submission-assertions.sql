@@ -116,7 +116,7 @@ begin
   end if;
 end $$;
 
-do $
+do $assert$
 declare t text;
 begin
   foreach t in array array['research_sources','research_findings','research_reports'] loop
@@ -133,6 +133,6 @@ begin
   ) then
     raise exception 'Research briefs table is missing or RLS is disabled';
   end if;
-end $;
+end $assert$;
 
 select 'atomic token submission integration checks passed' as result;
