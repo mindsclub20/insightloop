@@ -82,6 +82,46 @@ serve(async (req) => {
       questionCount: questions.length, answers, deviceFingerprint: device_fingerprint,
     });
 
+    // Token-funded submissions must use one database transaction for response,
+    // answers, wallet credit, ledger entry, and reserved-budget decrement.
+    // This prevents a network failure after a successful reward RPC from leaving
+    // a paid token transaction without its corresponding response.
+    const tokenMode = project.token_funding_status === 'FUNDED' || project.token_funding_status === 'EXHAUSTED';
+    if (tokenMode) {
+      if (project.token_funding_status !== 'FUNDED' ||
+          Number(project.tokens_reserved) < Number(project.reward_per_response_tokens) ||
+          Number(project.token_rewards_paid) >= Number(project.sample_size)) {
+        throw new HttpError(403, 'This survey has no funded rewards remaining and is no longer accepting responses');
+      }
+
+      const { data: result, error: submitErr } = await admin.rpc('submit_token_funded_survey_response', {
+        p_research_project_id: research_project_id,
+        p_user_id: userId,
+        p_duration_seconds: duration_seconds,
+        p_device_fingerprint: device_fingerprint ?? null,
+        p_status: fraud.status,
+        p_quality_score: fraud.qualityScore,
+        p_answers: answers,
+        p_flag_reasons: fraud.reasons,
+      });
+      if (submitErr) {
+        if (submitErr.code === '23505') throw new HttpError(409, 'You have already responded to this study');
+        throw new HttpError(500, `Survey response and reward were rolled back: ${submitErr.message}`);
+      }
+      if (!result?.success || !result?.responseId) {
+        throw new HttpError(500, 'Survey response could not be confirmed');
+      }
+
+      return json({
+        responseId: result.responseId,
+        status: result.status,
+        reward_tokens: result.reward_tokens ?? 0,
+        message: result.status === 'FLAGGED'
+          ? 'Your response was submitted and flagged for quality review. Token reward is pending review.'
+          : `Response submitted. ${result.reward_tokens} tokens have been added to your wallet.`,
+      });
+    }
+
     const { data: response, error: insertErr } = await admin.from('survey_responses').insert({
       research_project_id, user_id: userId, completed_at: new Date().toISOString(),
       duration_seconds, device_fingerprint: device_fingerprint ?? null,
