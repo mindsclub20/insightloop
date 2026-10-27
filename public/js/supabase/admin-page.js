@@ -137,13 +137,18 @@ async function loadUsers() {
   try {
     const list = await admin.listUsers();
     document.getElementById('usersList').innerHTML = `
-      <table><thead><tr><th>Name</th><th>Role</th><th>Status</th><th></th></tr></thead>
-      <tbody>${list.map((u) => `<tr>
-        <td>${escapeHtml(u.full_name || '')}</td><td>${u.role}</td><td>${badge(u.status)}</td>
+      <table><thead><tr><th>Account</th><th>Role</th><th>Status</th><th></th></tr></thead>
+      <tbody>${list.map((u) => {
+        const isParticipant = u.role === 'USER';
+        const accountLabel = isParticipant ? 'Participant' : (u.full_name || '');
+        const roleLabel = isParticipant ? 'Participant' : u.role;
+        return `<tr>
+        <td>${escapeHtml(accountLabel)}</td><td>${escapeHtml(roleLabel)}</td><td>${badge(u.status)}</td>
         <td>${u.role !== 'SUPER_ADMIN' ? (u.status === 'ACTIVE'
           ? `<button class="danger" onclick="suspendUser('${u.id}')">Suspend</button>`
           : `<button class="secondary" onclick="reactivateUser('${u.id}')">Reactivate</button>`) : ''}</td>
-      </tr>`).join('')}</tbody></table>
+      </tr>`;
+      }).join('')}</tbody></table>
       <p class="muted" style="margin-top:8px;">Email not shown here — profiles doesn't store it (it lives in auth.users, a separate schema this admin read doesn't join against). Add it via a small view if you need it in this list.</p>`;
   } catch (err) { showAlert('alert', err.message); }
 }
