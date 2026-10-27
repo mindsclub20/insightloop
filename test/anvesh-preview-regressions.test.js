@@ -61,3 +61,11 @@ test('changed dashboard modules parse as valid JavaScript', () => {
     }
   }
 });
+
+test('business results buttons use delegated events and avoid textarea type assignment', () => {
+  const page = read('public/js/supabase/business-page.js');
+  assert.match(page, /document\.addEventListener\('click', \(event\) =>/);
+  assert.match(page, /data-view-results/);
+  assert.match(page, /if \(input\.tagName === 'INPUT'\) input\.type = step\.type \|\| 'text'/);
+  assert.doesNotMatch(page, /input\.type = step\.type \|\| 'text';/);
+});
