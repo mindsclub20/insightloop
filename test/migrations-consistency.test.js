@@ -67,7 +67,7 @@ test('SQL CONSISTENCY: every table referenced across all migrations was actually
   // Known-fine non-table snake_case identifiers this loose regex will flag as false positives.
   const KNOWN_FALSE_POSITIVES = new Set([
     'row_security', 'each_row', 'update_project_status_transitions', // trigger timing words / composite matches
-    'current_user_role', 'project_status_transitions', 'jsonb_array_elements', // SQL set-returning function / table added in 003
+    'current_user_role', 'project_status_transitions', 'jsonb_array_elements', // known false positive: SQL set-returning function; project_status_transitions is created in 003
   ]);
   const realProblems = problems.filter((p) => !KNOWN_FALSE_POSITIVES.has(p.name) && p.name !== 'project_status_transitions');
 
