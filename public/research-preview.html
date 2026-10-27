@@ -151,32 +151,109 @@ $('projectList').addEventListener('keydown',e=>{const card=e.target.closest('[da
 $('closeModal').addEventListener('click',closeModal);$('cancelModal').addEventListener('click',closeModal);
 $('researchModal').addEventListener('click',e=>{if(e.target===$('researchModal'))closeModal()});
 $('closeDrawer').addEventListener('click',closeProject);$('drawerBackdrop').addEventListener('click',closeProject);
-$('researchForm').addEventListener('submit',e=>{
- e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget).entries());
- const draft={id:'local-'+Date.now(),title:data.title.trim(),objective:data.objective.trim(),audience:data.audience.trim(),location:data.location.trim(),method:data.method,deliverable:data.deliverable,savedAt:new Date().toISOString()};
- if(!draft.title||!draft.objective){toast('Add a title and objective before saving.');return}
- const drafts=draftStore();drafts.unshift(draft);
- if(!persistDrafts(drafts)){toast('Browser storage is unavailable. Copy your brief before closing this tab.');return}
- projects.unshift({id:draft.id,title:draft.title,meta:'Lo$('generateLocalPlan').addEventListener('click',()=>{
- const objective=$('researchObjective').value.trim();
- if(!objective){toast('Enter the research problem first.');$('researchObjective').focus();return}
- const method=$('researchMethod').value;
- const plans={
-  web:['Turn the problem into 3–5 searchable research questions.','Start with official, primary and recent sources; record the URL and date for each source.','Compare claims across independent sources and note contradictions.','List evidence gaps and the questions that still need validation.','Draft a report that separates sourced findings from hypotheses.'],
-  survey:['Define the adult audience and the decision the survey will support.','Draft short, neutral questions with one idea per question.','Check answer options, privacy needs and sample feasibility.','Review and approve the survey before any publication or reward action.','Analyse actual responses only after they have been collected.'],
-  interview:['Define the participant criteria and a consistent interview approach.','Draft open-ended, non-leading questions linked to the decision.','Prepare a consent and privacy note; avoid unnecessary personal data.','Group interview notes into themes while preserving contradictory views.','Summarise themes and limitations without presenting anecdotes as statistics.'],
-  'mixed-primary':['Review existing sources first and list what remains unknown.','Choose a survey or interviews only for the gaps that require primary evidence.','Draft neutral questions and define the eligible adult audience.','Review privacy, sample feasibility and the planned analysis before launch.','Combine source evidence and collected responses while clearly distinguishing them.'],
-  mixed:['Clarify the decision and convert it into a small set of research questions.','Start with existing sources to understand what is already known.','Use a survey or interviews only where meaningful evidence gaps remain.','Compare evidence quality, uncertainty and conflicting claims.','Prepare a report with sources, limitations and practical next steps.']
- };
- const steps=plans[method]||plans.mixed;
- $('planSuggestion').innerHTML='<strong>Local planning suggestion · not AI-generated</strong><ol>'+steps.map(step=>'<li>'+step+'</li>').join('')+'</ol><small>This rule-based suggestion stays in this browser. No Gemini call, Firecrawl search, backend write or token usage was triggered.</small>';
- $('planSuggestion').hidden=false;
- toast('Local plan suggestion created. It has not been sent to AI or saved to the backend.');
+$('researchForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.currentTarget).entries());
+  const draft = {
+    id: 'local-' + Date.now(),
+    title: String(data.title || '').trim(),
+    objective: String(data.objective || '').trim(),
+    audience: String(data.audience || '').trim(),
+    location: String(data.location || '').trim(),
+    method: data.method || 'mixed',
+    deliverable: data.deliverable || 'report',
+    savedAt: new Date().toISOString()
+  };
+  if (!draft.title || !draft.objective) {
+    toast('Add a title and objective before saving.');
+    return;
+  }
+  const drafts = draftStore();
+  drafts.unshift(draft);
+  if (!persistDrafts(drafts)) {
+    toast('Browser storage is unavailable. Copy your brief before closing this tab.');
+    return;
+  }
+  projects.unshift({
+    id: draft.id,
+    title: draft.title,
+    meta: 'Local draft · saved in this browser',
+    status: 'planning',
+    statusLabel: 'Local draft',
+    progress: 8,
+    objective: draft.objective,
+    next: 'Review the brief and use the existing Research Planner for the next step.',
+    stages: 0,
+    updated: 'Saved locally'
+  });
+  renderProjects();
+  closeModal();
+  e.currentTarget.reset();
+  $('planSuggestion').hidden = true;
+  toast('Draft saved in this browser only. No backend changes were made.');
 });
-$('viewAll').addEventListener('click'ent note-taking method.':method==='mixed-primary'?'Start with web sources, then use a survey or interviews to investigate remaining gaps.':'Compare desk research with primary research; choose the method after identifying evidence gaps.';
- toast('Local suggestion only: '+methodText+' No AI provider was called.');
+
+$('generateLocalPlan').addEventListener('click', () => {
+  const objective = $('researchObjective').value.trim();
+  if (!objective) {
+    toast('Enter the research problem first.');
+    $('researchObjective').focus();
+    return;
+  }
+  const method = $('researchMethod').value;
+  const plans = {
+    web: [
+      'Turn the problem into 3–5 searchable research questions.',
+      'Start with official, primary and recent sources; record the URL and date for each source.',
+      'Compare claims across independent sources and note contradictions.',
+      'List evidence gaps and questions that still need validation.',
+      'Draft a report that separates sourced findings from hypotheses.'
+    ],
+    survey: [
+      'Define the adult audience and the decision the survey will support.',
+      'Draft short, neutral questions with one idea per question.',
+      'Check answer options, privacy needs and sample feasibility.',
+      'Review and approve the survey before any publication or reward action.',
+      'Analyse actual responses only after they have been collected.'
+    ],
+    interview: [
+      'Define participant criteria and a consistent interview approach.',
+      'Draft open-ended, non-leading questions linked to the decision.',
+      'Prepare a consent and privacy note; avoid unnecessary personal data.',
+      'Group notes into themes while preserving contradictory views.',
+      'Summarise themes and limitations without presenting anecdotes as statistics.'
+    ],
+    'mixed-primary': [
+      'Review existing sources first and list what remains unknown.',
+      'Choose surveys or interviews only for gaps requiring primary evidence.',
+      'Draft neutral questions and define the eligible adult audience.',
+      'Review privacy, sample feasibility and analysis before launch.',
+      'Combine source evidence and collected responses, distinguishing them clearly.'
+    ],
+    mixed: [
+      'Clarify the decision and convert it into a small set of research questions.',
+      'Start with existing sources to understand what is already known.',
+      'Use a survey or interviews only where meaningful evidence gaps remain.',
+      'Compare evidence quality, uncertainty and conflicting claims.',
+      'Prepare a report with sources, limitations and practical next steps.'
+    ]
+  };
+  const steps = plans[method] || plans.mixed;
+  $('planSuggestion').innerHTML =
+    '<strong>Local planning suggestion · not AI-generated</strong><ol>' +
+    steps.map(step => '<li>' + escapeHtml(step) + '</li>').join('') +
+    '</ol><small>This stays in this browser. No Gemini call, Firecrawl search, backend write or token usage was triggered.</small>';
+  $('planSuggestion').hidden = false;
+  toast('Local plan suggestion created. No AI provider was called.');
 });
-$('viewAll').addEventListener('click',()=>{activeFilter='all';document.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('active',b.dataset.filter==='all'));renderProjects()});
+
+$('viewAll').addEventListener('click', () => {
+  activeFilter = 'all';
+  document.querySelectorAll('[data-filter]').forEach(button =>
+    button.classList.toggle('active', button.dataset.filter === 'all')
+  );
+  renderProjects();
+});
 $('showSources').addEventListener('click',()=>toast('Source cards are illustrative. Live Firecrawl discovery is not invoked in this UI preview.'));
 $('reportDetails').addEventListener('click',()=>toast('Report viewer layout is a sample. No real research report is connected here.'));
 $('openMobileNav').addEventListener('click',()=> $('mobileNav').classList.add('open'));
