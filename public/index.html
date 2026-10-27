@@ -1,60 +1,100 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#f5f0ff">
-<meta name="description" content="Anvesh helps businesses ask better questions and understand real customers.">
-<title>Anvesh — Research, made clearer</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#172554">
+<meta name="description" content="Anvesh — from questions to evidence. A structured workspace for planning research, organising evidence and reviewing findings.">
+<title>Anvesh — From Questions to Evidence</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/style.css">
-
 <style>
-.pitch-embed-shell{position:relative;width:100%;aspect-ratio:16/9;min-height:260px;overflow:hidden;border:1px solid rgba(110,95,180,.18);border-radius:22px;background:#f7f6fc;box-shadow:0 24px 70px rgba(38,27,82,.12)}
-.pitch-embed{position:absolute;inset:0;width:100%;height:100%;border:0}
-.pitch-embed-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:18px}
-.pitch-embed-actions .muted{margin:0}
-@media(max-width:640px){.pitch-embed-shell{aspect-ratio:4/3;min-height:300px;border-radius:16px}.pitch-embed-actions{align-items:flex-start;flex-direction:column;gap:8px}}
+:root{--an-navy:#172554;--an-indigo:#4f46e5;--an-teal:#0f766e;--an-cyan:#0891b2;--an-text:#0f172a;--an-muted:#475569;--an-line:#e2e8f0;--an-bg:#f7f9fc}
+body{background:var(--an-bg);color:var(--an-text);font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.6}
+header.topbar{padding:13px clamp(18px,5vw,72px);background:rgba(255,255,255,.94);border-bottom:1px solid var(--an-line);box-shadow:none}
+header.topbar .brand{font-family:Manrope,'Space Grotesk',sans-serif;color:var(--an-navy);font-weight:800}
+header.topbar .brand:after{color:#14b8a6}
+header.topbar nav{gap:clamp(10px,2vw,24px)}
+header.topbar nav a{color:#475569;font-weight:600}
+header.topbar nav a:hover{color:var(--an-indigo)}
+.landing{max-width:1240px;margin:auto;padding:0 28px}
+.hero-v2{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(340px,.85fr);gap:42px;align-items:center;padding:clamp(54px,8vw,104px) 0 68px}
+.eyebrow-v2{display:inline-flex;align-items:center;gap:8px;color:var(--an-teal);font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase}
+.eyebrow-v2:before{content:'';width:22px;height:2px;background:#14b8a6}
+.hero-v2 h1{font-family:Manrope,'Space Grotesk',sans-serif;font-size:clamp(42px,6vw,70px);line-height:1.04;letter-spacing:-3px;margin:18px 0 20px;max-width:700px;color:var(--an-navy)}
+.hero-v2 h1 span{color:var(--an-indigo)}
+.hero-v2 .lede{font-size:clamp(16px,1.5vw,19px);line-height:1.7;color:var(--an-muted);max-width:620px;margin:0}
+.actions-v2{display:flex;gap:12px;flex-wrap:wrap;margin:30px 0 18px}
+.actions-v2 .btn{min-height:48px;padding:13px 19px;border-radius:11px;font-weight:800}
+.actions-v2 .btn.primary{background:var(--an-indigo);color:white;box-shadow:0 9px 20px #4f46e526}
+.actions-v2 .btn.secondary{background:white;color:var(--an-navy);border:1px solid #cbd5e1;box-shadow:none}
+.actions-v2 .note{font-size:12px;color:#64748b}
+.pipeline-card{background:white;border:1px solid var(--an-line);border-radius:22px;padding:23px;box-shadow:0 24px 60px #17255412;position:relative;overflow:hidden}
+.pipeline-card:before{content:'';position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,#4f46e5,#22d3ee,#14b8a6)}
+.pipeline-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0 18px}
+.pipeline-top strong{font-family:Manrope,sans-serif;font-size:15px}
+.pill-v2{background:#ecfeff;color:#155e75;padding:5px 8px;border-radius:99px;font-size:10px;font-weight:800}
+.stage-v2{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:12px;padding:13px 0;border-top:1px solid #eef2f7}
+.stage-v2:first-of-type{border-top:0}
+.stage-num{height:34px;width:34px;border-radius:11px;background:#eef2ff;color:#4338ca;display:grid;place-items:center;font-weight:800}
+.stage-v2:nth-of-type(3) .stage-num{background:#ccfbf1;color:#115e59}
+.stage-v2 strong{display:block;font-size:13px}
+.stage-v2 small{display:block;color:#64748b;font-size:11px;margin-top:2px}
+.stage-state{font-size:10px;color:#64748b;font-weight:700}
+.trust-row{display:flex;gap:18px;flex-wrap:wrap;color:#64748b;font-size:11px;margin-top:22px}
+.trust-row span{display:inline-flex;align-items:center;gap:7px}
+.trust-row span:before{content:'✓';display:grid;place-items:center;width:17px;height:17px;background:#ccfbf1;color:#115e59;border-radius:50%;font-size:10px;font-weight:900}
+.section-v2{padding:64px 0}
+.section-heading{max-width:690px;margin-bottom:28px}
+.section-heading .eyebrow-v2{margin-bottom:12px}
+.section-heading h2{font-family:Manrope,sans-serif;font-size:clamp(28px,4vw,42px);line-height:1.15;letter-spacing:-1.4px;margin:0 0 12px;color:var(--an-navy)}
+.section-heading p{color:var(--an-muted);font-size:15px;margin:0}
+.workflow-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.workflow-card{background:white;border:1px solid var(--an-line);border-radius:16px;padding:20px;min-height:184px}
+.workflow-card .n{font-size:11px;color:var(--an-teal);font-weight:900;letter-spacing:1px}
+.workflow-card h3{font-family:Manrope,sans-serif;font-size:16px;margin:14px 0 8px;color:var(--an-navy)}
+.workflow-card p{color:var(--an-muted);font-size:13px;margin:0}
+.feature-grid-v2{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.feature-v2{background:white;border:1px solid var(--an-line);border-radius:17px;padding:23px}
+.feature-v2 .icon-v2{width:42px;height:42px;border-radius:13px;background:#eef2ff;color:#4338ca;display:grid;place-items:center;font-size:19px;margin-bottom:16px}
+.feature-v2 h3{font-family:Manrope,sans-serif;margin:0 0 8px;font-size:16px;color:var(--an-navy)}
+.feature-v2 p{margin:0;color:var(--an-muted);font-size:13px}
+.research-callout{display:flex;justify-content:space-between;align-items:center;gap:25px;background:var(--an-navy);color:white;border-radius:22px;padding:clamp(24px,5vw,44px);margin:22px 0 60px}
+.research-callout h2{font-family:Manrope,sans-serif;font-size:clamp(24px,3vw,34px);line-height:1.2;margin:0 0 9px;letter-spacing:-.8px}
+.research-callout p{color:#cbd5e1;margin:0;max-width:650px;font-size:14px}
+.research-callout .btn{background:#5eead4;color:#10234b;font-weight:900;white-space:nowrap}
+.presentation-v2{padding:0 0 54px}
+.presentation-shell{position:relative;aspect-ratio:16/9;min-height:280px;overflow:hidden;border:1px solid var(--an-line);border-radius:20px;background:#fff;box-shadow:0 18px 50px #1725540d}
+.presentation-shell iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.status-v2{background:#eff6ff;border:1px solid #bfdbfe;border-radius:13px;padding:14px 17px;font-size:12px;color:#1e40af;margin-bottom:28px}
+footer.foot{background:#fff;border-top:1px solid var(--an-line);padding:24px;color:#64748b}
+@media(max-width:900px){.hero-v2{grid-template-columns:1fr;gap:30px;padding-top:54px}.pipeline-card{max-width:650px}.workflow-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.feature-grid-v2{grid-template-columns:repeat(2,minmax(0,1fr))}.research-callout{align-items:flex-start;flex-direction:column}.research-callout .btn{white-space:normal}}
+@media(max-width:620px){.landing{padding:0 18px}.hero-v2{padding:42px 0 44px}.hero-v2 h1{font-size:43px;letter-spacing:-1.9px}.workflow-grid,.feature-grid-v2{grid-template-columns:1fr}.workflow-card{min-height:auto}.section-v2{padding:42px 0}.pipeline-card{padding:17px}.stage-v2{grid-template-columns:34px minmax(0,1fr) auto;gap:9px}.stage-state{font-size:9px}.research-callout{margin-bottom:42px}header.topbar nav a[href="#workflow"],header.topbar nav a[href="#features"]{display:none}.presentation-shell{aspect-ratio:4/3;min-height:300px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
 </style>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-<header class="topbar"><a class="brand" href="/">Anvesh</a><nav><a href="#presentation">My presentation</a><a href="#how-it-works">How it works</a><a href="/login.html">Log in</a></nav></header>
-<main>
-<section class="hero">
-<p class="eyebrow">YOUR CUSTOMER-RESEARCH WORKSPACE</p>
-<h1>Better questions.<br><span class="gradient">Clearer decisions.</span></h1>
-<p class="hero-copy">A guided workspace that connects businesses and research participants, helping teams learn what people think before deciding what to build next.</p>
-<div class="hero-actions"><a class="btn" href="/register-business.html">Start business research</a><a class="btn secondary" href="/register-participant.html">Join as a participant</a></div>
-<p class="muted">A simple workspace for surveys, responses and insights.</p>
+<header class="topbar"><a class="brand" href="/">Anvesh</a><nav aria-label="Main navigation"><a href="#workflow">How it works</a><a href="#features">Capabilities</a><a href="#presentation">Pitch deck</a><a href="/supabase-login.html">Log in</a></nav></header>
+<main class="landing">
+<section class="hero-v2">
+  <div><span class="eyebrow-v2">Research workspace · Preview</span><h1>From questions<br>to <span>evidence.</span></h1><p class="lede">Anvesh is evolving into a structured research workspace that helps teams define a problem, plan the investigation, organise evidence, and review findings before making a decision.</p><div class="actions-v2"><a class="btn primary" href="/research-preview.html">Explore research workspace ↗</a><a class="btn secondary" href="/register-business.html">Start as a business</a></div><p class="note">Research-first product direction. Some AI research workflows are still under development.</p><div class="trust-row"><span>Clear research stages</span><span>Evidence-focused workflow</span><span>Privacy-conscious design</span></div></div>
+  <div class="pipeline-card" aria-label="Illustrative research workflow"><div class="pipeline-top"><strong>Research, step by step</strong><span class="pill-v2">WORKFLOW PREVIEW</span></div>
+    <div class="stage-v2"><span class="stage-num">01</span><div><strong>Define the problem</strong><small>Objective, context and decision</small></div><span class="stage-state">Brief</span></div>
+    <div class="stage-v2"><span class="stage-num">02</span><div><strong>Plan the investigation</strong><small>Questions, methods and scope</small></div><span class="stage-state">Plan</span></div>
+    <div class="stage-v2"><span class="stage-num">03</span><div><strong>Discover evidence</strong><small>Sources, notes and evidence gaps</small></div><span class="stage-state">Discover</span></div>
+    <div class="stage-v2"><span class="stage-num">04</span><div><strong>Analyse findings</strong><small>Compare evidence and uncertainty</small></div><span class="stage-state">Analyse</span></div>
+    <div class="stage-v2"><span class="stage-num">05</span><div><strong>Review the report</strong><small>Sources, limitations and decisions</small></div><span class="stage-state">Report</span></div>
+  </div>
 </section>
-
-<section class="presentation-wrap" id="presentation" aria-labelledby="presentation-heading">
-<div class="presentation-heading">
-<div><p class="eyebrow">THE IDEA, IN 8 SLIDES</p><h2 id="presentation-heading">Presenting Anvesh</h2><p class="presentation-intro">A clearer way to ask questions, hear people, and make informed decisions.</p></div>
-<span class="presentation-badge">Interactive presentation</span>
-</div>
-<div class="pitch-embed-shell">
-  <iframe
-    class="pitch-embed"
-    src="https://www.canva.com/design/DAHYzrplmdU/view?embed"
-    title="Anvesh Startup Pitch — Complete, 8-slide presentation"
-    loading="lazy"
-    allowfullscreen
-    allow="fullscreen"
-    referrerpolicy="strict-origin-when-cross-origin"></iframe>
-</div>
-<div class="pitch-embed-actions">
-  <a class="btn" href="https://www.canva.com/d/QlCFcSNGxqYW_pk" target="_blank" rel="noopener noreferrer">Open full presentation ↗</a>
-  <p class="muted">If the embedded presentation does not load, open it in Canva.</p>
-</div>
-</section>
-
-<section class="feature-grid" id="how-it-works">
-<article class="feature-card"><div class="feature-icon">✦</div><h3>For businesses</h3><p>Shape a research brief, define your audience and track your study.</p></article>
-<article class="feature-card"><div class="feature-icon">↗</div><h3>For participants</h3><p>Explore eligible surveys, share your perspective and review rewards.</p></article>
-<article class="feature-card"><div class="feature-icon">◎</div><h3>Trust by design</h3><p>Clear review steps and role-based workspaces keep research organised.</p></article>
-<article class="feature-card"><div class="feature-icon">✧</div><h3>AI-ready foundation</h3><p>A future AI survey builder can be added without exposing API keys in the browser.</p></article>
-</section>
-<div class="status-note"><strong>Development notice:</strong> Payments and payouts are not connected to real money. Verify production authentication and persistent storage before onboarding real users.</div>
+<section class="section-v2" id="workflow"><div class="section-heading"><span class="eyebrow-v2">A clearer process</span><h2>Make research a process, not a pile of tabs.</h2><p>Keep the research question, the method, the supporting evidence and the resulting report connected in one understandable flow.</p></div>
+<div class="workflow-grid"><article class="workflow-card"><span class="n">STEP 01</span><h3>Frame the question</h3><p>Describe the problem and the decision the research should inform.</p></article><article class="workflow-card"><span class="n">STEP 02</span><h3>Build the plan</h3><p>Define research questions, audience, methods and source strategy.</p></article><article class="workflow-card"><span class="n">STEP 03</span><h3>Gather evidence</h3><p>Organise relevant sources and keep findings linked to their origins.</p></article><article class="workflow-card"><span class="n">STEP 04</span><h3>Review the report</h3><p>Make findings, methodology and limitations visible before acting.</p></article></div></section>
+<section class="section-v2" id="features"><div class="section-heading"><span class="eyebrow-v2">Designed for thoughtful decisions</span><h2>A workspace for the whole research journey.</h2><p>Research is the main concept. Surveys and questionnaires remain useful methods for collecting primary evidence when appropriate.</p></div>
+<div class="feature-grid-v2"><article class="feature-v2"><div class="icon-v2">⌕</div><h3>Research planning</h3><p>Bring the problem, audience, questions and intended outcome together before you begin.</p></article><article class="feature-v2"><div class="icon-v2">↗</div><h3>Evidence and sources</h3><p>Keep source material separate from summaries and interpretations, with room to note gaps.</p></article><article class="feature-v2"><div class="icon-v2">▤</div><h3>Reports and review</h3><p>Organise findings, methodology and limitations into a report people can evaluate.</p></article><article class="feature-v2"><div class="icon-v2">◎</div><h3>Primary research</h3><p>Use surveys as one supporting method rather than the entire research process.</p></article><article class="feature-v2"><div class="icon-v2">◇</div><h3>Clear status</h3><p>Distinguish proposed work from running, completed, partially completed or failed work.</p></article><article class="feature-v2"><div class="icon-v2">⌑</div><h3>Privacy-aware design</h3><p>Keep access role-aware and avoid showing unnecessary participant personal details.</p></article></div></section>
+<section class="research-callout"><div><h2>Start with the question you need to answer.</h2><p>Explore the interactive research workspace preview. Sample projects are clearly labelled, and drafts created there remain in your browser rather than changing backend records.</p></div><a class="btn" href="/research-preview.html">Open the workspace ↗</a></section>
+<section class="presentation-v2" id="presentation"><div class="section-heading"><span class="eyebrow-v2">The product story</span><h2>Presenting Anvesh</h2><p>View the existing pitch presentation. The embedded deck is retained from the current site.</p></div><div class="presentation-shell"><iframe src="https://www.canva.com/design/DAHYzrplmdU/view?embed" title="Anvesh pitch presentation" loading="lazy" allowfullscreen allow="fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><p class="note" style="margin-top:12px"><a href="https://www.canva.com/d/QlCFcSNGxqYW_pk" target="_blank" rel="noopener noreferrer">Open full presentation in Canva ↗</a></p></section>
+<div class="status-v2"><strong>Preview notice:</strong> This page presents the intended research-first direction. Some AI, evidence discovery and report workflows are not verified as live end-to-end functionality. Payments and payouts are not connected to real money.</div>
 </main>
-<footer class="foot">Anvesh · Research with a little more clarity</footer>
-</body></html>
+<footer class="foot">Anvesh · From questions to evidence · <a href="/research-preview.html">Explore the workspace preview</a> · <a href="/register-participant.html">Participant access</a></footer>
+</body>
+</html>
