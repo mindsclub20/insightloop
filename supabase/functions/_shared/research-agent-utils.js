@@ -72,3 +72,53 @@ export function normalizeGroundingSources(metadata) {
 export function getMissingGeminiSecrets(env) {
   return GEMINI_SECRET_NAMES.filter((name) => !(typeof env?.[name] === 'string' && env[name].trim()));
 }
+
+export const AI_PROVIDER_SECRET_NAMES = Object.freeze({
+  gemini: 'GEMINI_API_KEY',
+  groq: 'GROQ_API_KEY',
+  openai: 'OPENAI_API_KEY',
+  anthropic: 'ANTHROPIC_API_KEY',
+  xai: 'XAI_API_KEY',
+  huggingface: 'HUGGINGFACE_API_KEY',
+  ollama: 'OLLAMA_BASE_URL',
+});
+
+export const AI_PROVIDER_ORDER = Object.freeze([
+  'gemini', 'groq', 'openai', 'anthropic', 'xai', 'huggingface', 'ollama',
+]);
+
+export function getProviderOrder(env = {}) {
+  const requested = typeof env.ANVESH_AI_PROVIDER_ORDER === 'string'
+    ? env.ANVESH_AI_PROVIDER_ORDER.split(',').map((x) => x.trim().toLowerCase()).filter(Boolean)
+    : [];
+  const values = requested.length ? requested : [...AI_PROVIDER_ORDER];
+  return [...new Set(values.filter((id) => AI_PROVIDER_ORDER.includes(id)))];
+}
+
+export function getConfiguredAIProviders(env = {}, workload = '') {
+  const overrideKey = 'ANVESH_PROVIDER_' + String(workload || '').toUpperCase().replace(/[^A-Z0-9]+/g, '_');
+  const override = typeof env[overrideKey] === 'string' ? env[overrideKey].trim().toLowerCase() : '';
+  const order = getProviderOrder(env);
+  const ordered = override && AI_PROVIDER_ORDER.includes(override)
+    ? [override, ...order.filter((id) => id !== override)]
+    : order;
+  return ordered.filter((id) => {
+    const secretName = AI_PROVIDER_SECRET_NAMES[id];
+    return typeof env[secretName] === 'string' && env[secretName].trim().length > 0;
+  }).map((id) => ({
+    id,
+    secretName: AI_PROVIDER_SECRET_NAMES[id],
+    model: typeof env['ANVESH_' + id.toUpperCase() + '_MODEL'] === 'string' && env['ANVESH_' + id.toUpperCase() + '_MODEL'].trim()
+      ? env['ANVESH_' + id.toUpperCase() + '_MODEL'].trim()
+      : '',
+    baseUrl: id === 'ollama'
+      ? env.OLLAMA_BASE_URL.trim().replace(/\/+$/, '')
+      : '',
+  }));
+}
+
+export function getMissingAIProviders(env = {}) {
+  return AI_PROVIDER_ORDER
+    .map((id) => AI_PROVIDER_SECRET_NAMES[id])
+    .filter((name) => typeof env[name] !== 'string' || !env[name].trim());
+}
