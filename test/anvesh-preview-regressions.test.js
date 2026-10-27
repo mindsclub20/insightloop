@@ -86,3 +86,24 @@ test('participant survey cards display token rewards instead of zero cash reward
   assert.match(page, /return tokens\.toLocaleString\('en-IN'\) \+ ' internal tokens'/);
   assert.match(page, /escapeHtml\(rewardLabel\(study\)\)/);
 });
+
+test('token-funded survey submissions route through the atomic database RPC', () => {
+  const handler = read('supabase/functions/submit-survey-response/index.ts');
+  assert.match(handler, /const tokenMode = project\.token_funding_status/);
+  assert.match(handler, /admin\.rpc\('submit_token_funded_survey_response'/);
+  assert.match(handler, /Survey response and reward were rolled back/);
+  assert.match(handler, /if \(!result\?\.success \|\| !result\?\.responseId\)/);
+});
+
+test('atomic token submission migration groups response, answers, reward and budget in one transaction', () => {
+  const migration = read('migrations/026_atomic_token_survey_submission.sql');
+  assert.match(migration, /create or replace function public\.submit_token_funded_survey_response/);
+  assert.match(migration, /security definer\s+set search_path = ''/i);
+  assert.match(migration, /insert into public\.survey_responses/);
+  assert.match(migration, /insert into public\.answers/);
+  assert.match(migration, /insert into public\.token_transactions/);
+  assert.match(migration, /update public\.token_wallets/);
+  assert.match(migration, /update public\.research_projects/);
+  assert.match(migration, /revoke all on function public\.submit_token_funded_survey_response/);
+  assert.match(migration, /to service_role/);
+});
