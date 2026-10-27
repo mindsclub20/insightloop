@@ -2,7 +2,7 @@ name: InsightLoop CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/anvesh-frontend-integration-preview]
   pull_request:
     branches: [main]
   workflow_dispatch:
