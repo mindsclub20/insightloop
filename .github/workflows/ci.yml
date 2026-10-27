@@ -58,6 +58,12 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -d anvesh_test -v ON_ERROR_STOP=1 -f test/sql/atomic-token-submission-fixture.sql
+      - name: Apply research workspace and brief migrations to isolated database
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d anvesh_test -v ON_ERROR_STOP=1 -f migrations/024_research_workspace_artifacts.sql
+          psql -h localhost -U postgres -d anvesh_test -v ON_ERROR_STOP=1 -f migrations/025_research_briefs.sql
       - name: Apply atomic token submission migration to isolated database
         env:
           PGPASSWORD: postgres
