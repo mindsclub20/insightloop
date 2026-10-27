@@ -651,6 +651,9 @@ async function viewResultsReport(id) {
   detail.innerHTML = '<p class="muted">Loading report…</p>';
   try {
     const report = await business.getStudyReport(id);
+    if (!report || !report.observedResults || !report.calculatedStatistics) {
+      throw new Error('The report service returned an incomplete results payload.');
+    }
     const qHtml = (report.questionAnalytics || []).map((q) => {
       if (q.breakdown) {
         return `<div class="card"><h3>${escapeHtml(q.questionText)}</h3>
