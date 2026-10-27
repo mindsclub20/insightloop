@@ -370,7 +370,8 @@ serve(async (req) => {
         sources,
       },
       budget,
-      web_search: { provider: 'firecrawl', sources_found: sources.length },\n      key_rotation: {
+      web_search: { provider: 'firecrawl', sources_found: sources.length },
+      key_rotation: {
         configured_keys_detected: availableKeys.length,
         missing_secrets: getMissingGeminiSecrets(env),
         note: 'Each workload prefers its assigned Gemini secret. Missing secrets are skipped; quota-limit responses are not bypassed by switching keys.',
