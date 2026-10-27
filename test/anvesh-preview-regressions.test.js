@@ -77,3 +77,12 @@ test('token admin masks participant names in balances and transaction labels', (
   assert.match(page, /accountLabel\(byId\.get\(t\.recipient_user_id\)\)/);
   assert.match(page, /accountLabel\(byId\.get\(t\.sender_user_id\)\)/);
 });
+
+test('participant survey cards display token rewards instead of zero cash rewards', () => {
+  const data = read('public/js/supabase/participant.js');
+  const page = read('public/supabase-participant/surveys.html');
+  assert.match(data, /reward_per_response_tokens/);
+  assert.match(page, /function rewardLabel\(study\)/);
+  assert.match(page, /return tokens\.toLocaleString\('en-IN'\) \+ ' internal tokens'/);
+  assert.match(page, /escapeHtml\(rewardLabel\(study\)\)/);
+});
