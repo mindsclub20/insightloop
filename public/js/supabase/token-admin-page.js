@@ -9,6 +9,14 @@ function alertBox(message, kind = 'error') {
 }
 function clearAlert() { $('tokenAlert').textContent = ''; $('tokenAlert').className = 'alert hidden'; }
 function balance(v) { return Number(v || 0).toLocaleString('en-IN'); }
+function accountLabel(account) {
+  if (!account) return 'Account';
+  if (account.role === 'USER') return 'Participant';
+  return account.business_name || account.full_name || 'Account';
+}
+function accountSubtitle(account) {
+  return account && account.role !== 'USER' ? (account.full_name || '') : '';
+}
 
 async function load() {
   clearAlert();
@@ -24,16 +32,16 @@ async function load() {
     const total = accounts.reduce((sum, a) => sum + Number(a.balance_tokens || 0), 0);
     $('tokenStats').textContent = balance(total) + ' tokens across ' + accounts.length + ' accounts';
     $('tokenAccounts').innerHTML = accounts.length ? '<table><thead><tr><th>Account</th><th>Type</th><th>Balance</th><th>Created</th></tr></thead><tbody>' +
-      accounts.map(a => '<tr><td>' + escapeTokenHtml(a.business_name || a.full_name || 'Unnamed account') +
-      '<br><small class="muted">' + escapeTokenHtml(a.full_name || '') + '</small></td><td>' + escapeTokenHtml(a.role) +
+      accounts.map(a => '<tr><td>' + escapeTokenHtml(accountLabel(a)) +
+      '<br><small class="muted">' + escapeTokenHtml(accountSubtitle(a)) + '</small></td><td>' + escapeTokenHtml(a.role === 'USER' ? 'Participant' : a.role) +
       '</td><td><strong>' + balance(a.balance_tokens) + '</strong></td><td>' + escapeTokenHtml(new Date(a.created_at).toLocaleDateString()) +
       '</td></tr>').join('') + '</tbody></table>' : '<p class="muted">No accounts found.</p>';
     const byId = new Map(accounts.map(a => [a.user_id, a]));
     const txs = window.__tokenTransactions || [];
     $('tokenTransactions').innerHTML = txs.length ? '<table><thead><tr><th>When</th><th>From</th><th>To</th><th>Amount</th><th>Type</th><th>Note</th></tr></thead><tbody>' +
       txs.map(t => '<tr><td>' + escapeTokenHtml(tokenDate(t.created_at)) + '</td><td>' +
-      escapeTokenHtml(t.sender_user_id ? (byId.get(t.sender_user_id)?.business_name || byId.get(t.sender_user_id)?.full_name || 'Account') : 'Anvesh Admin') +
-      '</td><td>' + escapeTokenHtml(byId.get(t.recipient_user_id)?.business_name || byId.get(t.recipient_user_id)?.full_name || 'Account') +
+      escapeTokenHtml(t.sender_user_id ? accountLabel(byId.get(t.sender_user_id)) : 'Anvesh Admin') +
+      '</td><td>' + escapeTokenHtml(accountLabel(byId.get(t.recipient_user_id))) +
       '</td><td><strong>' + balance(t.amount_tokens) + '</strong></td><td>' + escapeTokenHtml(t.transaction_type) +
       '</td><td>' + escapeTokenHtml(t.note || '—') + '</td></tr>').join('') + '</tbody></table>' : '<p class="muted">No token transactions yet.</p>';
   } catch (error) {
