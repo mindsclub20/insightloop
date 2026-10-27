@@ -76,3 +76,24 @@ button:focus-visible,a:focus-visible{outline:3px solid #b49cff;outline-offset:3p
 .survey-chat button{min-height:42px}
 .survey-chat .muted{font-size:12px;margin-bottom:0}
 @media(max-width:600px){.survey-chat{padding:10px}.survey-chat-bubble{max-width:96%}.survey-chat .row{gap:8px}.survey-chat .row button{flex:1}}
+
+
+/* Phase 1 — Anvesh research-first visual system (presentation only) */
+:root{--il-ink:#17243d;--il-muted:#62718a;--il-purple:#087e8b;--il-purple-deep:#075e68;--il-line:#dfe7f0;--il-lilac:#e6f7f6;--il-mint:#dff7f1}
+body{background:radial-gradient(ellipse at 8% 0%,rgba(184,240,237,.34),transparent 34%),radial-gradient(ellipse at 95% 8%,rgba(195,220,255,.28),transparent 26%),#f5f8fc;color:var(--il-ink)}
+.dashboard-intro{background:linear-gradient(120deg,#101d3b 0%,#203b67 60%,#087e8b 100%);box-shadow:0 20px 48px rgba(16,38,75,.15)}
+.dashboard-intro .eyebrow{color:#b8f0ed}
+.tabs{border-color:#dfe7f0;box-shadow:0 8px 24px rgba(20,45,80,.055)}
+.tab:hover{background:#edf9f8;color:#075e68}
+.tab.active{background:#e6f7f6;color:#075e68}
+#tab-create #aiSurveyCard{background:linear-gradient(150deg,#fff 0%,#f2fbfa 72%,#f0f6ff 100%)!important;border-color:#bfe7e3!important}
+#aiSurveyCard:before{background:#def5f2;color:#087e8b}
+#tab-create input:focus,#tab-create select:focus,#tab-create textarea:focus{border-color:#58bcb8;box-shadow:0 0 0 4px rgba(8,126,139,.12)}
+#generateAiSurveyBtn{background:linear-gradient(120deg,#087e8b,#075e68);box-shadow:0 8px 20px rgba(8,126,139,.2)}
+#budgetPreview{background:#f0faf9}
+#tab-studies,#tab-results{border-color:#dfe7f0;box-shadow:0 10px 32px rgba(20,45,80,.04)}
+button:focus-visible,a:focus-visible{outline-color:#63d3cf}
+.survey-chat{border-color:#d7e9e8}
+.survey-chat-bubble.assistant{background:#eaf7f6;color:#20324a}
+.survey-chat-bubble.user{background:#087e8b}
+@media(prefers-reduced-motion:reduce){.tabs,.tab,.card{transition:none!important}}
