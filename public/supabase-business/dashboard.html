@@ -39,7 +39,7 @@
 
   <section id="tab-create">
     <div class="dashboard-workspace">
-    <div class="card" id="aiSurveyCard" style="max-width:760px;border-color:#d8c9ff;background:linear-gradient(145deg,#fff 0%,#f8f4ff 100%);">
+    <div class="card" id="aiSurveyCard" style="max-width:760px;">
       <p class="eyebrow">ANVESH RESEARCH ASSISTANT</p>
       <h2>Start with the decision you need to make.</h2>
       <p class="muted">Describe the problem in plain language. Review the proposed research questions, then edit and save the study draft before deciding what to publish.</p>
@@ -61,7 +61,6 @@
       <button id="generateAiSurveyBtn" type="button" class="hidden" aria-hidden="true" tabindex="-1">Generate survey</button>
       <div id="aiSurveyPreview" class="hidden" style="margin-top:20px;"></div>
       <p class="muted" style="margin-top:14px;">Your drafts are saved to your account. Publishing reserves participant rewards, charges a 100-token platform fee, and activates immediately after funding succeeds.</p>
-    </div>
     </div>
     <div class="card" style="max-width:560px;">
       <h2>I want to understand...</h2>
@@ -98,6 +97,7 @@
       <input type="number" id="reward" value="5" min="5" max="1000000" step="1">
       <p class="muted" id="budgetPreview"></p>
       <button style="margin-top:10px;" id="createStudyBtn">Create draft study</button>
+    </div>
     </div>
 
     <div id="draftBuilder"></div>
