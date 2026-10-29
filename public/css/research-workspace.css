@@ -42,3 +42,53 @@ input:focus,textarea:focus,select:focus{border-color:var(--an-teal)!important;bo
 #statsBar{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px}
 @media(max-width:760px){#statsBar{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:420px){#statsBar{grid-template-columns:1fr!important}}
+
+
+/* Business dashboard UI repair: keep the research hero legible and the
+   assistant + study-details cards in the same responsive workspace. */
+.dashboard-intro{
+  background:linear-gradient(125deg,#101d3b,#203b67 68%,#087e8b)!important;
+  color:#fff!important;
+  border:1px solid #203b67!important;
+  border-radius:22px!important;
+  box-shadow:0 18px 42px #10224718!important;
+}
+.dashboard-intro .eyebrow{color:#b8f0ed!important;letter-spacing:.13em;font-weight:800}
+.dashboard-intro h1{color:#fff!important;max-width:850px;letter-spacing:-.04em}
+.dashboard-intro>p:not(.eyebrow){color:#e0eafa!important;line-height:1.65}
+.dashboard-intro .dashboard-pill{color:#fff;background:#ffffff15;border-color:#ffffff38}
+#tab-create .dashboard-workspace{
+  display:grid;
+  grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);
+  align-items:start;
+  gap:20px;
+}
+#tab-create .dashboard-workspace>.card{
+  min-width:0;
+  max-width:none!important;
+  margin:0 0 20px;
+  padding:clamp(20px,2.3vw,28px);
+  border:1px solid #dfe7f0!important;
+  border-radius:18px!important;
+  box-shadow:0 10px 30px #1022470a!important;
+  background:#fff!important;
+}
+#tab-create #aiSurveyCard{
+  background:linear-gradient(150deg,#fff 0%,#f5f8fc 70%,#e8fbfa 100%)!important;
+  border-color:#bfe6e4!important;
+}
+#tab-create #aiSurveyCard h2,
+#tab-create .dashboard-workspace>.card h2{color:#14254d}
+#tab-create .dashboard-workspace .survey-chat-bubble.assistant{
+  background:#e8fbfa;
+  border:1px solid #bfe6e4;
+  color:#10203f;
+}
+.tabs .tab:not(.active){background:#fff!important;color:#43516a!important;border:1px solid #dfe7f0!important}
+.tabs .tab.active{background:#14254d!important;color:#fff!important;border-color:#14254d!important}
+#tab-create .dashboard-workspace button:not(.secondary):not(.danger){
+  background:#087e8b!important;color:#fff!important;
+}
+@media(max-width:850px){
+  #tab-create .dashboard-workspace{grid-template-columns:minmax(0,1fr)}
+}
