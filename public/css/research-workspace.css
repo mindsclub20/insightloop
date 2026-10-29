@@ -92,3 +92,23 @@ input:focus,textarea:focus,select:focus{border-color:var(--an-teal)!important;bo
 @media(max-width:850px){
   #tab-create .dashboard-workspace{grid-template-columns:minmax(0,1fr)}
 }
+
+
+/* Force readable contrast for the business dashboard hero even if shared card rules change. */
+body .container > section.dashboard-intro{
+  background:linear-gradient(120deg,#101d3b 0%,#203b67 60%,#087e8b 100%) !important;
+  background-color:#101d3b !important;
+  color:#ffffff !important;
+}
+body .container > section.dashboard-intro h1,
+body .container > section.dashboard-intro p:not(.eyebrow),
+body .container > section.dashboard-intro .dashboard-pill{
+  color:#ffffff !important;
+}
+body .container > section.dashboard-intro .eyebrow{
+  color:#b8f0ed !important;
+}
+body .container > section.dashboard-intro .dashboard-pill{
+  background:#ffffff15 !important;
+  border-color:#ffffff38 !important;
+}
