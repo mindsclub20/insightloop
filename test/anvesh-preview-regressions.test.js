@@ -115,8 +115,9 @@ test('business research dashboard keeps its assistant and study details in the s
   const assistant = html.indexOf('id="aiSurveyCard"', workspaceStart);
   const details = html.indexOf('id="template_type"', workspaceStart);
   const workspaceEnd = html.indexOf('<div id="draftBuilder"></div>', details);
+  const detailsCard = html.indexOf('<div class="card" style="max-width:560px;">', workspaceStart);
+  assert.doesNotMatch(html.slice(assistant, detailsCard), /<\\/div>\\s*<\\/div>\\s*$/);
   assert.ok(workspaceStart >= 0 && assistant > workspaceStart && details > assistant && workspaceEnd > details);
-  assert.doesNotMatch(html, /<\/div>\s*<div class="card" style="max-width:560px;">/);
 });
 
 test('business research dashboard hero and AI assistant use the navy/teal UI theme', () => {
