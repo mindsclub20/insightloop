@@ -119,7 +119,8 @@ test('business research dashboard keeps its assistant and study details in the s
   const workspaceEnd = html.indexOf('<div id="draftBuilder"></div>', details);
   const boundary = html.slice(assistant, detailsCard).trimEnd();
   assert.ok(workspaceStart >= 0 && assistant > workspaceStart && details > detailsCard && workspaceEnd > details);
-  assert.ok(!boundary.endsWith("</div>\\n    </div>"), 'the details card must remain inside dashboard-workspace');
+  const tail = boundary.split("\n").map((line) => line.trim()).filter(Boolean).slice(-2);
+  assert.notDeepEqual(tail, ["</div>", "</div>"], "the details card must remain inside dashboard-workspace");
 });
 
 test('business research dashboard hero and AI assistant use the navy/teal UI theme', () => {
