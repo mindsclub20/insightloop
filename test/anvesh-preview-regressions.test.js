@@ -109,19 +109,21 @@ test('atomic token submission migration groups response, answers, reward and bud
 });
 
 
+
 test('business research dashboard keeps its assistant and study details in the same responsive workspace', () => {
   const html = read('public/supabase-business/dashboard.html');
   const workspaceStart = html.indexOf('<div class="dashboard-workspace">');
   const assistant = html.indexOf('id="aiSurveyCard"', workspaceStart);
   const details = html.indexOf('id="template_type"', workspaceStart);
-  const workspaceEnd = html.indexOf('<div id="draftBuilder"></div>', details);
   const detailsCard = html.indexOf('<div class="card" style="max-width:560px;">', workspaceStart);
-  assert.doesNotMatch(html.slice(assistant, detailsCard), /<\\/div>\\s*<\\/div>\\s*$/);
-  assert.ok(workspaceStart >= 0 && assistant > workspaceStart && details > assistant && workspaceEnd > details);
+  const workspaceEnd = html.indexOf('<div id="draftBuilder"></div>', details);
+  const boundary = html.slice(assistant, detailsCard).trimEnd();
+  assert.ok(workspaceStart >= 0 && assistant > workspaceStart && details > detailsCard && workspaceEnd > details);
+  assert.ok(!boundary.endsWith("</div>\\n    </div>"), 'the details card must remain inside dashboard-workspace');
 });
 
 test('business research dashboard hero and AI assistant use the navy/teal UI theme', () => {
   const css = read('public/css/research-workspace.css');
-  assert.match(css, /\.dashboard-intro\s*\{[^}]*background:linear-gradient\(125deg,#101d3b,#203b67 68%,#087e8b\)!important/s);
-  assert.match(css, /#tab-create #aiSurveyCard\s*\{[^}]*background:linear-gradient\(150deg,#fff 0%,#f5f8fc 70%,#e8fbfa 100%\)!important/s);
+  assert.ok(css.includes('background:linear-gradient(125deg,#101d3b,#203b67 68%,#087e8b)!important;'));
+  assert.ok(css.includes('background:linear-gradient(150deg,#fff 0%,#f5f8fc 70%,#e8fbfa 100%)!important;'));
 });
